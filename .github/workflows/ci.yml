@@ -1,0 +1,87 @@
+name: Reader Experience CI
+on:
+  push:
+  pull_request:
+  workflow_call:
+    inputs:
+      source_sha:
+        type: string
+        required: true
+      release_version:
+        type: string
+        required: true
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['8.0', '8.2']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.source_sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.15.0'
+          cache: npm
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          coverage: none
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install pinned development tools
+        run: |
+          npm ci --ignore-scripts
+          python -m pip install --disable-pip-version-check -r requirements-dev.txt
+      # Check committed generated assets before any command can rebuild them.
+      - name: Check formatting and generated resource hashes
+        run: npm run format:check
+      - name: Rebuild browser assets
+        run: npm run build
+      - name: Scan externally configured identity rules
+        env:
+          IDENTITY_RULES: ${{ vars.IDENTITY_RULES || secrets.IDENTITY_RULES }}
+        run: npm run identity:check
+      - name: Check PHP syntax
+        run: git ls-files '*.php' -z | xargs -0 -n1 php -l
+      - name: Run basic feature fixtures
+        run: npm test
+      - name: Install pinned Chromium
+        run: npx playwright install --with-deps --only-shell chromium
+      - name: Run frontend regressions
+        run: npm run test:frontend
+      - name: Upload browser failure evidence
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reader-experience-browser-failures-${{ matrix.php }}-${{ inputs.source_sha || github.sha }}
+          path: |
+            test-results/
+            playwright-report/
+          if-no-files-found: ignore
+      - name: Build and verify immutable installation bundle
+        env:
+          RELEASE_VERSION: ${{ inputs.release_version }}
+          SOURCE_SHA: ${{ inputs.source_sha || github.sha }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          npm run package
+          npm run package:check
+      - name: Upload ZIP, checksum, external manifest and validation proof
+        if: matrix.php == '8.2'
+        uses: actions/upload-artifact@v4
+        with:
+          name: reader-experience-release-${{ inputs.source_sha || github.sha }}
+          path: |
+            dist/reader-experience-*.zip
+            dist/reader-experience-*.zip.sha256
+            dist/reader-experience-*.manifest.json
+            dist/release-notes.md
+            dist/release-validation.json
+          if-no-files-found: error

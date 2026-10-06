@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.runtime/
+test-results/
+playwright-report/
+__pycache__/
+*.pyc
+.venv/
+.env
+*.sql
+*.log

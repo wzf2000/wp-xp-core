@@ -1,0 +1,24 @@
+{
+  "name": "reader-experience",
+  "private": true,
+  "scripts": {
+    "format": "node tools/format.cjs --write",
+    "format:check": "node tools/format.cjs --check",
+    "build": "python3 build-assets.py",
+    "test": "php tests/contracts.php && python3 -m unittest discover -s tests -p \"test_*.py\"",
+    "package": "python3 tools/package.py",
+    "package:check": "python3 tools/release.py --check-package",
+    "identity:check": "python3 tools/identity_scan.py",
+    "test:frontend": "playwright test"
+  },
+  "devDependencies": {
+    "@prettier/plugin-php": "0.25.0",
+    "js-beautify": "1.15.4",
+    "mdast-util-from-markdown": "2.0.3",
+    "pangu": "10.1.1",
+    "prettier": "3.9.6",
+    "@playwright/test": "1.55.1"
+  },
+  "version": "1.0.0",
+  "license": "GPL-2.0-or-later"
+}
