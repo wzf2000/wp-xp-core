@@ -23,3 +23,7 @@ Defaults use neutral names. Configure existing names before replacing an old own
 Companion's `pagenest_like_recorded(user_id, post_id, count)` is consumed idempotently using the existing `like:user:post` event format with zero XP. A stored event suppresses duplicates. Companion persists its own like count and new-user record atomically; experience ledger writes remain a separate transaction. A later idempotent like retry can deliver an experience event whose previous delivery failed.
 
 The `site_tools_account_panel` filter returns the existing experience panel when ready. The callback keeps the incoming value when the policy is unavailable. No other plugin needs to reference the implementation class.
+
+## Loading with other experience providers
+
+Register Reader Experience before providers that read hook or addon options while their plugin file loads. WordPress activation may sort the stored plugin list, so one-time ordering is insufficient. The private site bootstrap filters `option_active_plugins` using a trusted, repository-external early-plugin list; it only reorders already active plugins and does not activate or load an inactive provider. This preserves the existing experience policy without embedding the site or third-party provider identity in this plugin.

@@ -19,7 +19,7 @@ VERSION_RE = r"(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-(?:alpha|beta|r
 def repository_from_remote():
     try:
         remote = subprocess.check_output(
-            ["git", "remote", "get-url", "origin"], cwd=ROOT, text=True
+            ["git", "remote", "get-url", "origin"], cwd=ROOT, text=True, stderr=subprocess.DEVNULL
         ).strip()
     except subprocess.CalledProcessError:
         return None
