@@ -19,7 +19,7 @@ function check($name, $condition)
     $checks++;
 }
 check('unconfigured ready false', Reader_Experience::ready() === false);
-check('no policy hooks on load', $hooks === []);
+check('no policy hooks on load', $hooks === ['admin_menu']);
 check(
     'ten-level policy retained',
     Reader_Experience::MINS === [0, 5, 20, 60, 150, 300, 600, 1000, 1800, 3000],

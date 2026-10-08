@@ -1,30 +1,60 @@
 # WP XP Core
 
-Independent WordPress plugin for the existing ten-level reader experience policy: daily check-in, reading dwell time, publishing, comments and author milestones. Version **1.1.1**, PHP **8.0+**, WordPress **6.0+**.
+简体中文 · [English](README.en.md)
 
-This plugin connects to an existing configured ledger. It does not establish a new balance policy, install tables or recalculate accounts. Deployment status and server configuration are maintained outside this source tree; preparing source or a ZIP does not deploy the plugin.
+独立的 WordPress 经验系统，可自定义奖励数值与等级门槛，支持每日签到、阅读停留、发表文章、评论及作者里程碑奖励。当前版本 **1.2.0**，要求 PHP **8.0+**、WordPress **6.0+**，无需第三方积分或等级插件。
 
-## Install and use
+## 安装与使用
 
-1. Build the verified `wp-xp-core-1.1.1.zip` from a committed checkout and install through WordPress.
-2. Have the server administrator configure the shared JSON profile outside the web root, pointing to the existing ledger and policy options. With no configuration the plugin remains inactive.
-3. Stop the previous experience owner before enabling this plugin. Retain all existing balances and event records.
-4. Add the configured experience shortcode to the account page, then verify check-in, history and login return with a test account.
+1. 从已提交的源码构建并核验 `wp-xp-core-1.2.0.zip`，通过 WordPress 安装。
+2. 由服务器管理员在 Web 根目录外配置共享 JSON 文件，指向已有账本和运行选项。配置缺失或无效时不启用经验活动，但仍可访问设置页。
+3. 启用前停用原有经验管理插件，保留已有余额及事件记录。
+4. 在账户页放置配置指定的经验短代码，并在隔离测试环境验证前台功能。
 
-The frontend displays experience, level and recent history. Balances use the independent `reader_experience_balance` user metadata; the ten level boundaries remain unchanged. No third-party points or rank provider is required. Check-in and reading require authenticated requests. PageNest Companion owns likes; WP XP Core receives the standard like event, records it once with zero XP and applies the existing author milestones. The previous like REST aliases delegate to Companion. Disabling experience does not prevent Companion likes.
+插件接入已有经验账本，不自动建表、初始化用户或重算余额。部署状态与服务器配置在源码仓库外维护；准备源码或安装包不代表已经部署。
 
-The `site_tools_user_level` filter accepts the fallback and user ID and returns `Level N` when ready; it retains the fallback when unavailable. The `site_tools_account_panel` filter supplies the account panel when the policy is ready and preserves the caller's existing output otherwise.
+## 自定义经验规则
 
-## Upgrade from Reader Experience
+进入后台 **设置 → WP XP Core**，也可点击插件列表中的 **设置**。具有 `manage_options` 权限的管理员可修改全站规则；不提供单个用户的经验调整功能。
 
-Version 1.1.1 changes the plugin basename to `wp-xp-core/wp-xp-core.php`. Disable the previous `reader-experience/reader-experience.php` entry before activating WP XP Core; do not load both copies. WordPress identifies these as different plugin entries, so replacing the old installation requires an explicit activation switch. Update any server early-loading configuration that references the old plugin basename to the new basename during the same switch. Retain the external compatibility profile and all existing account data; this rename performs no database, balance or schedule migration.
+| 规则                                | 默认值                                        |
+| ----------------------------------- | --------------------------------------------- |
+| 每日签到                            | 2 经验，每日一次                              |
+| 有效阅读                            | 1 经验，每日最多奖励 3 次                     |
+| 首次发表文章                        | 20 经验                                       |
+| 符合条件的评论                      | 2 经验，每日最多奖励 3 次                     |
+| 作者浏览里程碑：100 / 500 / 1000 次 | 5 / 10 / 20 经验                              |
+| 作者点赞里程碑：10 / 30 / 100 次    | 5 / 10 / 20 经验                              |
+| 各等级最低经验                      | 0、5、20、60、150、300、600、1000、1800、3000 |
 
-The `Reader_Experience` class, `reader_experience_*` functions, storage and option names, the default `reader-experience/v1` REST namespace, `reader_experience` shortcode, asset handles, `ReaderExperience` JavaScript global and `reader-experience-*` CSS selectors deliberately remain stable. Existing integrations and content continue to use them.
+奖励数值允许 0–1000000 的整数；阅读及评论每日奖励次数允许 0–1000。等级门槛允许设置 1–100 项，从 0 开始且严格递增，每项最高 1000000000，可用逗号或空白分隔，等级数量可以修改。里程碑次数为兼容历史奖励保持固定，但每档奖励均可修改。
 
-## Development and release
+奖励规则只影响修改后首次记账的事件，不重算或补发历史奖励。奖励为 0 时仍记录事件，避免之后重复领取；每日奖励次数为 0 时停发对应类别的奖励。评论撤销与恢复始终使用首次奖励数值，不受当前规则变化影响。修改等级门槛会立即改变等级展示，但不修改经验余额。游戏成绩和排行榜独立运行，不发放经验。
 
-[Configuration and safety](docs/CONFIGURATION.md) · [Development commands](CONTRIBUTING.md) · [Changelog](CHANGELOG.md) · [License](LICENSE)
+默认值完整保留原有规则。加载插件或打开设置页不会自动创建设置选项。已保存数据无效时使用默认值并向管理员显示提示；提交无效设置时保留原设置。保存需要管理员权限和有效验证令牌，过期表单不能覆盖其他管理员刚保存的设置。规则保存在 `wp_xp_core_rules` 选项中，不替代服务器上的存储与集成配置。
 
-The plugin supports a local Git release workflow without a remote: commit the complete candidate, run `npm run package` and `npm run package:check`, then tag the verified commit as `v1.1.1`. A GitHub remote or `REPOSITORY` value is optional.
+## 前台展示与集成
 
-Pinned development dependencies, formatter, asset build, contracts, browser checks and deterministic package guards are self-contained. The installation ZIP includes PHP, content-hashed JS/CSS and user documentation, and excludes tests, tools and dependencies. CI runs PHP 8.0/8.2; identity rules are supplied externally.
+前台展示经验、即时计算的等级、下一级门槛及近期私人记录。用户元数据 `reader_experience_balance` 是事件账本的余额投影。签到和阅读必须通过登录验证；阅读仍要求停留 15 秒。现有奖励资格限制、每日事件去重与账本事务保持有效。
+
+PageNest Companion 负责点赞。WP XP Core 接收标准点赞事件，以零经验记录一次，再按规则发放作者里程碑奖励。原有点赞 REST 别名转交 Companion 处理，停用经验系统不影响 Companion 点赞。
+
+`site_tools_user_level` 过滤器接收原始值和用户 ID，经验系统就绪时返回 `Level N`，不可用时保留原始值。`site_tools_account_panel` 过滤器在规则就绪时提供账户经验面板，否则保留调用方原内容。
+
+## 从 Reader Experience 升级
+
+1.1.1 版本将插件入口改为 `wp-xp-core/wp-xp-core.php`。启用前请停用 `reader-experience/reader-experience.php`，不要同时加载两个副本。WordPress 将它们视为不同插件入口，因此替换旧安装时需要明确切换启用项，同时更新服务器提前加载配置中的入口路径。保留外部兼容配置和已有账户数据；改名不执行数据库、余额或定时任务迁移。
+
+`Reader_Experience` 类、`reader_experience_*` 函数、存储与选项名称、默认 REST 命名空间 `reader-experience/v1`、`reader_experience` 短代码、资源句柄、JavaScript 全局对象 `ReaderExperience` 和 `reader-experience-*` CSS 选择器均作为兼容接口保持稳定。
+
+从 1.1.1 升级到当前版本无需数据迁移；明确保存规则前，继续使用原有默认值。
+
+## 开发与发布
+
+[配置与安全说明](docs/CONFIGURATION.md) · [开发命令](CONTRIBUTING.md) · [更新日志](CHANGELOG.md) · [许可证](LICENSE)
+
+修改功能、配置、安装或发布信息时，必须同步更新中英文 README，并保留双方的语言切换链接。
+
+先提交完整候选版本，再运行 `npm run package` 和 `npm run package:check`，最后为通过核验的提交添加对应版本标签。GitHub 远程仓库或 `REPOSITORY` 参数不是必需项，也支持本地 Git 发布流程。
+
+开发依赖、格式化工具、资源构建、契约检查、存储运行测试、浏览器检查及确定性打包核验均由本仓库维护。安装包包含 PHP、带内容哈希的 JS/CSS 和中英文 README，不包含测试、工具或依赖目录。CI 覆盖 PHP 8.0/8.2；身份扫描规则由外部提供。

@@ -1,6 +1,7 @@
 const { test, expect } = require('@playwright/test');
 const state = {
   experience: 5,
+  checkin_xp: 17,
   level: 2,
   next: 20,
   checked_in: false,
@@ -37,9 +38,10 @@ test('state, check-in and safe history rendering', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('.reader-experience-state')).toContainText('经验 5');
   await expect(page.locator('.reader-experience-history')).toContainText('历史账本校准 +10');
+  await expect(page.locator('.reader-experience-checkin')).toHaveText('每日签到 +17');
   await page.locator('.reader-experience-checkin').click();
   await expect(page.locator('.reader-experience-checkin')).toBeDisabled();
-  await expect(page.locator('.reader-experience-message')).toContainText('签到成功');
+  await expect(page.locator('.reader-experience-message')).toContainText('今日签到已记录');
   await expect(page.locator('.reader-experience-history')).toContainText('<img src=x>');
   await expect(page.locator('.reader-experience-history img')).toHaveCount(0);
   const before = calls.filter((x) => x === 'like').length;
@@ -79,4 +81,12 @@ test('visible reading sends one ticketed visit after fifteen seconds', async ({ 
   expect(visits[0]).toEqual({ post_id: 9, ticket: 'synthetic-ticket', issued: 1 });
   await page.clock.runFor(20000);
   expect(visits).toHaveLength(1);
+});
+
+test('custom final level has no next threshold', async ({ page }) => {
+  await page.route('**/api/*', (route) =>
+    route.fulfill({ json: { ...state, level: 3, next: null } }),
+  );
+  await page.goto('/');
+  await expect(page.locator('.reader-experience-state')).toContainText('Level 3 · 已达最高等级');
 });

@@ -27,6 +27,7 @@ class ReleaseGuards(unittest.TestCase):
             "wp-xp-core.php": "<?php // Plugin Name: WP XP Core\n// Version: 1.0.0\n",
             "index.php": "<?php\n",
             "README.md": "Read me\n",
+            "README.en.md": "English readme\n",
             "LICENSE": "GPL\n",
             "CHANGELOG.md": "# Changes\n\n## 1.0.0\n\n- Current functionality.\n",
             "theme.json": "{}\n",

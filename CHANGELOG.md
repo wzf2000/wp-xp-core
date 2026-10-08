@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.2.0
+
+- Add an administrator settings page for global rewards, daily caps and variable level thresholds, with nonce validation and concurrent-edit protection.
+- Preserve defaults and historical ledger values; comment reversals/restorations use their original award.
+- Show configured check-in rewards and calculated next levels without hardcoded frontend amounts.
+- Provide synchronized Chinese and English READMEs in the installation package.
+
 ## 1.1.1
 
 - Rename the plugin and installation package to WP XP Core (`wp-xp-core/wp-xp-core.php`).

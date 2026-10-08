@@ -94,6 +94,10 @@ final class FixtureStorage
         }
         return $this->db->query($sql)->fetchColumn();
     }
+    public function get_row($sql, $mode)
+    {
+        return $this->db->query($sql)->fetch($mode);
+    }
     public function get_col($sql)
     {
         return $this->db->query($sql)->fetchAll(PDO::FETCH_COLUMN);
@@ -154,13 +158,20 @@ function get_option($key, $default = false)
     $value = $wpdb->get_var(
         $wpdb->prepare('SELECT option_value FROM fixture_options WHERE option_name=%s', $key),
     );
-    return $value === false ? $default : $value;
+    return $value === false
+        ? $default
+        : ($key === WP_XP_Core_Settings::OPTION
+            ? unserialize($value)
+            : $value);
 }
 function update_option($key, $value, $autoload = null)
 {
     global $wpdb;
     if ($wpdb->failOptionWrite || get_option($key) === $value) {
         return false;
+    }
+    if ($key === WP_XP_Core_Settings::OPTION) {
+        $value = serialize($value);
     }
     if (get_option($key) === false) {
         return $wpdb->query(
@@ -349,4 +360,260 @@ verify(
     'maintenance permission rejected',
     Reader_Experience::permission($request)->code === 'maintenance',
 );
+
+$wpdb->query(
+    "UPDATE fixture_options SET option_value='1' WHERE option_name='reader_experience_live'",
+);
+$defaults = WP_XP_Core_Settings::defaults();
+verify(
+    'read defaults never creates settings',
+    get_option(WP_XP_Core_Settings::OPTION, null) === null,
+);
+$GLOBALS['capable'] = false;
+verify(
+    'settings require administrator',
+    WP_XP_Core_Settings::save($defaults, 'fixture-nonce', WP_XP_Core_Settings::revision(null))
+        ->code === 'forbidden',
+);
+$GLOBALS['capable'] = true;
+verify(
+    'settings require nonce',
+    WP_XP_Core_Settings::save($defaults, 'bad', WP_XP_Core_Settings::revision(null))->code ===
+        'nonce',
+);
+$custom = $defaults;
+$custom['levels'] = [0, 3, 9];
+$custom['checkin_xp'] = 13;
+$custom['comment_xp'] = 7;
+$custom['visit_xp'] = 4;
+$custom['visit_limit'] = 1;
+$custom['article_xp'] = 11;
+verify(
+    'administrator saves custom policy',
+    WP_XP_Core_Settings::save($custom, 'fixture-nonce', WP_XP_Core_Settings::revision(null)) ===
+        true,
+);
+verify(
+    'custom thresholds used',
+    Reader_Experience::level(8) === 2 && Reader_Experience::level(9) === 3,
+);
+verify(
+    'stale settings form rejected',
+    WP_XP_Core_Settings::save($defaults, 'fixture-nonce', WP_XP_Core_Settings::revision(null))
+        ->code === 'conflict',
+);
+foreach (
+    [
+        ['checkin_xp' => -1],
+        ['visit_limit' => 1001],
+        ['article_xp' => 1000001],
+        ['comment_xp' => '2.5'],
+        ['levels' => [1, 2]],
+        ['levels' => [0, 2, 2]],
+        ['levels' => [0, 1000000001]],
+        ['levels' => []],
+        ['levels' => array_fill(0, 101, 0)],
+        ['unknown' => 1],
+    ]
+    as $bad
+) {
+    $bad = array_replace($custom, $bad);
+    verify(
+        'invalid policy rejected',
+        WP_XP_Core_Settings::save($bad, 'fixture-nonce', WP_XP_Core_Settings::revision($custom))
+            ->code === 'input',
+    );
+    verify('invalid save preserves prior policy', WP_XP_Core_Settings::rules() === $custom);
+}
+verify(
+    'textarea levels normalized',
+    WP_XP_Core_Settings::validate(array_replace($custom, ['levels' => "0, 3\n9"])) === $custom,
+);
+Reader_Experience::transaction(function () use ($defaults, $custom) {
+    update_option(WP_XP_Core_Settings::OPTION, $defaults, false);
+    verify('event uses one policy snapshot', WP_XP_Core_Settings::rules() === $custom);
+});
+verify('next event sees updated policy', WP_XP_Core_Settings::rules() === $defaults);
+update_option(WP_XP_Core_Settings::OPTION, ['broken' => true]);
+verify('invalid stored policy safely defaults', WP_XP_Core_Settings::rules() === $defaults);
+update_option(WP_XP_Core_Settings::OPTION, $custom);
+function get_post($id)
+{
+    return $id
+        ? (object) [
+            'ID' => $id,
+            'post_author' => 8,
+            'post_status' => 'publish',
+            'post_type' => 'post',
+        ]
+        : null;
+}
+function post_password_required($p)
+{
+    return false;
+}
+function get_comment($id)
+{
+    return $GLOBALS['comments'][$id] ?? null;
+}
+$request = new class {
+    public array $body = [];
+    public function get_json_params()
+    {
+        return $this->body;
+    }
+    public function is_json_content_type()
+    {
+        return true;
+    }
+    public function get_body()
+    {
+        return json_encode($this->body);
+    }
+};
+$before = (int) get_user_meta(7, Reader_Experience::BALANCE_META, true);
+$state = Reader_Experience::request($request, 'checkin');
+verify(
+    'configured checkin amount recorded',
+    $state['experience'] === $before + 13 && $state['checkin_xp'] === 13 && $state['next'] === null,
+);
+verify(
+    'duplicate checkin still suppressed',
+    Reader_Experience::request($request, 'checkin')['experience'] === $before + 13,
+);
+Reader_Experience::published('publish', 'draft', get_post(700));
+verify(
+    'configured article award',
+    (int) $wpdb->get_var(
+        "SELECT xp FROM fixture_reader_experience_events WHERE event_key='article:700'",
+    ) === 11,
+);
+$GLOBALS['comments'][90] = (object) [
+    'comment_post_ID' => 700,
+    'user_id' => 7,
+    'comment_parent' => 0,
+    'comment_approved' => '1',
+    'comment_type' => 'comment',
+];
+Reader_Experience::comment(90);
+verify(
+    'configured comment award',
+    (int) $wpdb->get_var(
+        "SELECT xp FROM fixture_reader_experience_events WHERE event_key='comment:90'",
+    ) === 7,
+);
+$custom['comment_xp'] = 99;
+update_option(WP_XP_Core_Settings::OPTION, $custom);
+$GLOBALS['comments'][90]->comment_approved = '0';
+Reader_Experience::comment(90);
+verify(
+    'old comment revoked by original amount',
+    (int) $wpdb->get_var(
+        'SELECT SUM(xp) FROM fixture_reader_experience_events WHERE object_id=90',
+    ) === 0,
+);
+$GLOBALS['comments'][90]->comment_approved = '1';
+Reader_Experience::comment(90);
+verify(
+    'old comment restored by original amount',
+    (int) $wpdb->get_var(
+        'SELECT SUM(xp) FROM fixture_reader_experience_events WHERE object_id=90',
+    ) === 7,
+);
+
+function wp_salt($scheme)
+{
+    return 'synthetic-salt';
+}
+$request->body = ['post_id' => 701, 'issued' => time() - 20, 'signature' => ''];
+$request->body['signature'] = hash_hmac(
+    'sha256',
+    '7:701:' . $request->body['issued'],
+    wp_salt('nonce'),
+);
+Reader_Experience::request($request, 'visit');
+verify(
+    'configured reading award used',
+    (int) $wpdb->get_var(
+        "SELECT xp FROM fixture_reader_experience_events WHERE kind='visit' AND object_id=701",
+    ) === 4,
+);
+$request->body['post_id'] = 702;
+$request->body['signature'] = hash_hmac(
+    'sha256',
+    '7:702:' . $request->body['issued'],
+    wp_salt('nonce'),
+);
+Reader_Experience::request($request, 'visit');
+verify(
+    'configured reading daily cap enforced',
+    Reader_Experience::count_day(7, 'visit', Reader_Experience::day()) === 1,
+);
+$custom['article_xp'] = 0;
+$custom['comment_limit'] = 0;
+$custom['visit_limit'] = 0;
+update_option(WP_XP_Core_Settings::OPTION, $custom);
+Reader_Experience::published('publish', 'draft', get_post(703));
+verify(
+    'zero award records marker',
+    Reader_Experience::exists('article:703') &&
+        (int) $wpdb->get_var(
+            "SELECT xp FROM fixture_reader_experience_events WHERE event_key='article:703'",
+        ) === 0,
+);
+$custom['article_xp'] = 50;
+update_option(WP_XP_Core_Settings::OPTION, $custom);
+Reader_Experience::published('publish', 'draft', get_post(703));
+verify(
+    'zero marker prevents later rewards',
+    (int) $wpdb->get_var(
+        "SELECT xp FROM fixture_reader_experience_events WHERE event_key='article:703'",
+    ) === 0,
+);
+$GLOBALS['comments'][91] = clone $GLOBALS['comments'][90];
+Reader_Experience::comment(91);
+verify('zero comment cap suppresses awards', !Reader_Experience::exists('comment:91'));
+$request->body['post_id'] = 704;
+$request->body['signature'] = hash_hmac(
+    'sha256',
+    '7:704:' . $request->body['issued'],
+    wp_salt('nonce'),
+);
+Reader_Experience::request($request, 'visit');
+verify(
+    'zero reading cap suppresses awards',
+    !Reader_Experience::exists('visit:7:' . Reader_Experience::day() . ':704'),
+);
+foreach (['view' => [100, 500, 1000], 'like' => [10, 30, 100]] as $kind => $thresholds) {
+    foreach ($thresholds as $i => $threshold) {
+        $custom[$kind . '_' . $threshold] = ($i + 1) * 3;
+    }
+    update_option(WP_XP_Core_Settings::OPTION, $custom);
+    Reader_Experience::transaction(function () use ($kind, $thresholds) {
+        for ($i = 0; $i < max($thresholds); $i++) {
+            Reader_Experience::record(
+                'fixture:' . $kind . ':' . $i,
+                7,
+                $kind,
+                705,
+                0,
+                Reader_Experience::day(),
+            );
+        }
+        Reader_Experience::milestones(705, $kind);
+        Reader_Experience::milestones(705, $kind);
+    });
+    foreach ($thresholds as $i => $threshold) {
+        verify(
+            'custom milestone reward and deduplication',
+            (int) $wpdb->get_var(
+                $wpdb->prepare(
+                    'SELECT SUM(xp) FROM fixture_reader_experience_events WHERE event_key=%s',
+                    "milestone:$kind:705:$threshold",
+                ),
+            ) ===
+                ($i + 1) * 3,
+        );
+    }
+}
 echo "$checks independent ledger runtime checks passed\n";

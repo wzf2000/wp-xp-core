@@ -58,7 +58,7 @@ def identity(version, sha):
 def source_files():
     # Installation allowlist excludes development tools, tests and dependencies.
     names = {p.name for p in ROOT.glob("*.php")}
-    names |= {"README.md", "LICENSE", "CHANGELOG.md"}
+    names |= {"README.md", "README.en.md", "LICENSE", "CHANGELOG.md"}
     if (ROOT / "CONTRIBUTING.md").is_file():
         names.add("CONTRIBUTING.md")
     names |= {
@@ -78,7 +78,7 @@ def installation_name(name):
     if len(path.parts) == 1:
         return (
             path.suffix == ".php"
-            or name in {"README.md", "LICENSE", "CHANGELOG.md", "CONTRIBUTING.md"}
+            or name in {"README.md", "README.en.md", "LICENSE", "CHANGELOG.md", "CONTRIBUTING.md"}
             or (SLUG == "pagenest" and name in {"style.css", "theme.json", "screenshot.png"})
         )
     return (

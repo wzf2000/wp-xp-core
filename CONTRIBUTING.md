@@ -21,9 +21,13 @@ For a release, first commit the complete candidate and run:
 ```sh
 npm run package
 npm run package:check
-git tag v1.1.1
+git tag "v$(node -p 'require("./package.json").version')"
 ```
 
-Version identity, source SHA, committed installation bytes, the file allowlist, checksums and the manifest are verified. Tag the verified release commit as `v1.1.1`. A local repository without a remote is supported: omit `REPOSITORY`, and release notes record the local Git commit. For a GitHub release, `REPOSITORY` can be supplied explicitly or inferred from an optional GitHub remote; no account name is embedded. The manifest is published after hashed resources are built. CI preserves ZIP, checksum and validation proof. Deployment is a separately authorized operation.
+Version identity, source SHA, committed installation bytes, the file allowlist, checksums and the manifest are verified. Tag the verified release commit with the version in `package.json`. A local repository without a remote is supported: omit `REPOSITORY`, and release notes record the local Git commit. For a GitHub release, `REPOSITORY` can be supplied explicitly or inferred from an optional GitHub remote; no account name is embedded. The manifest is published after hashed resources are built. CI preserves ZIP, checksum and validation proof. Deployment is a separately authorized operation.
 
 `IDENTITY_RULES` is an externally configured JSON string array from Actions variables or secrets. The scanner always verifies itself against a synthetic marker, reports matching file paths only, and scans the current source tree including generated resources.
+
+## Bilingual documentation
+
+`README.md` is the Chinese default; `README.en.md` is the English equivalent. Update both in the same change whenever behavior, configuration, installation or release information changes. Keep reciprocal language links at the top. Both files belong in the installation package.

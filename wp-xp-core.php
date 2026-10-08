@@ -1,13 +1,14 @@
 <?php
 /** Plugin Name: WP XP Core
- * Description: Bounded experience events, ten levels and private activity history.
- * Version: 1.1.1
+ * Description: Configurable experience rules, levels and private activity history.
+ * Version: 1.2.0
  */
 defined('ABSPATH') || exit();
 require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/settings.php';
 final class Reader_Experience
 {
-    const VERSION = '1.1.1';
+    const VERSION = '1.2.0';
     const BALANCE_META = 'reader_experience_balance';
     const MINS = [0, 5, 20, 60, 150, 300, 600, 1000, 1800, 3000];
     private static bool $writing = false;
@@ -78,6 +79,7 @@ final class Reader_Experience
         self::$writing = true;
         try {
             self::q('START TRANSACTION');
+            WP_XP_Core_Settings::begin();
             $r = $fn();
             self::q('COMMIT');
             return $r;
@@ -86,6 +88,7 @@ final class Reader_Experience
             wp_cache_flush_runtime();
             throw $e;
         } finally {
+            WP_XP_Core_Settings::end();
             self::$writing = $old;
             $wpdb->get_var(
                 $wpdb->prepare('SELECT RELEASE_LOCK(%s)', reader_experience_lock('event_lock')),
@@ -121,7 +124,7 @@ final class Reader_Experience
     public static function level(int $experience): int
     {
         $level = 1;
-        foreach (self::MINS as $i => $min) {
+        foreach (WP_XP_Core_Settings::rules()['levels'] as $i => $min) {
             if ($experience >= $min) {
                 $level = $i + 1;
             }
@@ -209,7 +212,8 @@ final class Reader_Experience
         return [
             'experience' => $xp,
             'level' => $level,
-            'next' => $level < 10 ? self::MINS[$level] : null,
+            'next' => WP_XP_Core_Settings::rules()['levels'][$level] ?? null,
+            'checkin_xp' => WP_XP_Core_Settings::rules()['checkin_xp'],
             'checked_in' => self::exists('checkin:' . $uid . ':' . self::day()),
             'visit_today' => self::count_day($uid, 'visit', self::day()),
             'comment_today' => self::count_day($uid, 'comment', self::day()),
@@ -323,12 +327,27 @@ final class Reader_Experience
                     throw new RuntimeException('Maintenance');
                 }
                 $day = self::day();
+                $rules = WP_XP_Core_Settings::rules();
                 if ($action === 'checkin') {
-                    self::record("checkin:$uid:$day", $uid, 'checkin', 0, 2, $day);
+                    self::record(
+                        "checkin:$uid:$day",
+                        $uid,
+                        'checkin',
+                        0,
+                        $rules['checkin_xp'],
+                        $day,
+                    );
                 }
                 if ($action === 'visit') {
-                    if (self::count_day($uid, 'visit', $day) < 3) {
-                        self::record("visit:$uid:$day:$pid", $uid, 'visit', $pid, 1, $day);
+                    if (self::count_day($uid, 'visit', $day) < $rules['visit_limit']) {
+                        self::record(
+                            "visit:$uid:$day:$pid",
+                            $uid,
+                            'visit',
+                            $pid,
+                            $rules['visit_xp'],
+                            $day,
+                        );
                     }
                     $p = get_post($pid);
                     if (
@@ -381,11 +400,9 @@ final class Reader_Experience
                 $kind,
             ),
         );
-        foreach (
-            $kind === 'view' ? [[100, 5], [500, 10], [1000, 20]] : [[10, 5], [30, 10], [100, 20]]
-            as [$threshold, $xp]
-        ) {
+        foreach ($kind === 'view' ? [100, 500, 1000] : [10, 30, 100] as $threshold) {
             if ($n >= $threshold) {
+                $xp = WP_XP_Core_Settings::rules()[$kind . '_' . $threshold];
                 self::record(
                     "milestone:$kind:$pid:$threshold",
                     (int) $p->post_author,
@@ -415,7 +432,7 @@ final class Reader_Experience
                     (int) $p->post_author,
                     'article',
                     (int) $p->ID,
-                    20,
+                    WP_XP_Core_Settings::rules()['article_xp'],
                     self::day(),
                 ),
             );
@@ -455,8 +472,19 @@ final class Reader_Experience
                     ARRAY_A,
                 );
                 if (!$first) {
-                    if ($eligible && self::count_day($uid, 'comment', self::day()) < 3) {
-                        self::record('comment:' . $id, $uid, 'comment', $id, 2, self::day());
+                    if (
+                        $eligible &&
+                        self::count_day($uid, 'comment', self::day()) <
+                            WP_XP_Core_Settings::rules()['comment_limit']
+                    ) {
+                        self::record(
+                            'comment:' . $id,
+                            $uid,
+                            'comment',
+                            $id,
+                            WP_XP_Core_Settings::rules()['comment_xp'],
+                            self::day(),
+                        );
                     }
                     return;
                 }
@@ -474,7 +502,7 @@ final class Reader_Experience
                         $uid,
                     ),
                 );
-                $target = $eligible ? 2 : 0;
+                $target = $eligible ? (int) $first['xp'] : 0;
                 if ($net !== $target) {
                     $seq = (int) $wpdb->get_var(
                         $wpdb->prepare(
@@ -675,7 +703,7 @@ final class Reader_Experience
                 ? '<button type="button" class="reader-experience-checkin"' .
                     ($state['checked_in'] ? ' disabled' : '') .
                     '>' .
-                    ($state['checked_in'] ? '今日已签到' : '每日签到 +2') .
+                    ($state['checked_in'] ? '今日已签到' : '每日签到 +' . $state['checkin_xp']) .
                     '</button><p class="reader-experience-message" role="status"></p><details><summary>最近经验记录</summary><ul class="reader-experience-history"></ul></details>'
                 : '<a href="' .
                     esc_url(wp_login_url(reader_experience_panel_url())) .
@@ -696,6 +724,15 @@ function reader_experience_account_panel($original)
     return Reader_Experience::ready() ? Reader_Experience::panel() : $original;
 }
 add_filter('site_tools_account_panel', 'reader_experience_account_panel');
+add_filter('plugin_action_links_wp-xp-core/wp-xp-core.php', function ($links) {
+    if (current_user_can('manage_options')) {
+        array_unshift(
+            $links,
+            '<a href="' . esc_url(admin_url('options-general.php?page=wp-xp-core')) . '">设置</a>',
+        );
+    }
+    return $links;
+});
 function reader_experience_user_level($fallback, $uid)
 {
     if (!Reader_Experience::ready() || !is_numeric($uid) || (int) $uid < 1) {
