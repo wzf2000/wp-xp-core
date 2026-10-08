@@ -4,6 +4,7 @@ defined('ABSPATH') || exit();
 final class WP_XP_Core_Settings
 {
     const OPTION = 'wp_xp_core_rules';
+    const PANEL_OPTION = 'wp_xp_core_panel_page_id';
     private static ?array $snapshot = null;
     public static function begin(): void
     {
@@ -193,6 +194,88 @@ final class WP_XP_Core_Settings
             $wpdb->get_var($wpdb->prepare('SELECT RELEASE_LOCK(%s)', $lock));
         }
     }
+    public static function panel_revision($raw): string
+    {
+        // WordPress keeps integer values in the write cache but reloads DB scalars as strings.
+        $value = is_int($raw) || (is_string($raw) && ctype_digit($raw)) ? (int) $raw : $raw;
+        return self::revision($value);
+    }
+    public static function save_panel_page($input, $nonce, $revision)
+    {
+        if (!current_user_can('manage_options') || !reader_experience_native()) {
+            return new WP_Error('forbidden', '没有管理经验面板的权限。', ['status' => 403]);
+        }
+        if (!is_string($nonce) || !wp_verify_nonce($nonce, 'wp_xp_core_panel')) {
+            return new WP_Error('nonce', '验证已过期，请刷新设置页。', ['status' => 403]);
+        }
+        if (
+            (!is_int($input) && !is_string($input)) ||
+            !preg_match('/^(0|[1-9][0-9]*)$/D', (string) $input) ||
+            strlen((string) $input) > 10 ||
+            (int) $input > 2147483647
+        ) {
+            return new WP_Error('input', '请选择有效的已发布页面。', ['status' => 400]);
+        }
+        $id = (int) $input;
+        $page = $id ? get_post($id) : null;
+        if (
+            $id &&
+            (!$page ||
+                $page->post_type !== 'page' ||
+                $page->post_status !== 'publish' ||
+                $page->post_password !== '')
+        ) {
+            return new WP_Error('input', '请选择没有密码保护的已发布页面。', ['status' => 400]);
+        }
+        global $wpdb;
+        $lock = substr('wp_xp_panel:' . hash('sha256', DB_NAME . ':' . $wpdb->prefix), 0, 64);
+        if ((int) $wpdb->get_var($wpdb->prepare('SELECT GET_LOCK(%s,10)', $lock)) !== 1) {
+            return new WP_Error('busy', '面板设置正被修改，请重试。', ['status' => 409]);
+        }
+        try {
+            wp_cache_delete(self::PANEL_OPTION, 'options');
+            wp_cache_delete('alloptions', 'options');
+            wp_cache_delete('notoptions', 'options');
+            $old = get_option(self::PANEL_OPTION, null);
+            if (!is_string($revision) || !hash_equals(self::panel_revision($old), $revision)) {
+                return new WP_Error('conflict', '面板设置已更新，请刷新页面。', ['status' => 409]);
+            }
+            if ((is_int($old) || is_string($old)) && (string) $old === (string) $id) {
+                return true;
+            }
+            return update_option(self::PANEL_OPTION, $id, false)
+                ? true
+                : new WP_Error('storage', '面板设置未能保存，请重试。', ['status' => 503]);
+        } finally {
+            $wpdb->get_var($wpdb->prepare('SELECT RELEASE_LOCK(%s)', $lock));
+        }
+    }
+    private static function panel_help(): void
+    {
+        echo '<section class="xp-card xp-panel-help"><h2>添加经验面板</h2><p>经验面板放在普通 WordPress 页面中，无需已有账户插件。</p><ol><li>进入 <strong>页面 → 新建页面</strong>，标题可填“我的经验”。</li><li>添加 <strong>短代码</strong> 区块，填入 <code>[reader_experience]</code>。</li><li>发布页面，登录后即可查看经验与签到。</li></ol>';
+        if (reader_experience_native()) {
+            $raw = get_option(self::PANEL_OPTION, null);
+            echo '<form method="post"><input type="hidden" name="wp_xp_core_action" value="panel">';
+            wp_nonce_field('wp_xp_core_panel');
+            echo '<input type="hidden" name="panel_revision" value="' .
+                esc_attr(self::panel_revision($raw)) .
+                '"><label class="xp-label" for="xp-panel-page">选择已发布的经验页面</label>';
+            wp_dropdown_pages([
+                'name' => 'panel_page_id',
+                'id' => 'xp-panel-page',
+                'selected' => (int) $raw,
+                'show_option_none' => '暂不指定',
+                'option_none_value' => 0,
+                'post_status' => 'publish',
+            ]);
+            echo '<p class="xp-help">选择后，顶栏“经验签到”和登录返回链接会指向此页。请先按上方步骤加入短代码；保存不会创建或发布页面。</p>';
+            submit_button('保存面板页面', 'secondary', 'save_panel', false);
+            echo '</form>';
+        } else {
+            echo '<p class="xp-help">本站使用高级接入配置；面板页与短代码名称由现有配置提供。</p>';
+        }
+        echo '</section>';
+    }
     public static function tiers(): array
     {
         return ['view' => [100, 500, 1000], 'like' => [10, 30, 100]];
@@ -256,11 +339,18 @@ final class WP_XP_Core_Settings
         }
         $result = null;
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $result = self::save(
-                wp_unslash($_POST['rules'] ?? []),
-                $_POST['_wpnonce'] ?? '',
-                $_POST['revision'] ?? '',
-            );
+            $result =
+                ($_POST['wp_xp_core_action'] ?? '') === 'panel'
+                    ? self::save_panel_page(
+                        wp_unslash($_POST['panel_page_id'] ?? ''),
+                        $_POST['_wpnonce'] ?? '',
+                        $_POST['panel_revision'] ?? '',
+                    )
+                    : self::save(
+                        wp_unslash($_POST['rules'] ?? []),
+                        $_POST['_wpnonce'] ?? '',
+                        $_POST['revision'] ?? '',
+                    );
         }
         echo '<div class="wrap wp-xp-core-admin"><header class="xp-header"><span class="xp-mark" aria-hidden="true">XP</span><div><h1>WP XP Core <span class="xp-version">' .
             esc_html(Reader_Experience::VERSION) .
@@ -362,7 +452,9 @@ final class WP_XP_Core_Settings
         submit_button('保存经验规则', 'primary', 'submit', false);
         echo '</div></form><aside class="xp-sidebar" aria-label="插件信息与帮助"><section class="xp-card xp-about"><span class="xp-eyebrow">关于插件</span><h2>WP XP Core</h2><p>独立的 WordPress 经验与等级系统。</p><dl><div><dt>版本</dt><dd>' .
             esc_html(Reader_Experience::VERSION) .
-            '</dd></div><div><dt>作者</dt><dd><a href="https://github.com/wzf2000">wzf2000</a></dd></div><div><dt>许可证</dt><dd><a href="https://www.gnu.org/licenses/old-licenses/gpl-2.0.html">GPL-2.0-or-later</a></dd></div></dl><a class="xp-repo-link" href="https://github.com/wzf2000/wp-xp-core">源码与使用说明 <span aria-hidden="true">↗</span></a><p class="xp-help">查看项目文档、更新记录与贡献方式。</p></section><section class="xp-card xp-guide"><h2>规则说明</h2><p>保存全站规则前，可先了解生效范围。</p><details><summary>奖励如何生效？</summary><p>不重算或补发历史经验。0 经验仍记录事件，避免日后重复领取；评论撤销与恢复使用首次奖励数值。</p></details><details><summary>数值可以设置多大？</summary><p>奖励为 0–1000000 的整数，每日次数为 0–1000。等级门槛最高为 1000000000。</p></details></section></aside></div></div>';
+            '</dd></div><div><dt>作者</dt><dd><a href="https://github.com/wzf2000">wzf2000</a></dd></div><div><dt>许可证</dt><dd><a href="https://www.gnu.org/licenses/old-licenses/gpl-2.0.html">GPL-2.0-or-later</a></dd></div></dl><a class="xp-repo-link" href="https://github.com/wzf2000/wp-xp-core">源码与使用说明 <span aria-hidden="true">↗</span></a><p class="xp-help">查看项目文档、更新记录与贡献方式。</p></section>';
+        self::panel_help();
+        echo '<section class="xp-card xp-guide"><h2>规则说明</h2><p>保存全站规则前，可先了解生效范围。</p><details><summary>奖励如何生效？</summary><p>不重算或补发历史经验。0 经验仍记录事件，避免日后重复领取；评论撤销与恢复使用首次奖励数值。</p></details><details><summary>数值可以设置多大？</summary><p>奖励为 0–1000000 的整数，每日次数为 0–1000。等级门槛最高为 1000000000。</p></details></section></aside></div></div>';
     }
 }
 add_action('admin_menu', [WP_XP_Core_Settings::class, 'menu']);

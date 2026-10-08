@@ -2,23 +2,35 @@
 
 [简体中文](CONFIGURATION.md) · English · [Back to overview](../README.en.md) · [User guide](GUIDE.en.md)
 
-This page is for server administrators and integrators. Version 1.3.1 connects to compatible, existing experience storage. A new site needs an explicit storage and initialization plan; the installation ZIP does not provide a first-run wizard.
+This page is for integrators. **Ordinary first-time installation needs no external configuration: upload and activate a 1.4.0+ installation ZIP.** For page setup, see the [user guide](GUIDE.en.md). External JSON is only for advanced deployments with custom storage or existing integrations.
+
+## Default installation
+
+Without `PAGENEST_COMPATIBILITY_PROFILE_FILE`, the plugin uses built-in configuration. First activation creates the WordPress-prefixed `reader_experience_events` ledger and its own installation markers/live switch. It does not read myCRED data, import historical activity or bulk-initialize user balances. Users without a balance display zero XP and earn experience through subsequent eligible activity.
+
+Activation requires InnoDB support, with WordPress user metadata, post metadata and options already using InnoDB. The plugin does not convert other tables. It verifies schema and unique event keys and serializes installation with a database lock; failed setup leaves rewards disabled. Deactivation and reactivation preserve the ledger, balances, rules and any existing maintenance switch, without recalculating or backfilling XP. Normal requests never initialize storage.
+
+Create an experience page manually with `[reader_experience]`. The separate `wp_xp_core_panel_page_id` option stores the administrator’s selected public, unpassworded page; it is independent of rewards. Without a selection, links use the current page or home. Administrators create and publish pages; the plugin never publishes content automatically.
+
+Multisite supports activation separately on each site, not network-wide activation. Native balances are scoped by the site table prefix, as are ledgers and installation options. Integrators can use `Reader_Experience::balance_meta()` for the current balance key.
+
+## Optional external configuration
+
+Defining `PAGENEST_COMPATIBILITY_PROFILE_FILE` opts into advanced external integration. Its readable JSON file must be **outside the WordPress web root (`ABSPATH`)**, with `schema_version: 1` and an explicit `experience` object.
+
+This mode retains existing configuration, ledger, balances and panel page; activation does not run the native installer. Missing, incomplete or invalid external configuration disables experience and **never falls back to an empty native ledger**. The constant is a retained shared interface; experience and levels do not require PageNest Companion. Its like service is required only for like milestones.
 
 ## Integration checklist
 
-1. Confirm WordPress 6.0+ and PHP 8.0+, and back up the affected configuration and storage.
-2. Verify the existing event ledger and `reader_experience_balance` projection, including matching balances, unique event keys and compatible fields. The ledger, WordPress user metadata and post metadata must use InnoDB for transactional writes.
-3. Configure the external profile below before enabling the plugin. An existing live option with stored value `1` is also required by `Reader_Experience::ready()`; readiness does not itself validate table structure.
-4. Disable the previous experience owner and update any server early-loading entry. Preserve route, shortcode and scheduled-hook aliases required by the site.
-5. Install the Release ZIP, add the configured shortcode and verify integration in an isolated environment.
+Only advanced external deployments need these checks; ordinary first-time installations can skip them:
 
-Opening settings works even when experience is not ready. Editing rewards cannot repair a missing profile or initialize a ledger.
+1. Confirm WordPress 6.0+, PHP 8.0+, and back up affected configuration and storage.
+2. Verify the event ledger, `reader_experience_balance` projection and matching balances, unique event keys and compatible fields. Ledger, user metadata and post metadata must use InnoDB.
+3. Prepare the external profile and confirm the existing live option stores `1`. Readiness in this mode does not itself validate table structure.
+4. Where another experience implementation exists, establish one owner and retain required route, shortcode and scheduling aliases.
+5. Verify the integration in isolation before following your site’s deployment process.
 
-## External JSON profile
-
-Define `PAGENEST_COMPATIBILITY_PROFILE_FILE` in server configuration. It must point to a readable JSON file outside `ABSPATH`, with `schema_version: 1` and an explicit `experience` object. No profile, missing experience configuration or a validation error keeps `ready()` false; loading neither installs a ledger nor recomputes balances.
-
-The constant name is a retained shared configuration interface. Core experience and levels do not require PageNest Companion; its like service is required only for like milestones.
+A fresh native install refuses to adopt an unowned same-name ledger, existing experience balances or rules; data is preserved for explicit integration. This is not a myCRED migration feature.
 
 ## Profile fields
 
@@ -45,7 +57,7 @@ The `site_tools_account_panel` filter returns the existing experience panel when
 
 ## Global rule settings
 
-Administrators can open **Settings → WP XP Core** to configure rewards, reading/comment daily caps and 1–100 increasing level thresholds. The validated `wp_xp_core_rules` option is separate from the external deployment profile; reads never create it. Missing or invalid settings use the original defaults. See the [user guide](GUIDE.en.md) for ranges and defaults.
+Administrators can open **Settings → WP XP Core** to configure rewards, reading/comment daily caps and 1–100 increasing level thresholds. Rules use `wp_xp_core_rules`; advanced external profiles continue to configure storage and integration. Reading never creates the option. Missing or invalid settings use the original defaults. See the [user guide](GUIDE.en.md) for ranges and defaults.
 
 Saving requires `manage_options` and a valid nonce. A database-scoped advisory lock serializes settings saves; a revision hash rejects stale forms, and invalid values leave the previous option untouched. An event transaction snapshots one complete policy. Zero rewards retain idempotency markers; zero caps suppress that reward category. Author milestone counts and XP are configurable in three stable tiers per kind. Historical events are not recalculated: comment reversals and restorations use the original event amount. Level changes immediately affect display without rewriting balances. No individual account adjustment interface is provided.
 
@@ -68,6 +80,8 @@ Level inputs submit an ordered array. The first value is read-only zero; add/rem
 The `site_tools_user_level` filter receives `($fallback, $user_id)` and returns `Level N` when ready, or the original fallback otherwise. It reads no rank posts and has no third-party provider dependency. The plugin preserves the configured weekly schedule and rotates game weekly scores using the same scoring lock as verified settlement.
 
 ## Compatibility and upgrades
+
+Version 1.4.0 adds native first-install setup. Sites with valid external configuration retain it during updates, with no table creation, recalculation or native initialization.
 
 When upgrading from versions before 1.1.0, migrate existing balances exactly to `reader_experience_balance` and remove `rank_option` from the external experience profile. This release does not perform that migration. Storage, route aliases and shortcode aliases continue to be configured externally; keep historic aliases needed by existing content. Invalid retired profile fields keep the policy disabled.
 

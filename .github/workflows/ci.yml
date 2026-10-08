@@ -82,13 +82,61 @@ jobs:
             dist/release-validation.json
           if-no-files-found: error
 
+  wordpress:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['8.0', '8.2']
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: synthetic-ci-password
+          MYSQL_ROOT_HOST: '%'
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost -psynthetic-ci-password"
+          --health-interval=10s --health-timeout=5s --health-retries=10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.source_sha || github.sha }}
+          persist-credentials: false
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: mysqli, mbstring, dom
+          coverage: none
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Download pinned WP-CLI
+        run: curl --fail --location --output /tmp/wp-cli.phar https://github.com/wp-cli/wp-cli/releases/download/v2.12.0/wp-cli-2.12.0.phar
+      - name: Run fresh WordPress installation, panel and concurrent reward regressions
+        env:
+          WP_XP_TEST_DATABASE: wp_xp_core_ci
+          WP_XP_TEST_DB_HOST: 127.0.0.1:3306
+          WP_XP_TEST_DB_USER: root
+          WP_XP_TEST_DB_PASSWORD: synthetic-ci-password
+        run: python3 tools/wp-integration.py --wp-cli /tmp/wp-cli.phar --lab /tmp/wp-xp-core-ci --core-version 6.8.3
+      - name: Preserve synthetic WordPress evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wp-xp-core-wordpress-${{ matrix.php }}-${{ inputs.source_sha || github.sha }}
+          path: /tmp/wp-xp-core-ci/results.json
+          if-no-files-found: ignore
+
   required:
     name: Required checks
     if: always()
-    needs: verify
+    needs: [verify, wordpress]
     runs-on: ubuntu-latest
     steps:
       - name: Require every verification job to succeed
         env:
           VERIFY_RESULT: ${{ needs.verify.result }}
-        run: test "$VERIFY_RESULT" = success
+          WORDPRESS_RESULT: ${{ needs.wordpress.result }}
+        run: test "$VERIFY_RESULT" = success && test "$WORDPRESS_RESULT" = success

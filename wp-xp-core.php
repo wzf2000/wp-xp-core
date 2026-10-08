@@ -9,14 +9,16 @@
  * Requires PHP: 8.0
  * Requires at least: 6.0
  * Update URI: https://github.com/wzf2000/wp-xp-core
- * Version: 1.3.1
+ * Version: 1.4.0
  */
 defined('ABSPATH') || exit();
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/settings.php';
+require_once __DIR__ . '/lifecycle.php';
+register_activation_hook(__FILE__, [WP_XP_Core_Lifecycle::class, 'activate']);
 final class Reader_Experience
 {
-    const VERSION = '1.3.1';
+    const VERSION = '1.4.0';
     const BALANCE_META = 'reader_experience_balance';
     const MINS = [0, 5, 20, 60, 150, 300, 600, 1000, 1800, 3000];
     private static bool $writing = false;
@@ -24,12 +26,19 @@ final class Reader_Experience
     {
         global $wpdb;
         return reader_experience_configured() &&
+            (!reader_experience_native() || WP_XP_Core_Lifecycle::installed()) &&
             $wpdb->get_var(
                 $wpdb->prepare(
                     "SELECT option_value FROM {$wpdb->options} WHERE option_name=%s",
                     reader_experience_config('live_option'),
                 ),
             ) === '1';
+    }
+    public static function balance_meta(): string
+    {
+        return reader_experience_native() && function_exists('is_multisite') && is_multisite()
+            ? $GLOBALS['wpdb']->prefix . self::BALANCE_META
+            : self::BALANCE_META;
     }
     public static function table(): string
     {
@@ -52,6 +61,9 @@ final class Reader_Experience
     {
         if (!defined('WP_CLI') || !WP_CLI) {
             throw new RuntimeException('CLI only');
+        }
+        if (reader_experience_native()) {
+            throw new RuntimeException('Activate WP XP Core to install native storage.');
         }
         global $wpdb;
         self::q(
@@ -105,7 +117,7 @@ final class Reader_Experience
     }
     public static function guard($check, $uid, $key)
     {
-        return $key === self::BALANCE_META && !self::$writing ? false : $check;
+        return $key === self::balance_meta() && !self::$writing ? false : $check;
     }
     public static function set_balance(int $uid, int $value): void
     {
@@ -114,17 +126,17 @@ final class Reader_Experience
         }
         wp_cache_delete($uid, 'user_meta');
         $value = max(0, $value);
-        $existing = metadata_exists('user', $uid, self::BALANCE_META);
-        $previous = get_user_meta($uid, self::BALANCE_META, true);
-        $saved = update_user_meta($uid, self::BALANCE_META, $value);
+        $existing = metadata_exists('user', $uid, self::balance_meta());
+        $previous = get_user_meta($uid, self::balance_meta(), true);
+        $saved = update_user_meta($uid, self::balance_meta(), $value);
         // WordPress returns false for both a failed write and an unchanged existing value.
         if ($saved === false && (!$existing || (string) $previous !== (string) $value)) {
             throw new RuntimeException('Experience write failed');
         }
         wp_cache_delete($uid, 'user_meta');
         if (
-            !metadata_exists('user', $uid, self::BALANCE_META) ||
-            (string) get_user_meta($uid, self::BALANCE_META, true) !== (string) $value
+            !metadata_exists('user', $uid, self::balance_meta()) ||
+            (string) get_user_meta($uid, self::balance_meta(), true) !== (string) $value
         ) {
             throw new RuntimeException('Experience write failed');
         }
@@ -196,7 +208,7 @@ final class Reader_Experience
         );
         if ($xp !== 0) {
             wp_cache_delete($uid, 'user_meta');
-            self::set_balance($uid, (int) get_user_meta($uid, self::BALANCE_META, true) + $xp);
+            self::set_balance($uid, (int) get_user_meta($uid, self::balance_meta(), true) + $xp);
         }
         return true;
     }
@@ -215,7 +227,7 @@ final class Reader_Experience
     {
         global $wpdb;
         wp_cache_delete($uid, 'user_meta');
-        $xp = (int) get_user_meta($uid, self::BALANCE_META, true);
+        $xp = (int) get_user_meta($uid, self::balance_meta(), true);
         $level = self::level($xp);
         return [
             'experience' => $xp,
@@ -597,7 +609,7 @@ final class Reader_Experience
     }
     public static function legacy(): void
     {
-        if (!self::ready()) {
+        if (!reader_experience_external() || !self::ready()) {
             return;
         }
         remove_all_actions('wp_ajax_bigfa_like');
@@ -613,7 +625,7 @@ final class Reader_Experience
     }
     public static function weekly(): void
     {
-        if (!self::ready()) {
+        if (!reader_experience_external() || !self::ready()) {
             return;
         }
         global $wpdb;
@@ -756,7 +768,7 @@ function reader_experience_user_level($fallback, $uid)
     }
     return 'Level ' .
         Reader_Experience::level(
-            (int) get_user_meta((int) $uid, Reader_Experience::BALANCE_META, true),
+            (int) get_user_meta((int) $uid, Reader_Experience::balance_meta(), true),
         );
 }
 add_filter('site_tools_user_level', 'reader_experience_user_level', 10, 2);

@@ -4,6 +4,7 @@ define('ABSPATH', __DIR__);
 define('DB_NAME', 'fixture');
 define('ARRAY_A', PDO::FETCH_ASSOC);
 function add_action(...$args) {}
+function register_activation_hook(...$args) {}
 $GLOBALS['likes_enabled'] = true;
 function pagenest_companion_like() {}
 function pagenest_companion_feature($name)
@@ -192,8 +193,11 @@ function update_option($key, $value, $autoload = null)
         ),
     ) > 0;
 }
+$profile = tempnam(sys_get_temp_dir(), 'wp-xp-core-runtime-');
+file_put_contents($profile, json_encode(['schema_version' => 1, 'experience' => []]));
+define('PAGENEST_COMPATIBILITY_PROFILE_FILE', $profile);
+register_shutdown_function(static fn() => unlink($profile));
 require dirname(__DIR__) . '/wp-xp-core.php';
-$GLOBALS['reader_experience_profile'] = reader_experience_validate([]);
 $checks = 0;
 function verify($name, $condition)
 {

@@ -5,8 +5,8 @@ Bug fixes, documentation improvements and feature proposals are welcome. Discuss
 
 ## 本地开发 / Local development
 
-使用 Git 工作副本、PHP 8.0+、Node.js 24 和 Python 3.12。依赖已固定在本仓库；贡献与测试无需生产站点凭据。当前插件接入预先配置的外部 JSON 和已有账本，不是自动建表的通用安装器。
-Use a Git checkout, PHP 8.0+, Node.js 24 and Python 3.12. Development dependencies are pinned here; contribution and tests need no production credentials. The plugin connects to a preconfigured external JSON profile and an existing ledger; it does not automatically provision tables.
+使用 Git 工作副本、PHP 8.0+、Node.js 24 和 Python 3.12。依赖已固定在本仓库；贡献与测试无需生产站点凭据。原生安装在启用时创建账本；可选外部接入保留已有存储。安装测试使用合成夹具，不连接生产数据库。
+Use a Git checkout, PHP 8.0+, Node.js 24 and Python 3.12. Development dependencies are pinned here; contribution and tests need no production credentials. Native activation creates its ledger; optional external integration retains existing storage. Installation fixtures are synthetic and never connect to production databases.
 
 ```sh
 npm ci --ignore-scripts
@@ -32,8 +32,8 @@ Maintain both READMEs together for behavior, configuration, installation and rel
 
 ## Pull Request 与发布 / Pull Requests and releases
 
-PR 与推送共享只读 CI，`Required checks` 汇总所有验证结果。格式检查、PHP 语法、运行测试、浏览器测试和不可变安装包校验均须通过。安装包要求完整提交；本地未提交修改导致打包失败是预期保护。
-Pull Requests and pushes share read-only CI. `Required checks` aggregates all verification results. Formatting, PHP syntax, runtime tests, browser tests and immutable package verification must pass. Packaging requires a committed checkout; refusing uncommitted changes is intentional.
+PR 与推送共享只读 CI，`Required checks` 汇总所有验证结果。格式检查、PHP 语法、运行测试、浏览器测试、真实 WordPress／MySQL 安装与并发测试，以及不可变安装包校验均须通过。安装包要求完整提交；本地未提交修改导致打包失败是预期保护。
+Pull Requests and pushes share read-only CI. `Required checks` aggregates all verification results. Formatting, PHP syntax, runtime tests, browser tests, real WordPress/MySQL installation and concurrency tests, and immutable package verification must pass. Packaging requires a committed checkout; refusing uncommitted changes is intentional.
 
 维护者发布见 [发布流程](docs/RELEASING.md)。贡献者不需要创建标签；手动 GitHub 发布工作流会安全地创建新标签和附件。发布与站点部署相互独立。
 See [Releasing](docs/RELEASING.md) for maintainer steps. Contributors need not create tags; the manual release workflow creates new tags and verified attachments. Publishing does not deploy to a site.

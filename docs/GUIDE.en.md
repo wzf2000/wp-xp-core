@@ -2,15 +2,25 @@
 
 [简体中文](GUIDE.md) · English · [Back to overview](../README.en.md)
 
-This guide is for site administrators whose server integration is already complete. Before installation, read [Configuration and integration](CONFIGURATION.en.md).
+This guide is for site administrators. From 1.4.0, new sites can install and activate with default rules, without server JSON configuration. See [Get started](../README.en.md#get-started) for installation.
 
-## Place the experience panel
+## Create an experience page
 
-1. Edit the WordPress page used for accounts or a personal dashboard.
-2. Add a **Shortcode** block containing `[reader_experience]`, or the actual shortcode name from your server profile.
-3. Save the page. Signed-in users can see experience, level and experience needed for the next level, check in and expand recent history. Signed-out users see a login link.
+An experience page is a normal WordPress page displaying the currently signed-in user’s experience. You do not need an existing account page or account plugin.
 
-Recent history belongs to the current signed-in user. The profile’s `panel_page_id` can specify the panel page used for login links; zero uses the current page or home. See [Profile fields](CONFIGURATION.en.md#profile-fields).
+1. Open **Pages → Add New Page**, and enter **My experience** as the title, or choose another title.
+2. Click the editor’s **+** button, search for **Shortcode**, and add that block.
+3. Paste the following into its input:
+
+   ```text
+   [reader_experience]
+   ```
+
+4. Click **Publish** and confirm. Use a public page without password protection. Anonymous visitors see a login link, not another user’s experience history.
+5. Open **Settings → WP XP Core → 添加经验面板** (Add experience panel), select the published page and click **保存面板页面** (Save panel page). This only selects a link destination; it does not create or publish a page.
+6. Open that page and sign in to view XP, level, progress, check-in and recent records. The admin bar’s experience link and the login return link also point there.
+
+You can add the page to your site’s navigation using WordPress’s menu/navigation editor. Without a selected page, links use the current page or home. Advanced external integrations retain their configured panel page and shortcode; see [Optional external configuration](CONFIGURATION.en.md#optional-external-configuration).
 
 ## Set experience rules
 
@@ -55,7 +65,9 @@ Reward changes apply only to events first recorded afterward. Historical experie
 
 ### Why does the panel say the system is under maintenance?
 
-An accessible settings page does not mean experience is ready. Ask your administrator to verify a valid, readable JSON profile outside the web root, an explicit `experience` object and the configured live option set to `1`. Existing ledger and balance storage must also be compatible. See [Integration checklist](CONFIGURATION.en.md#integration-checklist).
+On a new site, first confirm successful plugin activation. If activation fails, follow its message to check database permissions and InnoDB support; the plugin does not convert other WordPress tables. Deactivation and reactivation preserve the ledger and settings rather than resetting XP.
+
+For an advanced external integration, follow the [integration checklist](CONFIGURATION.en.md#integration-checklist) to check its profile and live switch. Invalid configuration does not silently fall back to a new empty ledger.
 
 ### Why did reading or commenting award no XP?
 
