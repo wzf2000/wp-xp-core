@@ -1,58 +1,86 @@
-# Configuration and retained policy
+# 服务器配置与集成
 
-Define `PAGENEST_COMPATIBILITY_PROFILE_FILE` in server configuration. It must point to a readable JSON file outside `ABSPATH`, with `schema_version: 1` and an explicit `experience` object. No profile, missing experience configuration or a validation error keeps `ready()` false; loading neither installs a ledger nor recomputes balances.
+简体中文 · [English](CONFIGURATION.en.md) · [返回首页](../README.md) · [使用指南](GUIDE.md)
 
-The ten fields are:
+本页面向服务器管理员与集成开发者。1.3.1 接入兼容的已有经验存储；全新站点需另行制定建表与初始化方案，当前安装包没有首次初始化向导。
 
-| Field            | Purpose                                                                 |
-| ---------------- | ----------------------------------------------------------------------- |
-| `table_suffix`   | Existing event table, appended to the WordPress table prefix            |
-| `live_option`    | Existing live policy flag                                               |
-| `week_option`    | Existing weekly rotation marker                                         |
-| `event_lock`     | Ledger transaction lock, scoped to the database                         |
-| `weekly_lock`    | Exact shared weekly scoring lock, at most 64 ASCII bytes                |
-| `rest_namespace` | Primary authenticated REST namespace                                    |
-| `rest_aliases`   | Compatibility namespace list, same handlers and permission checks       |
-| `shortcodes`     | Experience panel shortcode names                                        |
-| `panel_page_id`  | Existing panel page ID; zero uses the current page or home              |
-| `weekly_hook`    | Existing weekly scheduling hook; this plugin does not create a schedule |
+## 接入核对
 
-Defaults use neutral names. Configure existing names before replacing an old owner. Unknown fields, invalid identifiers and malformed aliases are rejected. The weekly lock must match the scoring owner's lock exactly; event locks remain isolated by database.
+1. 确认 WordPress 6.0+、PHP 8.0+，备份受影响配置与存储。
+2. 核对已有事件账本、`reader_experience_balance` 余额投影及二者的一致性，确认事件键唯一、字段兼容。账本、WordPress 用户元数据表与文章元数据表需使用 InnoDB，以支持事务写入。
+3. 启用前准备下述外部配置。`Reader_Experience::ready()` 还要求已配置运行选项的存储值为 `1`；该就绪判断本身不校验表结构。
+4. 停用旧经验管理副本，同时更新服务器提前加载入口。保留现有页面所需的路由、短代码与定时钩子别名。
+5. 安装 Release ZIP，放置短代码，并在隔离环境验证接入。
 
-Companion's `pagenest_like_recorded(user_id, post_id, count)` is consumed idempotently using the existing `like:user:post` event format with zero XP. A stored event suppresses duplicates. Companion persists its own like count and new-user record atomically; experience ledger writes remain a separate transaction. A later idempotent like retry can deliver an experience event whose previous delivery failed.
+经验系统未就绪时，设置页仍可访问。调整奖励无法修复缺失配置，也不会初始化账本。
 
-The `site_tools_account_panel` filter returns the existing experience panel when ready. The callback keeps the incoming value when the policy is unavailable. No other plugin needs to reference the implementation class.
+## 外部 JSON 配置
 
-## Independent storage and integration
+在服务器配置中定义 `PAGENEST_COMPATIBILITY_PROFILE_FILE`，指向 **Web 根目录（`ABSPATH`）之外**可读取的 JSON 文件。顶层必须包含 `schema_version: 1` 和显式 `experience` 对象。配置缺失、无经验对象或校验失败时，经验系统保持不可用；加载不建表或重算余额。
 
-`reader_experience_balance` is the only running balance projection. The existing event ledger remains the source of changes; no cumulative or rank metadata is written. The default ten minimum balances are `0, 5, 20, 60, 150, 300, 600, 1000, 1800, 3000`, and levels are computed on demand using the currently configured thresholds. Metadata writes outside the ledger transaction are rejected, including ordinary add, update and delete calls.
+该常量是现有共享配置接口名称。经验与等级本身不要求安装 PageNest Companion；启用点赞里程碑时才需要可用的 Companion 点赞服务。
 
-The `site_tools_user_level` filter receives `($fallback, $user_id)` and returns `Level N` when ready, or the original fallback otherwise. It reads no rank posts and has no third-party provider dependency. The plugin preserves the configured weekly schedule and rotates game weekly scores using the same scoring lock as verified settlement.
+## 配置字段
 
-When upgrading from versions before 1.1.0, migrate existing balances exactly to `reader_experience_balance` and remove `rank_option` from the external experience profile. This release does not perform that migration. Storage, route aliases and shortcode aliases continue to be configured externally; keep historic aliases needed by existing content. Invalid retired profile fields keep the policy disabled.
+`experience` 对象支持以下十个字段。未填写字段使用 `config.php` 中的默认值；替换旧系统时应明确核对已有名称。
 
-## Package rename in 1.1.1
+| 字段             | 用途                                            |
+| ---------------- | ----------------------------------------------- |
+| `table_suffix`   | 已有事件表后缀，自动加 WordPress 表前缀         |
+| `live_option`    | 已有经验运行状态选项                            |
+| `week_option`    | 已有周轮换状态选项                              |
+| `event_lock`     | 账本事务锁，按数据库隔离                        |
+| `weekly_lock`    | 共享周榜结算锁的精确名称，最多 64 个 ASCII 字节 |
+| `rest_namespace` | 主 REST 命名空间，带登录与权限校验              |
+| `rest_aliases`   | 兼容命名空间列表，共用处理器与权限校验          |
+| `shortcodes`     | 经验面板短代码名称列表                          |
+| `panel_page_id`  | 面板页面 ID；0 使用当前页面或首页               |
+| `weekly_hook`    | 已有每周调度钩子；插件不创建定时任务            |
 
-WP XP Core uses the new plugin basename `wp-xp-core/wp-xp-core.php`. The rename requires switching the active plugin entry, with the old entry disabled before the new one is loaded. Switch any server early-loading basename reference at the same time. Keep the existing profile, ledger, balance metadata, options and scheduled hook unchanged. No data migration or initialization runs as part of this rename. The retained `Reader_Experience` class, `reader_experience_*` functions, default REST namespace and shortcode, CSS selectors, JavaScript global and asset handles are compatibility interfaces rather than package names.
+默认名称为通用标识。未知字段、无效标识符与错误别名会被拒绝；`weekly_lock` 必须与成绩结算方的锁完全一致，事件锁按数据库隔离。顶层可用共享字段及具体校验范围以 `config.php` 为准。
 
-## Global rules in 1.2.0
+## 全站规则设置
 
-Administrators can open **Settings → WP XP Core** to configure rewards, reading/comment daily caps and 1–100 increasing level thresholds. The validated `wp_xp_core_rules` option is separate from the external deployment profile; reads never create it. Missing or invalid settings use the original defaults. See the [Chinese README](../README.md) or [English README](../README.en.md) for ranges and defaults.
+后台 **设置 → WP XP Core** 管理活动奖励、阅读／评论每日次数和 1–100 级门槛。取值范围、默认规则与操作步骤见[使用指南](GUIDE.md#设置经验规则)。
 
-Saving requires `manage_options` and a valid nonce. A database-scoped advisory lock serializes settings saves; a revision hash rejects stale forms, and invalid values leave the previous option untouched. An event transaction snapshots one complete policy. Zero rewards retain idempotency markers; zero caps suppress that reward category. Author milestone counts and XP are configurable in three stable tiers per kind. Historical events are not recalculated: comment reversals and restorations use the original event amount. Level changes immediately affect display without rewriting balances. No individual account adjustment interface is provided.
+规则保存在独立选项 `wp_xp_core_rules` 中，不替代外部部署配置。读取不会创建选项，缺失或无效时使用默认值。保存需要 `manage_options` 和有效 nonce；数据库隔离的建议锁串行化保存，版本摘要拒绝过期表单，无效输入保留原设置。每个事件事务使用一份完整规则快照。
 
-The settings screen groups activity rules, author milestones and levels in responsive cards. Its information sidebar links to the author, license and source repository. The `admin_css` and `admin_js` asset manifest entries are content-hashed and enqueued only for `settings_page_wp-xp-core`; it adds no external fonts, scripts or network dependencies. Plugin metadata identifies the author and repository; `Update URI` does not implement an automatic updater.
+零奖励保留幂等事件，零每日次数停止对应奖励。历史事件不重算，评论撤销与恢复始终使用首次金额；等级变更即时影响展示，不改余额。当前没有单用户调分入口。
 
-## Editable milestones and level lists in 1.3.0
+后台按卡片分组并适配窄屏，信息侧栏包含作者、许可与源码入口。`admin_css`／`admin_js` 使用内容哈希，仅在 `settings_page_wp-xp-core` 加载；不引入外部字体、脚本或网络依赖。
 
-The six `view_100_threshold`, `view_500_threshold`, `view_1000_threshold`, `like_10_threshold`, `like_30_threshold` and `like_100_threshold` fields store current counts. Their suffixes are stable tier identifiers, not the configured counts. Each group must strictly increase within 1–1000000000. Complete old policies without all six fields normalize in memory using defaults; partial new policies are invalid. No load-time migration or option write occurs.
+### 里程碑标识与等级列表
 
-Milestone keys remain `milestone:kind:post:originalSlot`, preserving claimed tiers across threshold changes. New events record the actual threshold in detail. Saving does not award XP or reset tiers. On the next qualifying event, unclaimed tiers use cumulative ledger counts, including previously recorded activity. Lowering a threshold can therefore qualify a previously unclaimed tier on that event.
+六个次数字段为 `view_100_threshold`、`view_500_threshold`、`view_1000_threshold`、`like_10_threshold`、`like_30_threshold`、`like_100_threshold`。名称中的数字代表稳定档位，不代表当前次数。同组次数必须在 1–1000000000 内严格递增。完整旧规则在内存中补齐默认次数；部分填写新字段的规则无效，加载不执行选项迁移或写入。
 
-Likes require both `pagenest_companion_like` and `pagenest_companion_feature`, with the `likes` feature enabled. Companion only loads these functions after its profile validates. Without this provider, the settings fieldset and runtime like awards are disabled. Under the settings save lock, omitted or forged like fields are replaced with the stored values; other rules remain editable. No independent like service is included.
+幂等键保持 `milestone:kind:post:originalSlot`，修改门槛仍保留已领取状态。新事件详情记录实际门槛。保存不发奖或重置档位；下一次有效事件按账本累计次数判断尚未领取档位，降低门槛可能使其在该事件达标。
 
-Level inputs submit an ordered array. The first value is read-only zero; add/remove controls reindex rows, with a maximum of 100. Server-side validation remains authoritative. Without JavaScript existing rows remain editable, while adding or removing rows requires JavaScript.
+点赞需同时存在 `pagenest_companion_like` 与 `pagenest_companion_feature`，且 `likes` 功能开启。Companion 配置校验通过后才加载这些函数。服务不可用时，后台点赞字段和运行时点赞奖励禁用；保存锁内会将缺失或伪造的点赞字段替换为已保存值，其余规则仍可编辑。插件不包含独立点赞服务。
 
-## Optional legacy integration
+等级提交为有序数组，第一个值为只读 0，增删控件重排索引，最多 100 项。服务端校验始终生效；没有 JavaScript 时仍可编辑已有行，增删需要 JavaScript。
 
-The configured `weekly_hook` and `weekly_lock` retain the existing shared weekly game-score reset integration for deployments that use it. This compatibility code is unchanged; it does not award experience and is not part of the settings UI. Configure the integration only for a site with the corresponding score metadata and scheduler.
+## 账本与展示集成
+
+`reader_experience_balance` 是唯一现用余额投影，事件账本是增减依据。不写累计或等级元数据；按当前门槛即时计算等级。默认十级最低经验为 `0、5、20、60、150、300、600、1000、1800、3000`。事务外的普通元数据添加、更新或删除会被拒绝。
+
+| 接口                                              | 行为                                                         |
+| ------------------------------------------------- | ------------------------------------------------------------ |
+| `pagenest_like_recorded(user_id, post_id, count)` | 以 `like:user:post` 零经验事件幂等记录点赞，再判断作者里程碑 |
+| `site_tools_account_panel`                        | 就绪时提供经验面板，否则保留传入内容                         |
+| `site_tools_user_level($fallback, $user_id)`      | 就绪时返回 `Level N`，否则保留原值                           |
+
+Companion 原子保存点赞总数与新用户记录，经验记账另属独立事务；后续幂等点赞重试可重投递之前失败的经验事件。集成方无需引用插件实现类，等级读取不依赖旧等级文章或第三方提供者。旧点赞 REST 别名转交 Companion 处理；停用经验系统不影响 Companion 的点赞服务。
+
+## 兼容与升级
+
+**从 1.1.1 升级：** 无需数据迁移。已有完整自定义规则在内存补齐默认里程碑次数，保留奖励和等级，不自动保存。没有自定义规则时继续使用默认值。`Update URI` 标识源码仓库，未实现自动更新器。
+
+**从旧 Reader Experience 切换：** 1.1.1 将入口改为 `wp-xp-core/wp-xp-core.php`。先停用 `reader-experience/reader-experience.php`，再启用新入口，避免同时加载。WordPress 将两者视为不同插件，服务器提前加载引用也须同时切换。保留原配置、账本、余额、选项与定时钩子；改名不执行初始化或数据迁移。
+
+**从 1.1.0 之前的存储迁移：** 需将已有余额精确迁移至 `reader_experience_balance`，并从外部配置移除已退役 `rank_option`。当前版本不自动执行该迁移。保留历史页面需要的路由与短代码别名；已退役配置字段会使经验系统禁用。
+
+`Reader_Experience` 类、`reader_experience_*` 函数、默认 REST 命名空间与短代码、CSS 选择器、JavaScript 全局对象和资源句柄属于兼容接口，不是待替换的插件名称。
+
+## 可选旧系统集成
+
+`weekly_hook`／`weekly_lock` 保留已有每周游戏成绩轮换，使用与成绩结算相同的锁；它不发经验，也不属于设置界面。仅在对应成绩元数据与调度已存在的站点接入。该兼容实现保持不变。

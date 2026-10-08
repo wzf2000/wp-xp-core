@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="360" viewBox="0 0 1200 360" role="img" aria-labelledby="title desc">
+  <title id="title">WP XP Core</title>
+  <desc id="desc">Experience for participation. Levels for progress. A decorative example shows Level 4 progressing toward Level 5.</desc>
+  <defs><linearGradient id="bg" x2="1" y2="1"><stop stop-color="#101b38"/><stop offset="1" stop-color="#282365"/></linearGradient><linearGradient id="xp"><stop stop-color="#818cf8"/><stop offset="1" stop-color="#5eead4"/></linearGradient></defs>
+  <rect width="1200" height="360" rx="24" fill="url(#bg)"/>
+  <circle cx="1130" cy="20" r="240" fill="#818cf8" opacity=".08"/>
+  <circle cx="80" cy="355" r="150" fill="#5eead4" opacity=".05"/>
+  <g font-family="system-ui, sans-serif">
+    <text x="64" y="91" fill="#a5b4fc" font-size="16" letter-spacing="3">WORDPRESS EXPERIENCE SYSTEM</text>
+    <text x="60" y="170" fill="#ffffff" font-size="62" font-weight="700">WP XP Core</text>
+    <text x="64" y="223" fill="#cbd5e1" font-size="22">Experience for participation. Levels for progress.</text>
+    <text x="64" y="291" fill="#a5b4fc" font-size="16">CONFIGURABLE REWARDS · MILESTONES · LEVELS</text>
+    <rect x="755" y="76" width="380" height="208" rx="20" fill="#ffffff" fill-opacity=".07" stroke="#a5b4fc" stroke-opacity=".3"/>
+    <text x="785" y="122" fill="#cbd5e1" font-size="15">YOUR PROGRESS</text>
+    <text x="785" y="179" fill="#ffffff" font-size="34" font-weight="600">Level 4</text>
+    <text x="1105" y="178" text-anchor="end" fill="#5eead4" font-size="19">+ XP</text>
+    <rect x="785" y="207" width="320" height="10" rx="5" fill="#ffffff" fill-opacity=".12"/>
+    <rect x="785" y="207" width="220" height="10" rx="5" fill="url(#xp)"/>
+    <text x="785" y="250" fill="#cbd5e1" font-size="15">Every contribution counts</text>
+    <text x="1105" y="250" text-anchor="end" fill="#a5b4fc" font-size="15">Level 5 →</text>
+  </g>
+</svg>
