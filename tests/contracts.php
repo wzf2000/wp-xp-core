@@ -18,9 +18,15 @@ function check($name, $condition)
     }
     $checks++;
 }
+check('absent like provider disabled', WP_XP_Core_Settings::likes_ready() === false);
 check('unconfigured ready false', Reader_Experience::ready() === false);
 check('no policy hooks on load', $hooks === ['admin_menu', 'admin_enqueue_scripts']);
 $admin_styles = [];
+$admin_scripts = [];
+function wp_enqueue_script(...$args)
+{
+    $GLOBALS['admin_scripts'][] = $args;
+}
 function plugins_url($path, $file)
 {
     return '/plugins/wp-xp-core/' . $path;
@@ -33,6 +39,7 @@ WP_XP_Core_Settings::assets('dashboard');
 WP_XP_Core_Settings::assets('settings_page_other-plugin');
 check('admin styles absent on unrelated screens', $admin_styles === []);
 WP_XP_Core_Settings::assets('settings_page_wp-xp-core');
+check('one scoped admin script', count($admin_scripts) === 1);
 $manifest = json_decode(file_get_contents(dirname(__DIR__) . '/assets/assets.json'), true);
 check(
     'settings screen uses immutable admin stylesheet',

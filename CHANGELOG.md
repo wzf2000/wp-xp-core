@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.3.0
+
+- Configure view and like milestone counts while retaining stable claimed-tier identities and existing custom policies.
+- Edit levels as addable/removable rows with scoped immutable admin JavaScript.
+- Gate like settings and milestone recording on the available, enabled Companion provider; preserve disabled settings under save locking.
+
 ## 1.2.1
 
 - Refine settings with responsive grouped cards, contextual guidance and a plugin information sidebar.

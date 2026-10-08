@@ -80,6 +80,7 @@ async function format() {
     js: 'app.js',
     css: 'app.css',
     admin_css: 'admin.css',
+    admin_js: 'admin.js',
   })) {
     const content = fs.readFileSync(path.join(assets, name));
     const hash = crypto.createHash('sha256').update(content).digest('hex').slice(0, 12);

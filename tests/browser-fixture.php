@@ -21,3 +21,50 @@ $html =
     htmlspecialchars($assets['js']) .
     '"></script></html>';
 file_put_contents($dir . '/index.html', $html);
+
+// Render the actual PHP settings page with synthetic WordPress primitives.
+define('ABSPATH', __DIR__);
+class Reader_Experience
+{
+    const VERSION = 'fixture';
+}
+function add_action(...$args) {}
+function current_user_can(...$args)
+{
+    return true;
+}
+function get_option($key, $default = false)
+{
+    return $default;
+}
+function esc_attr($value)
+{
+    return htmlspecialchars($value, ENT_QUOTES);
+}
+function esc_html($value)
+{
+    return htmlspecialchars($value, ENT_QUOTES);
+}
+function wp_nonce_field($action)
+{
+    echo '<input name="_wpnonce" value="fixture">';
+}
+function submit_button($label, ...$args)
+{
+    echo '<button type="submit">' . $label . '</button>';
+}
+$_SERVER['REQUEST_METHOD'] = 'GET';
+require $root . '/settings.php';
+ob_start();
+WP_XP_Core_Settings::page();
+$markup = ob_get_clean();
+file_put_contents(
+    $dir . '/admin.html',
+    '<!doctype html><html lang="zh"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><link rel="stylesheet" href="' .
+        $assets['admin_css'] .
+        '">' .
+        $markup .
+        '<script src="' .
+        $assets['admin_js'] .
+        '"></script></html>',
+);

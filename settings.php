@@ -28,12 +28,31 @@ final class WP_XP_Core_Settings
             'like_10' => 5,
             'like_30' => 10,
             'like_100' => 20,
+            'view_100_threshold' => 100,
+            'view_500_threshold' => 500,
+            'view_1000_threshold' => 1000,
+            'like_10_threshold' => 10,
+            'like_30_threshold' => 30,
+            'like_100_threshold' => 100,
             'levels' => [0, 5, 20, 60, 150, 300, 600, 1000, 1800, 3000],
         ];
     }
     public static function validate($input): array
     {
         $defaults = self::defaults();
+        // Old complete policies gain thresholds in memory only; partial new policies are invalid.
+        $legacy = array_filter(
+            $defaults,
+            fn($key) => !str_ends_with($key, '_threshold'),
+            ARRAY_FILTER_USE_KEY,
+        );
+        if (
+            is_array($input) &&
+            !array_diff(array_keys($input), array_keys($legacy)) &&
+            !array_diff(array_keys($legacy), array_keys($input))
+        ) {
+            $input = array_replace($defaults, $input);
+        }
         if (
             !is_array($input) ||
             array_diff(array_keys($input), array_keys($defaults)) ||
@@ -46,19 +65,31 @@ final class WP_XP_Core_Settings
             if ($key === 'levels') {
                 continue;
             }
-            $max = str_ends_with($key, '_limit') ? 1000 : 1000000;
+            $threshold = str_ends_with($key, '_threshold');
+            $max = $threshold ? 1000000000 : (str_ends_with($key, '_limit') ? 1000 : 1000000);
             $value = $input[$key];
             if (
                 (!is_int($value) && !is_string($value)) ||
                 !preg_match('/^(0|[1-9][0-9]*)$/D', (string) $value) ||
-                strlen((string) $value) > 7 ||
+                strlen((string) $value) > 10 ||
+                ($threshold && (int) $value < 1) ||
                 (int) $value > $max
             ) {
                 throw new InvalidArgumentException(
-                    '经验必须为 0–1000000 的整数，每日次数必须为 0–1000 的整数。',
+                    '经验须为 0–1000000，每日次数须为 0–1000，里程碑次数须为 1–1000000000 的整数。',
                 );
             }
             $out[$key] = (int) $value;
+        }
+        foreach (self::tiers() as $kind => $slots) {
+            $previous = 0;
+            foreach ($slots as $slot) {
+                $value = $out[$kind . '_' . $slot . '_threshold'];
+                if ($value <= $previous) {
+                    throw new InvalidArgumentException('每组里程碑次数必须严格递增。');
+                }
+                $previous = $value;
+            }
         }
         $levels = $input['levels'];
         if (is_string($levels)) {
@@ -115,11 +146,6 @@ final class WP_XP_Core_Settings
         if (!is_string($nonce) || !wp_verify_nonce($nonce, 'wp_xp_core_settings')) {
             return new WP_Error('nonce', '验证已过期，请刷新设置页。', ['status' => 403]);
         }
-        try {
-            $rules = self::validate($input);
-        } catch (InvalidArgumentException $e) {
-            return new WP_Error('input', $e->getMessage(), ['status' => 400]);
-        }
         global $wpdb;
         $lock = 'wp_xp_rules:' . hash('sha256', DB_NAME . ':' . $wpdb->prefix);
         // Serialize administrators, then compare against the exact value shown by their form.
@@ -137,6 +163,25 @@ final class WP_XP_Core_Settings
                     'status' => 409,
                 ]);
             }
+            // Disabled controls are omitted by browsers. Preserve the stored policy under the same lock,
+            // ignoring forged like fields as well, before validating the submitted complete policy.
+            if (!self::likes_ready() && is_array($input)) {
+                try {
+                    $saved = self::validate($old);
+                } catch (InvalidArgumentException $e) {
+                    $saved = self::defaults();
+                }
+                foreach (self::tiers()['like'] as $slot) {
+                    foreach (['like_' . $slot, 'like_' . $slot . '_threshold'] as $key) {
+                        $input[$key] = $saved[$key];
+                    }
+                }
+            }
+            try {
+                $rules = self::validate($input);
+            } catch (InvalidArgumentException $e) {
+                return new WP_Error('input', $e->getMessage(), ['status' => 400]);
+            }
             if ($old === $rules) {
                 return true;
             }
@@ -147,6 +192,16 @@ final class WP_XP_Core_Settings
         } finally {
             $wpdb->get_var($wpdb->prepare('SELECT RELEASE_LOCK(%s)', $lock));
         }
+    }
+    public static function tiers(): array
+    {
+        return ['view' => [100, 500, 1000], 'like' => [10, 30, 100]];
+    }
+    public static function likes_ready(): bool
+    {
+        return function_exists('pagenest_companion_like') &&
+            function_exists('pagenest_companion_feature') &&
+            (bool) pagenest_companion_feature('likes');
     }
     public static function menu(): void
     {
@@ -166,6 +221,13 @@ final class WP_XP_Core_Settings
             plugins_url('assets/' . $manifest['admin_css'], __FILE__),
             [],
             Reader_Experience::VERSION,
+        );
+        wp_enqueue_script(
+            'wp-xp-core-admin',
+            plugins_url('assets/' . $manifest['admin_js'], __FILE__),
+            [],
+            Reader_Experience::VERSION,
+            true,
         );
     }
     private static function field(string $key, string $label, array $rules): void
@@ -237,26 +299,65 @@ final class WP_XP_Core_Settings
             self::field($key, $label, $rules);
         }
         echo '</div><p class="xp-footnote">签到每日奖励一次；阅读仍需满足停留条件。次数为 0 时停发对应类别奖励。</p></section>';
-        echo '<section class="xp-card" aria-labelledby="xp-milestones-title"><div class="xp-card-heading"><span class="xp-step" aria-hidden="true">02</span><div><h2 id="xp-milestones-title">作者里程碑</h2><p>作品达到以下浏览或点赞次数时，向作者发放对应经验。</p></div></div><div class="xp-fields xp-fields-three">';
-        foreach (
-            [
-                'view_100' => '100 次浏览',
-                'view_500' => '500 次浏览',
-                'view_1000' => '1000 次浏览',
-                'like_10' => '10 次点赞',
-                'like_30' => '30 次点赞',
-                'like_100' => '100 次点赞',
-            ]
-            as $key => $label
-        ) {
-            self::field($key, $label, $rules);
+        echo '<section class="xp-card" aria-labelledby="xp-milestones-title"><div class="xp-card-heading"><span class="xp-step" aria-hidden="true">02</span><div><h2 id="xp-milestones-title">作者里程碑</h2><p>设置每一档所需次数和奖励经验。</p></div></div>';
+        foreach (self::tiers() as $kind => $slots) {
+            $disabled = $kind === 'like' && !self::likes_ready();
+            echo '<fieldset class="xp-milestone-group"' .
+                ($disabled ? ' disabled' : '') .
+                '><legend>' .
+                ($kind === 'view' ? '浏览里程碑' : '点赞里程碑') .
+                '</legend>';
+            if ($kind === 'like') {
+                echo '<p class="xp-help">' .
+                    ($disabled
+                        ? '未启用点赞服务：需要 PageNest Companion 及其点赞功能。此组暂不可编辑和发奖，已有设置会保留。'
+                        : '点赞服务已启用：由 PageNest Companion 提供，按经验账本记录的有效点赞累计。') .
+                    '</p>';
+            }
+            foreach ($slots as $i => $slot) {
+                $key = $kind . '_' . $slot;
+                echo '<div class="xp-milestone-row"><span class="xp-tier">第 ' .
+                    ($i + 1) .
+                    ' 档</span><div class="xp-field"><label for="xp-' .
+                    esc_attr($key) .
+                    '-threshold">所需' .
+                    ($kind === 'view' ? '浏览' : '点赞') .
+                    '次数</label><div class="xp-input-unit"><input id="xp-' .
+                    esc_attr($key) .
+                    '-threshold" name="rules[' .
+                    esc_attr($key) .
+                    '_threshold]" type="number" min="1" max="1000000000" step="1" required value="' .
+                    esc_attr((string) $rules[$key . '_threshold']) .
+                    '"><span>次</span></div></div>';
+                self::field($key, '奖励经验', $rules);
+                echo '</div>';
+            }
+            echo '</fieldset>';
         }
-        echo '</div><p class="xp-footnote">里程碑次数固定，每档仅奖励一次；可自定义各档奖励经验。</p></section>';
-        echo '<section class="xp-card" aria-labelledby="xp-levels-title"><div class="xp-card-heading"><span class="xp-step" aria-hidden="true">03</span><div><h2 id="xp-levels-title">等级成长</h2><p>按经验总量划分等级，当前共 ' .
-            esc_html((string) count($rules['levels'])) .
-            ' 级。</p></div></div><label class="xp-label" for="xp-levels">各级最低经验</label><textarea id="xp-levels" name="rules[levels]" rows="4" required aria-describedby="xp-levels-help">' .
-            esc_textarea(implode(', ', $rules['levels'])) .
-            '</textarea><p id="xp-levels-help" class="xp-help">按 Level 1 起依次填写，用逗号或空白分隔；首项为 0，严格递增，最多 100 级。修改门槛会立即影响等级展示，不改变经验余额。</p></section>';
+        echo '<p class="xp-footnote">每组次数须严格递增；每篇作品每档仅奖励一次，修改次数不会重置已领取档位。保存不发奖；未领取档位在下一次有效活动时按累计次数判断。</p></section>';
+        echo '<section class="xp-card" aria-labelledby="xp-levels-title"><div class="xp-card-heading"><span class="xp-step" aria-hidden="true">03</span><div><h2 id="xp-levels-title">等级成长</h2><p>逐级设置最低经验，当前共 <span id="xp-level-count">' .
+            count($rules['levels']) .
+            '</span> 级。</p></div></div><div id="xp-levels" aria-describedby="xp-levels-help">';
+        foreach ($rules['levels'] as $i => $level) {
+            echo '<div class="xp-level-row"><label for="xp-level-' .
+                $i .
+                '">Level ' .
+                ($i + 1) .
+                '</label><div class="xp-input-unit"><input id="xp-level-' .
+                $i .
+                '" name="rules[levels][' .
+                $i .
+                ']" type="number" min="0" max="1000000000" step="1" required value="' .
+                esc_attr((string) $level) .
+                '"' .
+                ($i === 0 ? ' readonly' : '') .
+                '><span>经验</span></div><button type="button" class="button xp-level-remove" aria-label="移除 Level ' .
+                ($i + 1) .
+                '"' .
+                ($i === 0 ? ' disabled' : '') .
+                '>移除</button></div>';
+        }
+        echo '</div><button type="button" class="button xp-level-add" hidden>添加等级</button><p class="xp-level-message" role="status" aria-live="polite"></p><noscript><p>启用 JavaScript 后可添加或移除等级；现有门槛仍可编辑保存。</p></noscript><p id="xp-levels-help" class="xp-help">首级固定为 0，门槛须严格递增，最多 100 级。修改门槛会立即影响等级展示，不改变经验余额。</p></section>';
         echo '<div class="xp-save"><p>奖励调整仅影响之后首次记账的事件。</p>';
         submit_button('保存经验规则', 'primary', 'submit', false);
         echo '</div></form><aside class="xp-sidebar" aria-label="插件信息与帮助"><section class="xp-card xp-about"><span class="xp-eyebrow">关于插件</span><h2>WP XP Core</h2><p>独立的 WordPress 经验与等级系统。</p><dl><div><dt>版本</dt><dd>' .

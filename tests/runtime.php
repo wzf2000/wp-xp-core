@@ -4,6 +4,12 @@ define('ABSPATH', __DIR__);
 define('DB_NAME', 'fixture');
 define('ARRAY_A', PDO::FETCH_ASSOC);
 function add_action(...$args) {}
+$GLOBALS['likes_enabled'] = true;
+function pagenest_companion_like() {}
+function pagenest_companion_feature($name)
+{
+    return $GLOBALS['likes_enabled'];
+}
 function add_filter(...$args) {}
 function add_shortcode(...$args) {}
 function wp_cache_delete(...$args)
@@ -408,6 +414,9 @@ foreach (
         ['visit_limit' => 1001],
         ['article_xp' => 1000001],
         ['comment_xp' => '2.5'],
+        ['view_100_threshold' => 0],
+        ['view_500_threshold' => 50],
+        ['like_10_threshold' => 1000000001],
         ['levels' => [1, 2]],
         ['levels' => [0, 2, 2]],
         ['levels' => [0, 1000000001]],
@@ -616,4 +625,77 @@ foreach (['view' => [100, 500, 1000], 'like' => [10, 30, 100]] as $kind => $thre
         );
     }
 }
+$legacy = array_filter(
+    $custom,
+    fn($key) => !str_ends_with($key, '_threshold'),
+    ARRAY_FILTER_USE_KEY,
+);
+update_option(WP_XP_Core_Settings::OPTION, $legacy);
+verify(
+    'legacy custom settings normalized without writes',
+    WP_XP_Core_Settings::rules() === $custom && get_option(WP_XP_Core_Settings::OPTION) === $legacy,
+);
+$partial = $custom;
+unset($partial['view_100_threshold']);
+try {
+    WP_XP_Core_Settings::validate($partial);
+    verify('partial thresholds rejected', false);
+} catch (InvalidArgumentException $e) {
+    verify('partial thresholds rejected', true);
+}
+$GLOBALS['likes_enabled'] = false;
+$disabled = $custom;
+unset(
+    $disabled['like_10'],
+    $disabled['like_30'],
+    $disabled['like_100'],
+    $disabled['like_10_threshold'],
+    $disabled['like_30_threshold'],
+    $disabled['like_100_threshold'],
+);
+verify(
+    'disabled likes omitted values preserved',
+    WP_XP_Core_Settings::save(
+        $disabled,
+        'fixture-nonce',
+        WP_XP_Core_Settings::revision($legacy),
+    ) === true && WP_XP_Core_Settings::rules() === $custom,
+);
+$disabled['like_10'] = 999;
+verify(
+    'disabled likes forged value ignored',
+    WP_XP_Core_Settings::save(
+        $disabled,
+        'fixture-nonce',
+        WP_XP_Core_Settings::revision($custom),
+    ) === true && WP_XP_Core_Settings::rules() === $custom,
+);
+Reader_Experience::liked(77, 707, 1);
+verify('disabled provider records no like event', !Reader_Experience::exists('like:77:707'));
+$GLOBALS['likes_enabled'] = true;
+$custom['view_100_threshold'] = 2;
+$custom['view_500_threshold'] = 4;
+$custom['view_1000_threshold'] = 6;
+update_option(WP_XP_Core_Settings::OPTION, $custom);
+Reader_Experience::transaction(function () {
+    for ($i = 0; $i < 2; $i++) {
+        Reader_Experience::record('newview:' . $i, 7, 'view', 706, 0, Reader_Experience::day());
+    }
+    Reader_Experience::milestones(706, 'view');
+});
+verify(
+    'custom count awards stable first slot',
+    Reader_Experience::exists('milestone:view:706:100') &&
+        !Reader_Experience::exists('milestone:view:706:500'),
+);
+$custom['view_100_threshold'] = 1;
+$custom['view_100'] = 999;
+update_option(WP_XP_Core_Settings::OPTION, $custom);
+Reader_Experience::transaction(fn() => Reader_Experience::milestones(706, 'view'));
+verify(
+    'changed count never reawards claimed slot',
+    (int) $wpdb->get_var(
+        "SELECT SUM(xp) FROM fixture_reader_experience_events WHERE event_key='milestone:view:706:100'",
+    ) === 3,
+);
 echo "$checks independent ledger runtime checks passed\n";

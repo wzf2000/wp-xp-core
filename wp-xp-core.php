@@ -9,14 +9,14 @@
  * Requires PHP: 8.0
  * Requires at least: 6.0
  * Update URI: https://github.com/wzf2000/wp-xp-core
- * Version: 1.2.1
+ * Version: 1.3.0
  */
 defined('ABSPATH') || exit();
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/settings.php';
 final class Reader_Experience
 {
-    const VERSION = '1.2.1';
+    const VERSION = '1.3.0';
     const BALANCE_META = 'reader_experience_balance';
     const MINS = [0, 5, 20, 60, 150, 300, 600, 1000, 1800, 3000];
     private static bool $writing = false;
@@ -378,7 +378,7 @@ final class Reader_Experience
     }
     public static function liked(int $uid, int $pid, int $count): void
     {
-        if (!self::ready()) {
+        if (!self::ready() || !WP_XP_Core_Settings::likes_ready()) {
             return;
         }
         try {
@@ -397,6 +397,12 @@ final class Reader_Experience
     public static function milestones(int $pid, string $kind): void
     {
         global $wpdb;
+        if (
+            !isset(WP_XP_Core_Settings::tiers()[$kind]) ||
+            ($kind === 'like' && !WP_XP_Core_Settings::likes_ready())
+        ) {
+            return;
+        }
         $p = get_post($pid);
         if (!$p || $p->post_type !== 'post' || $p->post_status !== 'publish') {
             return;
@@ -408,11 +414,13 @@ final class Reader_Experience
                 $kind,
             ),
         );
-        foreach ($kind === 'view' ? [100, 500, 1000] : [10, 30, 100] as $threshold) {
+        foreach (WP_XP_Core_Settings::tiers()[$kind] as $slot) {
+            $rules = WP_XP_Core_Settings::rules();
+            $threshold = $rules[$kind . '_' . $slot . '_threshold'];
             if ($n >= $threshold) {
-                $xp = WP_XP_Core_Settings::rules()[$kind . '_' . $threshold];
+                $xp = $rules[$kind . '_' . $slot];
                 self::record(
-                    "milestone:$kind:$pid:$threshold",
+                    "milestone:$kind:$pid:$slot",
                     (int) $p->post_author,
                     'milestone_' . $kind,
                     $pid,

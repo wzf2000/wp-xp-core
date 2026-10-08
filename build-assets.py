@@ -6,7 +6,12 @@ import json
 
 assets = Path(__file__).resolve().parent / "assets"
 mapping = {}
-for key, name in [("js", "app.js"), ("css", "app.css"), ("admin_css", "admin.css")]:
+for key, name in [
+    ("js", "app.js"),
+    ("css", "app.css"),
+    ("admin_css", "admin.css"),
+    ("admin_js", "admin.js"),
+]:
     content = (assets / name).read_bytes()
     path = Path(name)
     target = path.stem + "-" + hashlib.sha256(content).hexdigest()[:12] + path.suffix

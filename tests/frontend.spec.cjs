@@ -90,3 +90,40 @@ test('custom final level has no next threshold', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('.reader-experience-state')).toContainText('Level 3 · 已达最高等级');
 });
+
+test('actual settings markup adds removes and submits ordered levels', async ({ page }) => {
+  await page.goto('/admin.html');
+  await expect(page.locator('.xp-level-row')).toHaveCount(10);
+  await expect(page.locator('#xp-level-0')).toHaveAttribute('readonly', '');
+  await expect(page.locator('#xp-like_10-threshold')).toBeDisabled();
+  await page.locator('.xp-level-add').click();
+  await expect(page.locator('.xp-level-row')).toHaveCount(11);
+  await page.locator('.xp-level-remove').nth(2).click();
+  await expect(page.locator('.xp-level-row')).toHaveCount(10);
+  await expect(page.locator('#xp-level-2')).toHaveValue('60');
+  const data = await page.locator('form').evaluate((form) => [...new FormData(form).entries()]);
+  expect(data.filter(([key]) => key.startsWith('rules[levels]')).map(([key]) => key)).toEqual(
+    Array.from({ length: 10 }, (_, i) => `rules[levels][${i}]`),
+  );
+  expect(data.some(([key]) => key.startsWith('rules[like_'))).toBe(false);
+  expect(data).toContainEqual(['rules[view_100_threshold]', '100']);
+  await page.setViewportSize({ width: 390, height: 844 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});
+
+test('level list enforces one and one hundred row boundaries', async ({ page }) => {
+  await page.goto('/admin.html');
+  for (let i = 0; i < 9; i++) await page.locator('.xp-level-remove').last().click();
+  await expect(page.locator('.xp-level-row')).toHaveCount(1);
+  await expect(page.locator('.xp-level-remove')).toBeDisabled();
+  await page.locator('.xp-level-add').click();
+  await expect(page.locator('#xp-level-1')).toBeEditable();
+  await expect(page.locator('.xp-level-remove').last()).toBeEnabled();
+  await page.locator('.xp-level-add').evaluate((button) => {
+    for (let i = 0; i < 98; i++) button.click();
+  });
+  await expect(page.locator('.xp-level-row')).toHaveCount(100);
+  await expect(page.locator('.xp-level-add')).toBeDisabled();
+  await page.locator('.xp-level-remove').last().click();
+  await expect(page.locator('.xp-level-add')).toBeEnabled();
+});
