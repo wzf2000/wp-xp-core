@@ -38,6 +38,10 @@ def identity(version, sha):
     assert re.search(r"Plugin Name:\s*WP XP Core\s*(?:\n|$)", header), "Plugin name mismatch"
     assert not (ROOT / "reader-experience.php").exists(), "Retired plugin entry remains"
     header_version = re.search(r"Version:\s*(\S+)", header).group(1)
+    runtime_version = re.search(
+        r"class Reader_Experience\s*\{\s*const VERSION\s*=\s*[\"']([^\"']+)[\"']\s*;", header
+    )
+    assert runtime_version and runtime_version.group(1) == version, "Runtime version mismatch"
     package = json.loads((ROOT / "package.json").read_text())
     lock = json.loads((ROOT / "package-lock.json").read_text())
     assert (
