@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: 安全报告 / Security reporting
+    url: https://github.com/wzf2000/wp-xp-core/security/policy
+    about: 请先阅读安全政策，勿在公开 Issue 中披露漏洞。Read the policy before reporting vulnerabilities.

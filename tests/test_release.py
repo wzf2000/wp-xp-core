@@ -29,6 +29,7 @@ class ReleaseGuards(unittest.TestCase):
             "README.md": "Read me\n",
             "README.en.md": "English readme\n",
             "LICENSE": "GPL\n",
+            "SECURITY.md": "Private reporting\n",
             "CHANGELOG.md": "# Changes\n\n## 1.0.0\n\n- Current functionality.\n",
             "theme.json": "{}\n",
             "screenshot.png": "fixture",

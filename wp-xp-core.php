@@ -9,14 +9,14 @@
  * Requires PHP: 8.0
  * Requires at least: 6.0
  * Update URI: https://github.com/wzf2000/wp-xp-core
- * Version: 1.3.0
+ * Version: 1.3.1
  */
 defined('ABSPATH') || exit();
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/settings.php';
 final class Reader_Experience
 {
-    const VERSION = '1.3.0';
+    const VERSION = '1.3.1';
     const BALANCE_META = 'reader_experience_balance';
     const MINS = [0, 5, 20, 60, 150, 300, 600, 1000, 1800, 3000];
     private static bool $writing = false;

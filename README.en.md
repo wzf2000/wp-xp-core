@@ -2,11 +2,11 @@
 
 [简体中文](README.md) · English
 
-Independent WordPress experience system with configurable rewards and levels: daily check-in, reading dwell time, publishing, comments and author milestones. Version **1.3.0**, PHP **8.0+**, WordPress **6.0+**. No third-party points or rank provider is required.
+Independent WordPress experience system with configurable rewards and levels: daily check-in, reading dwell time, publishing, comments and author milestones. Version **1.3.1**, PHP **8.0+**, WordPress **6.0+**. No third-party points or rank provider is required.
 
 ## Install and use
 
-1. Build the verified `wp-xp-core-1.3.0.zip` from a committed checkout and install through WordPress.
+1. Build the verified `wp-xp-core-1.3.1.zip` from a committed checkout and install through WordPress.
 2. Have the server administrator configure the shared JSON profile outside the web root, pointing to the existing ledger and policy options. With no valid configuration, experience activity remains inactive; the settings page is still available.
 3. Stop the previous experience owner before enabling this plugin. Retain all existing balances and event records.
 4. Add the configured experience shortcode to the account page, then verify the frontend in an isolated test environment.
@@ -31,11 +31,11 @@ Reward values accept integers from 0 to 1,000,000. Reading and comment daily lim
 
 Each article can earn each tier only once; changing counts does not reset claimed tiers. Saving awards nothing. Unclaimed tiers are evaluated against cumulative ledger counts on the next qualifying activity, so lowering a threshold can make an unclaimed tier eligible on that next activity.
 
-New reward rules apply to events first recorded after the change. Historical rewards are never recalculated or reissued. A zero reward still records the event to prevent later duplicate rewards; a zero daily limit disables that category's rewards. Comment removal and restoration use the original award, even when current rules differ. Changing level thresholds immediately changes displayed levels without changing experience balances. Game scores and ranking remain separate and award no XP.
+New reward rules apply to events first recorded after the change. Historical rewards are never recalculated or reissued. A zero reward still records the event to prevent later duplicate rewards; a zero daily limit disables that category's rewards. Comment removal and restoration use the original award, even when current rules differ. Changing level thresholds immediately changes displayed levels without changing experience balances.
 
 Defaults exactly preserve the previous policy. Loading the plugin or settings creates no settings option. Invalid saved data falls back to defaults with an administrator warning; invalid submissions preserve the previous settings. Saves require administrator capability and a valid nonce, and stale forms cannot overwrite newer settings. Settings are stored in `wp_xp_core_rules`; they do not replace the external storage/integration profile.
 
-The responsive settings page groups daily activities, author milestones and level progression. Its sidebar provides the version, author [wzf2000](https://github.com/wzf2000), license and rule guidance. The [source repository](https://github.com/wzf2000/wp-xp-core) is private and requires access. Admin styles and scripts load only on this plugin’s settings page.
+The responsive settings page groups daily activities, author milestones and level progression. Its sidebar provides the version, author [wzf2000](https://github.com/wzf2000), license and rule guidance. The [source repository](https://github.com/wzf2000/wp-xp-core) provides documentation, change history and contribution guidance. Admin styles and scripts load only on this plugin’s settings page.
 
 ## Frontend and integration
 
@@ -59,6 +59,12 @@ Upgrading from 1.1.1 requires no data migration. Existing complete custom polici
 
 Maintain the Chinese and English READMEs together whenever behavior, configuration, installation or release information changes, retaining reciprocal language links.
 
-Commit the complete candidate, run `npm run package` and `npm run package:check`, then tag the verified release commit with its version. A GitHub remote or `REPOSITORY` value is optional; local releases are supported.
+For local builds, commit the complete candidate, then run `npm run package` and `npm run package:check`. A GitHub remote or `REPOSITORY` value is optional. The manual GitHub release workflow below creates its own tags; do not pre-create a release tag.
 
-Pinned development dependencies, formatters, asset build, contracts, storage runtime tests, browser checks and deterministic package guards are self-contained. The installation ZIP includes PHP, content-hashed JS/CSS and both READMEs, and excludes tests, tools and dependencies. CI runs PHP 8.0/8.2; identity rules are supplied externally.
+Pinned development dependencies, formatters, asset build, contracts, storage runtime tests, browser checks and deterministic package guards are self-contained. The installation ZIP includes PHP, content-hashed JS/CSS and both READMEs, and excludes tests, tools and dependencies. CI runs PHP 8.0/8.2. The optional local identity scanner accepts external rules; public CI needs no secrets.
+
+## Contribute
+
+Use Issues for reproducible bugs or feature discussion, and Pull Requests for improvements. Read [Contributing](CONTRIBUTING.md) first. Report security issues privately under the [security policy](SECURITY.md); never post credentials, user data or exploit details publicly.
+
+CI runs the same read-only checks for pushes and Pull Requests; contributors need no site credentials. Maintainers can manually run the release workflow from `main`: it builds artifacts by default and creates a GitHub Release only when publishing is explicitly selected. Releases never deploy to any site; see [Releasing](docs/RELEASING.md).

@@ -1,0 +1,180 @@
+name: Manual WP XP Core Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Exact PHP plugin version, without v (X.Y.Z or X.Y.Z-rc.N/beta.N/alpha.N)'
+        required: true
+        type: string
+      publish:
+        description: 'Publish a new release; false builds downloadable artifacts only'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: wp-xp-core-release-${{ inputs.version }}
+  cancel-in-progress: false
+
+jobs:
+  resolve:
+    runs-on: ubuntu-latest
+    outputs:
+      sha: ${{ steps.source.outputs.sha }}
+    steps:
+      - name: Require main
+        env:
+          SOURCE_REF: ${{ github.ref }}
+        run: test "$SOURCE_REF" = refs/heads/main
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Validate requested version and pin dispatched commit
+        id: source
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
+          SOURCE_SHA: ${{ github.sha }}
+        run: |
+          python3 tools/release.py --version "$RELEASE_VERSION" --sha "$SOURCE_SHA" --identity-only
+          echo "sha=$SOURCE_SHA" >> "$GITHUB_OUTPUT"
+      - name: Refuse an existing tag or release when publishing
+        if: inputs.publish
+        uses: actions/github-script@v7
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
+        with:
+          script: |
+            const tag = `v${process.env.RELEASE_VERSION}`;
+            for (const [method, params] of [
+              [github.rest.git.getRef, {ref: `tags/${tag}`}],
+              [github.rest.repos.getReleaseByTag, {tag}],
+            ]) {
+              try { await method({...context.repo, ...params}); }
+              catch (error) { if (error.status === 404) continue; throw error; }
+              throw new Error(`Refusing existing tag/release ${tag}`);
+            }
+
+  verify:
+    needs: resolve
+    uses: ./.github/workflows/ci.yml
+    with:
+      source_sha: ${{ needs.resolve.outputs.sha }}
+      release_version: ${{ inputs.version }}
+
+  publish:
+    if: inputs.publish
+    needs: [resolve, verify]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      # No checkout, and no execution of repository/artifact code with a write token.
+      - uses: actions/download-artifact@v4
+        with:
+          name: wp-xp-core-release-${{ needs.resolve.outputs.sha }}
+          path: release
+      - name: Validate this run's attachment identity, hashes and closed file sets
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
+          SOURCE_SHA: ${{ needs.resolve.outputs.sha }}
+        run: |
+          python3 - <<'PY'
+          import hashlib, json, os, pathlib, re, zipfile
+          root = pathlib.Path('release')
+          version, sha = os.environ['RELEASE_VERSION'], os.environ['SOURCE_SHA']
+          assert re.fullmatch(r'(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-(?:alpha|beta|rc)\.[1-9]\d*)?', version)
+          assert re.fullmatch(r'[0-9a-f]{40}', sha)
+          prefix = f'wp-xp-core-{version}'
+          expected = {prefix + '.zip', prefix + '.zip.sha256', prefix + '.manifest.json', 'release-notes.md'}
+          assert {p.name for p in root.iterdir()} == expected | {'release-validation.json'}
+          for path in root.iterdir():
+              assert path.is_file() and not path.is_symlink() and path.stat().st_size <= 32 * 1024 * 1024
+          proof = json.loads((root / 'release-validation.json').read_bytes())
+          assert proof['version'] == version and proof['source_commit'] == sha and set(proof['files']) == expected
+          for name, digest in proof['files'].items():
+              assert re.fullmatch(r'[0-9a-f]{64}', digest)
+              assert hashlib.sha256((root / name).read_bytes()).hexdigest() == digest
+          assert (root / (prefix + '.zip.sha256')).read_text() == f"{proof['files'][prefix + '.zip']}  {prefix}.zip\n"
+          manifest_bytes = (root / (prefix + '.manifest.json')).read_bytes()
+          manifest = json.loads(manifest_bytes)
+          assert manifest['schema'] == 1 and manifest['slug'] == 'wp-xp-core'
+          assert manifest['version'] == version and manifest['source_commit'] == sha
+          fixed = {'wp-xp-core.php', 'config.php', 'settings.php', 'README.md', 'README.en.md', 'LICENSE', 'CHANGELOG.md', 'CONTRIBUTING.md', 'SECURITY.md'}
+          files = manifest['files']
+          assert fixed <= set(files)
+          for name, digest in files.items():
+              p = pathlib.PurePosixPath(name)
+              assert re.fullmatch(r'[A-Za-z0-9_./-]+', name) and not p.is_absolute() and '..' not in p.parts and str(p) == name
+              assert name in fixed or (len(p.parts) > 1 and ((p.parts[0] == 'assets' and p.suffix in {'.js', '.css', '.json', '.svg'}) or (p.parts[0] == 'docs' and p.suffix in {'.md', '.svg'})))
+              assert re.fullmatch(r'[0-9a-f]{64}', digest)
+          with zipfile.ZipFile(root / (prefix + '.zip')) as archive:
+              infos = archive.infolist()
+              assert len(infos) <= 1000 and sum(i.file_size for i in infos) <= 64 * 1024 * 1024
+              names = [i.filename for i in infos]
+              assert len({n.lower() for n in names}) == len(names)
+              assert set(names) == {'wp-xp-core/' + n for n in files} | {'wp-xp-core/release-manifest.json'}
+              for info in infos:
+                  assert not info.is_dir() and (info.external_attr >> 16) & 0o170000 in (0, 0o100000)
+              assert archive.read('wp-xp-core/release-manifest.json') == manifest_bytes
+              for name, digest in files.items():
+                  assert hashlib.sha256(archive.read('wp-xp-core/' + name)).hexdigest() == digest
+              assert re.search(rb'Version:\s*' + re.escape(version.encode()) + rb'\s*$', archive.read('wp-xp-core/wp-xp-core.php'), re.M)
+          PY
+      - name: Create draft, upload verified files, then publish
+        uses: actions/github-script@v7
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
+          SOURCE_SHA: ${{ needs.resolve.outputs.sha }}
+        with:
+          script: |
+            const fs = require('node:fs');
+            const tag = `v${process.env.RELEASE_VERSION}`;
+            for (const [method, params] of [
+              [github.rest.git.getRef, {ref: `tags/${tag}`}],
+              [github.rest.repos.getReleaseByTag, {tag}],
+            ]) {
+              try { await method({...context.repo, ...params}); }
+              catch (error) { if (error.status === 404) continue; throw error; }
+              throw new Error(`Refusing existing tag/release ${tag}`);
+            }
+            // Atomic tag creation closes the check/create race. Existing tags are never overwritten.
+            await github.rest.git.createRef({...context.repo, ref: `refs/tags/${tag}`, sha: process.env.SOURCE_SHA});
+            const result = await github.rest.repos.createRelease({
+              ...context.repo, tag_name: tag, target_commitish: process.env.SOURCE_SHA,
+              name: `WP XP Core ${process.env.RELEASE_VERSION}`,
+              draft: true, prerelease: process.env.RELEASE_VERSION.includes('-'),
+              body: fs.readFileSync('release/release-notes.md', 'utf8'),
+            });
+            for (const name of fs.readdirSync('release').sort()) {
+              const data = fs.readFileSync(`release/${name}`);
+              await github.rest.repos.uploadReleaseAsset({
+                ...context.repo, release_id: result.data.id, name, data,
+                headers: {'content-type': name.endsWith('.zip') ? 'application/zip' : 'application/octet-stream', 'content-length': data.length},
+              });
+            }
+            const assets = await github.paginate(github.rest.repos.listReleaseAssets, {...context.repo, release_id: result.data.id});
+            const expected = fs.readdirSync('release').sort();
+            if (assets.length !== expected.length || assets.map(a => a.name).sort().join('\n') !== expected.join('\n')) throw new Error('Draft attachment set differs');
+            const crypto = require('node:crypto');
+            for (const asset of assets) {
+              const local = fs.readFileSync(`release/${asset.name}`);
+              const digest = crypto.createHash('sha256').update(local).digest('hex');
+              if (asset.size !== local.length) throw new Error(`Remote size differs: ${asset.name}`);
+              if (asset.digest) {
+                if (asset.digest !== `sha256:${digest}`) throw new Error(`Remote digest differs: ${asset.name}`);
+              } else {
+                const response = await github.request('GET /repos/{owner}/{repo}/releases/assets/{asset_id}', {
+                  ...context.repo, asset_id: asset.id, headers: {accept: 'application/octet-stream'},
+                });
+                const data = response.data;
+                if (!(data instanceof ArrayBuffer) && !ArrayBuffer.isView(data)) throw new Error(`Missing binary remote digest proof: ${asset.name}`);
+                if (crypto.createHash('sha256').update(Buffer.from(data)).digest('hex') !== digest) throw new Error(`Downloaded remote digest differs: ${asset.name}`);
+              }
+            }
+            const ref = await github.rest.git.getRef({...context.repo, ref: `tags/${tag}`});
+            if (ref.data.object.type !== 'commit' || ref.data.object.sha !== process.env.SOURCE_SHA) throw new Error('Tag no longer matches verified source');
+            await github.rest.repos.updateRelease({...context.repo, release_id: result.data.id, draft: false});
