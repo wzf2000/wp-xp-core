@@ -1,14 +1,22 @@
 <?php
 /** Plugin Name: WP XP Core
- * Description: Configurable experience rules, levels and private activity history.
- * Version: 1.2.0
+ * Description: 独立的经验与等级系统，支持自定义活动奖励、等级门槛与私人活动记录。
+ * Plugin URI: https://github.com/wzf2000/wp-xp-core
+ * Author: wzf2000
+ * Author URI: https://github.com/wzf2000
+ * License: GPL-2.0-or-later
+ * License URI: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ * Requires PHP: 8.0
+ * Requires at least: 6.0
+ * Update URI: https://github.com/wzf2000/wp-xp-core
+ * Version: 1.2.1
  */
 defined('ABSPATH') || exit();
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/settings.php';
 final class Reader_Experience
 {
-    const VERSION = '1.2.0';
+    const VERSION = '1.2.1';
     const BALANCE_META = 'reader_experience_balance';
     const MINS = [0, 5, 20, 60, 150, 300, 600, 1000, 1800, 3000];
     private static bool $writing = false;

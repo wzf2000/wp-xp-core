@@ -155,6 +155,38 @@ final class WP_XP_Core_Settings
             'page',
         ]);
     }
+    public static function assets($hook): void
+    {
+        if ($hook !== 'settings_page_wp-xp-core') {
+            return;
+        }
+        $manifest = json_decode(file_get_contents(__DIR__ . '/assets/assets.json'), true);
+        wp_enqueue_style(
+            'wp-xp-core-admin',
+            plugins_url('assets/' . $manifest['admin_css'], __FILE__),
+            [],
+            Reader_Experience::VERSION,
+        );
+    }
+    private static function field(string $key, string $label, array $rules): void
+    {
+        $limit = str_ends_with($key, '_limit');
+        echo '<div class="xp-field"><label for="xp-' .
+            esc_attr($key) .
+            '">' .
+            esc_html($label) .
+            '</label><div class="xp-input-unit"><input type="number" min="0" max="' .
+            ($limit ? '1000' : '1000000') .
+            '" step="1" required id="xp-' .
+            esc_attr($key) .
+            '" name="rules[' .
+            esc_attr($key) .
+            ']" value="' .
+            esc_attr((string) $rules[$key]) .
+            '"><span>' .
+            ($limit ? '次 / 日' : '经验') .
+            '</span></div></div>';
+    }
     public static function page(): void
     {
         if (!current_user_can('manage_options')) {
@@ -168,7 +200,9 @@ final class WP_XP_Core_Settings
                 $_POST['revision'] ?? '',
             );
         }
-        echo '<div class="wrap"><h1>WP XP Core · 经验规则</h1>';
+        echo '<div class="wrap wp-xp-core-admin"><header class="xp-header"><span class="xp-mark" aria-hidden="true">XP</span><div><h1>WP XP Core <span class="xp-version">' .
+            esc_html(Reader_Experience::VERSION) .
+            '</span></h1><p>经验规则 · 让每一次参与都有积累</p></div></header>';
         if ($result !== null) {
             echo '<div class="notice ' .
                 (is_wp_error($result) ? 'notice-error' : 'notice-success') .
@@ -185,45 +219,50 @@ final class WP_XP_Core_Settings
             }
         }
         $rules = self::rules();
-        echo '<p>奖励与次数仅影响之后首次记账的事件，不重算历史经验。修改等级门槛会立即改变等级展示，但不修改经验余额。0 经验仍记录事件；每日次数为 0 时不发放该类奖励。</p><p>浏览里程碑固定为 100 / 500 / 1000 次，点赞里程碑固定为 10 / 30 / 100 次，保证历史奖励不重复发放；下方可修改各档奖励。评论撤销与恢复始终使用首次奖励数值。</p><form method="post">';
+        echo '<div class="xp-layout"><form method="post" class="xp-form">';
         wp_nonce_field('wp_xp_core_settings');
-        echo '<input type="hidden" name="revision" value="' .
-            esc_attr(self::revision($raw)) .
-            '"><table class="form-table">';
-        $labels = [
-            'checkin_xp' => '每日签到经验',
-            'visit_xp' => '有效阅读经验',
-            'article_xp' => '首次发表文章经验',
-            'comment_xp' => '有效评论经验',
-            'visit_limit' => '每日阅读奖励次数',
-            'comment_limit' => '每日评论奖励次数',
-            'view_100' => '100 次浏览奖励',
-            'view_500' => '500 次浏览奖励',
-            'view_1000' => '1000 次浏览奖励',
-            'like_10' => '10 次点赞奖励',
-            'like_30' => '30 次点赞奖励',
-            'like_100' => '100 次点赞奖励',
-        ];
-        foreach ($labels as $key => $label) {
-            echo '<tr><th><label for="xp-' .
-                esc_attr($key) .
-                '">' .
-                esc_html($label) .
-                '</label></th><td><input type="number" min="0" max="' .
-                (str_ends_with($key, '_limit') ? '1000' : '1000000') .
-                '" step="1" required id="xp-' .
-                esc_attr($key) .
-                '" name="rules[' .
-                esc_attr($key) .
-                ']" value="' .
-                esc_attr((string) $rules[$key]) .
-                '"></td></tr>';
+        echo '<input type="hidden" name="revision" value="' . esc_attr(self::revision($raw)) . '">';
+        echo '<section class="xp-card" aria-labelledby="xp-activity-title"><div class="xp-card-heading"><span class="xp-step" aria-hidden="true">01</span><div><h2 id="xp-activity-title">日常活动</h2><p>设置每次参与的奖励，以及每日可获得奖励的次数。</p></div></div><div class="xp-fields">';
+        foreach (
+            [
+                'checkin_xp' => '每日签到',
+                'article_xp' => '首次发表文章',
+                'visit_xp' => '有效阅读',
+                'comment_xp' => '有效评论',
+                'visit_limit' => '每日阅读奖励次数',
+                'comment_limit' => '每日评论奖励次数',
+            ]
+            as $key => $label
+        ) {
+            self::field($key, $label, $rules);
         }
-        echo '<tr><th><label for="xp-levels">各级最低经验</label></th><td><textarea id="xp-levels" name="rules[levels]" rows="4" class="large-text" required>' .
+        echo '</div><p class="xp-footnote">签到每日奖励一次；阅读仍需满足停留条件。次数为 0 时停发对应类别奖励。</p></section>';
+        echo '<section class="xp-card" aria-labelledby="xp-milestones-title"><div class="xp-card-heading"><span class="xp-step" aria-hidden="true">02</span><div><h2 id="xp-milestones-title">作者里程碑</h2><p>作品达到以下浏览或点赞次数时，向作者发放对应经验。</p></div></div><div class="xp-fields xp-fields-three">';
+        foreach (
+            [
+                'view_100' => '100 次浏览',
+                'view_500' => '500 次浏览',
+                'view_1000' => '1000 次浏览',
+                'like_10' => '10 次点赞',
+                'like_30' => '30 次点赞',
+                'like_100' => '100 次点赞',
+            ]
+            as $key => $label
+        ) {
+            self::field($key, $label, $rules);
+        }
+        echo '</div><p class="xp-footnote">里程碑次数固定，每档仅奖励一次；可自定义各档奖励经验。</p></section>';
+        echo '<section class="xp-card" aria-labelledby="xp-levels-title"><div class="xp-card-heading"><span class="xp-step" aria-hidden="true">03</span><div><h2 id="xp-levels-title">等级成长</h2><p>按经验总量划分等级，当前共 ' .
+            esc_html((string) count($rules['levels'])) .
+            ' 级。</p></div></div><label class="xp-label" for="xp-levels">各级最低经验</label><textarea id="xp-levels" name="rules[levels]" rows="4" required aria-describedby="xp-levels-help">' .
             esc_textarea(implode(', ', $rules['levels'])) .
-            '</textarea><p class="description">按 Level 1 起依次填写，用逗号或空白分隔；首项必须为 0，严格递增，最多 100 级。</p></td></tr></table>';
-        submit_button('保存经验规则');
-        echo '</form></div>';
+            '</textarea><p id="xp-levels-help" class="xp-help">按 Level 1 起依次填写，用逗号或空白分隔；首项为 0，严格递增，最多 100 级。修改门槛会立即影响等级展示，不改变经验余额。</p></section>';
+        echo '<div class="xp-save"><p>奖励调整仅影响之后首次记账的事件。</p>';
+        submit_button('保存经验规则', 'primary', 'submit', false);
+        echo '</div></form><aside class="xp-sidebar" aria-label="插件信息与帮助"><section class="xp-card xp-about"><span class="xp-eyebrow">关于插件</span><h2>WP XP Core</h2><p>独立的 WordPress 经验与等级系统。</p><dl><div><dt>版本</dt><dd>' .
+            esc_html(Reader_Experience::VERSION) .
+            '</dd></div><div><dt>作者</dt><dd><a href="https://github.com/wzf2000">wzf2000</a></dd></div><div><dt>许可证</dt><dd><a href="https://www.gnu.org/licenses/old-licenses/gpl-2.0.html">GPL-2.0-or-later</a></dd></div></dl><a class="xp-repo-link" href="https://github.com/wzf2000/wp-xp-core">GitHub 源码仓库 <span aria-hidden="true">↗</span></a><p class="xp-help">私有仓库，访问需要相应授权。</p></section><section class="xp-card xp-guide"><h2>规则说明</h2><p>保存全站规则前，可先了解生效范围。</p><details><summary>奖励如何生效？</summary><p>不重算或补发历史经验。0 经验仍记录事件，避免日后重复领取；评论撤销与恢复使用首次奖励数值。</p></details><details><summary>数值可以设置多大？</summary><p>奖励为 0–1000000 的整数，每日次数为 0–1000。等级门槛最高为 1000000000。</p></details><details><summary>游戏也会奖励经验吗？</summary><p>游戏成绩与排行榜独立运行，不发放经验。</p></details></section></aside></div></div>';
     }
 }
 add_action('admin_menu', [WP_XP_Core_Settings::class, 'menu']);
+add_action('admin_enqueue_scripts', [WP_XP_Core_Settings::class, 'assets']);

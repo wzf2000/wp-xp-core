@@ -76,7 +76,11 @@ async function format() {
     run('python3', ['build-assets.py']);
   const assets = path.join(root, 'assets');
   const manifest = JSON.parse(fs.readFileSync(path.join(assets, 'assets.json'), 'utf8'));
-  for (const [key, name] of Object.entries({ js: 'app.js', css: 'app.css' })) {
+  for (const [key, name] of Object.entries({
+    js: 'app.js',
+    css: 'app.css',
+    admin_css: 'admin.css',
+  })) {
     const content = fs.readFileSync(path.join(assets, name));
     const hash = crypto.createHash('sha256').update(content).digest('hex').slice(0, 12);
     const expected = `${path.parse(name).name}-${hash}${path.extname(name)}`;

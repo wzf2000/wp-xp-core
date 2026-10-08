@@ -1,0 +1,281 @@
+.wp-xp-core-admin {
+  --xp-accent: #3856b0;
+  --xp-text: #202b3d;
+  --xp-muted: #59677b;
+  max-width: 1220px;
+  color: var(--xp-text);
+}
+.wp-xp-core-admin .xp-header {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 24px 0 28px;
+}
+.wp-xp-core-admin .xp-mark {
+  display: grid;
+  place-items: center;
+  width: 58px;
+  height: 58px;
+  flex-shrink: 0;
+  border-radius: 16px;
+  background: var(--xp-accent);
+  color: #fff;
+  font-size: 23px;
+  font-weight: 700;
+  letter-spacing: -1px;
+}
+.wp-xp-core-admin .xp-header h1 {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 0;
+  color: var(--xp-text);
+  font-size: 26px;
+  font-weight: 650;
+}
+.wp-xp-core-admin .xp-header p {
+  margin: 7px 0 0;
+  color: var(--xp-muted);
+}
+.wp-xp-core-admin .xp-version {
+  padding: 3px 9px;
+  border: 1px solid #d3dbeb;
+  border-radius: 20px;
+  color: var(--xp-accent);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.5;
+}
+.wp-xp-core-admin .xp-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 280px;
+  gap: 24px;
+  align-items: start;
+}
+.wp-xp-core-admin .xp-form,
+.wp-xp-core-admin .xp-sidebar {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+}
+.wp-xp-core-admin .xp-card {
+  margin: 0;
+  padding: 24px;
+  border: 1px solid #dce2ec;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 2px 5px #202b3d03;
+}
+.wp-xp-core-admin .xp-card h2 {
+  margin: 0;
+  color: var(--xp-text);
+  font-size: 16px;
+  line-height: 1.5;
+}
+.wp-xp-core-admin .xp-card p {
+  color: var(--xp-muted);
+  line-height: 1.7;
+}
+.wp-xp-core-admin .xp-card-heading {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.wp-xp-core-admin .xp-card-heading p {
+  margin: 5px 0 0;
+}
+.wp-xp-core-admin .xp-step {
+  padding-top: 1px;
+  color: var(--xp-accent);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 24px;
+}
+.wp-xp-core-admin .xp-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px 24px;
+}
+.wp-xp-core-admin .xp-fields-three {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px 16px;
+}
+.wp-xp-core-admin .xp-field label,
+.wp-xp-core-admin .xp-label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.wp-xp-core-admin .xp-input-unit {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.wp-xp-core-admin .xp-input-unit input {
+  width: 100%;
+  min-width: 0;
+  min-height: 38px;
+  margin: 0;
+  border-color: #b6c2d3;
+  border-radius: 6px;
+}
+.wp-xp-core-admin .xp-input-unit span {
+  flex-shrink: 0;
+  color: var(--xp-muted);
+  font-size: 12px;
+}
+.wp-xp-core-admin textarea {
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  min-height: 106px;
+  padding: 12px;
+  border: 1px solid #b6c2d3;
+  border-radius: 6px;
+  font-family: monospace;
+  line-height: 1.8;
+  resize: vertical;
+}
+.wp-xp-core-admin .xp-footnote {
+  margin: 22px 0 0;
+  padding-top: 16px;
+  border-top: 1px solid #edf0f5;
+  font-size: 12px;
+}
+.wp-xp-core-admin .xp-help {
+  margin: 10px 0 0;
+  font-size: 12px;
+}
+.wp-xp-core-admin .xp-save {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 0 2px 24px;
+}
+.wp-xp-core-admin .xp-save p {
+  margin: 0;
+  color: var(--xp-muted);
+  font-size: 12px;
+}
+.wp-xp-core-admin .xp-save .button-primary {
+  min-height: 40px;
+  padding: 0 20px;
+  border-color: var(--xp-accent);
+  border-radius: 6px;
+  background: var(--xp-accent);
+}
+.wp-xp-core-admin .xp-save .button-primary:hover {
+  background: #29438f;
+}
+.wp-xp-core-admin .xp-eyebrow {
+  display: block;
+  margin-bottom: 12px;
+  color: var(--xp-muted);
+  font-size: 12px;
+}
+.wp-xp-core-admin .xp-about h2 {
+  font-size: 19px;
+}
+.wp-xp-core-admin .xp-about dl {
+  margin: 20px 0;
+}
+.wp-xp-core-admin .xp-about dl > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 12px;
+  font-size: 12px;
+}
+.wp-xp-core-admin .xp-about dt {
+  color: var(--xp-muted);
+}
+.wp-xp-core-admin .xp-about dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+  text-align: right;
+}
+.wp-xp-core-admin a {
+  color: var(--xp-accent);
+}
+.wp-xp-core-admin .xp-repo-link {
+  display: flex;
+  justify-content: space-between;
+  padding-top: 16px;
+  border-top: 1px solid #edf0f5;
+  font-weight: 600;
+  text-decoration: none;
+}
+.wp-xp-core-admin .xp-guide > p {
+  margin: 8px 0 16px;
+  font-size: 12px;
+}
+.wp-xp-core-admin details {
+  padding: 13px 0;
+  border-top: 1px solid #edf0f5;
+}
+.wp-xp-core-admin details:last-child {
+  padding-bottom: 0;
+}
+.wp-xp-core-admin summary {
+  cursor: pointer;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.wp-xp-core-admin details p {
+  margin: 10px 0 0;
+  font-size: 12px;
+}
+.wp-xp-core-admin input:focus,
+.wp-xp-core-admin textarea:focus,
+.wp-xp-core-admin summary:focus-visible,
+.wp-xp-core-admin a:focus-visible {
+  outline: 2px solid var(--xp-accent);
+  outline-offset: 3px;
+  box-shadow: none;
+}
+@media (max-width: 1100px) {
+  .wp-xp-core-admin .xp-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .wp-xp-core-admin .xp-sidebar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding-bottom: 24px;
+  }
+}
+@media (max-width: 600px) {
+  .wp-xp-core-admin .xp-header {
+    gap: 12px;
+    padding-top: 18px;
+  }
+  .wp-xp-core-admin .xp-header h1 {
+    font-size: 22px;
+  }
+  .wp-xp-core-admin .xp-mark {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    font-size: 20px;
+  }
+  .wp-xp-core-admin .xp-card {
+    padding: 20px;
+  }
+  .wp-xp-core-admin .xp-fields,
+  .wp-xp-core-admin .xp-fields-three,
+  .wp-xp-core-admin .xp-sidebar {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .wp-xp-core-admin .xp-input-unit input {
+    min-height: 44px;
+  }
+  .wp-xp-core-admin .xp-save {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .wp-xp-core-admin .xp-save .button-primary {
+    min-height: 44px;
+  }
+}

@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.1
+
+- Refine settings with responsive grouped cards, contextual guidance and a plugin information sidebar.
+- Add author, repository, license and compatibility metadata; load content-hashed admin styles only on this settings page.
+- Preserve all reward rules, stored data, validation and save protections.
+
 ## 1.2.0
 
 - Add an administrator settings page for global rewards, daily caps and variable level thresholds, with nonce validation and concurrent-edit protection.

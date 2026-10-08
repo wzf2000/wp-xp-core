@@ -2,11 +2,11 @@
 
 [简体中文](README.md) · English
 
-Independent WordPress experience system with configurable rewards and levels: daily check-in, reading dwell time, publishing, comments and author milestones. Version **1.2.0**, PHP **8.0+**, WordPress **6.0+**. No third-party points or rank provider is required.
+Independent WordPress experience system with configurable rewards and levels: daily check-in, reading dwell time, publishing, comments and author milestones. Version **1.2.1**, PHP **8.0+**, WordPress **6.0+**. No third-party points or rank provider is required.
 
 ## Install and use
 
-1. Build the verified `wp-xp-core-1.2.0.zip` from a committed checkout and install through WordPress.
+1. Build the verified `wp-xp-core-1.2.1.zip` from a committed checkout and install through WordPress.
 2. Have the server administrator configure the shared JSON profile outside the web root, pointing to the existing ledger and policy options. With no valid configuration, experience activity remains inactive; the settings page is still available.
 3. Stop the previous experience owner before enabling this plugin. Retain all existing balances and event records.
 4. Add the configured experience shortcode to the account page, then verify the frontend in an isolated test environment.
@@ -32,6 +32,8 @@ Reward values accept integers from 0 to 1,000,000. Reading and comment daily lim
 New reward rules apply to events first recorded after the change. Historical rewards are never recalculated or reissued. A zero reward still records the event to prevent later duplicate rewards; a zero daily limit disables that category's rewards. Comment removal and restoration use the original award, even when current rules differ. Changing level thresholds immediately changes displayed levels without changing experience balances. Game scores and ranking remain separate and award no XP.
 
 Defaults exactly preserve the previous policy. Loading the plugin or settings creates no settings option. Invalid saved data falls back to defaults with an administrator warning; invalid submissions preserve the previous settings. Saves require administrator capability and a valid nonce, and stale forms cannot overwrite newer settings. Settings are stored in `wp_xp_core_rules`; they do not replace the external storage/integration profile.
+
+The responsive settings page groups daily activities, author milestones and level progression. Its sidebar provides the version, author [wzf2000](https://github.com/wzf2000), license and rule guidance. The [source repository](https://github.com/wzf2000/wp-xp-core) is private and requires access. Admin styles load only on this plugin’s settings page.
 
 ## Frontend and integration
 

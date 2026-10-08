@@ -19,7 +19,28 @@ function check($name, $condition)
     $checks++;
 }
 check('unconfigured ready false', Reader_Experience::ready() === false);
-check('no policy hooks on load', $hooks === ['admin_menu']);
+check('no policy hooks on load', $hooks === ['admin_menu', 'admin_enqueue_scripts']);
+$admin_styles = [];
+function plugins_url($path, $file)
+{
+    return '/plugins/wp-xp-core/' . $path;
+}
+function wp_enqueue_style($handle, $url, $dependencies, $version)
+{
+    $GLOBALS['admin_styles'][] = compact('handle', 'url', 'dependencies', 'version');
+}
+WP_XP_Core_Settings::assets('dashboard');
+WP_XP_Core_Settings::assets('settings_page_other-plugin');
+check('admin styles absent on unrelated screens', $admin_styles === []);
+WP_XP_Core_Settings::assets('settings_page_wp-xp-core');
+$manifest = json_decode(file_get_contents(dirname(__DIR__) . '/assets/assets.json'), true);
+check(
+    'settings screen uses immutable admin stylesheet',
+    count($admin_styles) === 1 &&
+        $admin_styles[0]['url'] === '/plugins/wp-xp-core/assets/' . $manifest['admin_css'] &&
+        $admin_styles[0]['version'] === Reader_Experience::VERSION &&
+        $admin_styles[0]['dependencies'] === [],
+);
 check(
     'ten-level policy retained',
     Reader_Experience::MINS === [0, 5, 20, 60, 150, 300, 600, 1000, 1800, 3000],
