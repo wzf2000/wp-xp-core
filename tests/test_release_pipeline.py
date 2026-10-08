@@ -28,8 +28,10 @@ class ReleasePipeline(unittest.TestCase):
         self.assertIn("persist-credentials: false", workflow)
         self.assertIn("name: Required checks", workflow)
         self.assertIn("if: always()", workflow)
-        self.assertIn("needs: verify", workflow)
-        self.assertIn('run: test "$VERIFY_RESULT" = success', workflow)
+        self.assertIn("needs: [verify, wordpress]", workflow)
+        self.assertIn(
+            'run: test "$VERIFY_RESULT" = success && test "$WORDPRESS_RESULT" = success', workflow
+        )
 
     def test_publishing_has_no_untrusted_execution(self):
         workflow = (ROOT / ".github/workflows/release.yml").read_text()
@@ -61,7 +63,7 @@ class ReleasePipeline(unittest.TestCase):
         self.root = Path(self.temp.name)
         self.release = self.root / "release"
         self.release.mkdir()
-        self.version = "1.3.1"
+        self.version = "1.4.0"
         self.sha = "a" * 40
         self.prefix = "wp-xp-core-" + self.version
         self.files = {
@@ -70,6 +72,7 @@ class ReleasePipeline(unittest.TestCase):
                 "wp-xp-core.php",
                 "config.php",
                 "settings.php",
+                "lifecycle.php",
                 "README.md",
                 "README.en.md",
                 "LICENSE",
@@ -78,7 +81,7 @@ class ReleasePipeline(unittest.TestCase):
                 "SECURITY.md",
             )
         }
-        self.files["wp-xp-core.php"] = b"<?php\n// Version: 1.3.1\n"
+        self.files["wp-xp-core.php"] = b"<?php\n// Version: 1.4.0\n"
         text = (ROOT / ".github/workflows/release.yml").read_text()
         script = text.split("          python3 - <<'PY'\n", 1)[1].split("          PY\n", 1)[0]
         self.script = "\n".join(line[10:] for line in script.splitlines())

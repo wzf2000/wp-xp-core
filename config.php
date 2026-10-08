@@ -1,5 +1,5 @@
 <?php
-/** Server-owned opt-in configuration; loading never installs or recomputes balances. */
+/** Built-in defaults and strict external integration; loading never installs storage. */
 defined('ABSPATH') || exit();
 function reader_experience_defaults()
 {
@@ -67,7 +67,7 @@ function reader_experience_validate($input)
 function reader_experience_load_profile()
 {
     if (!defined('PAGENEST_COMPATIBILITY_PROFILE_FILE')) {
-        return null;
+        return reader_experience_defaults();
     }
     $path = realpath(PAGENEST_COMPATIBILITY_PROFILE_FILE);
     $root = realpath(ABSPATH);
@@ -98,9 +98,12 @@ function reader_experience_load_profile()
     ) {
         throw new InvalidArgumentException('Invalid shared profile.');
     }
-    return isset($profile['experience'])
-        ? reader_experience_validate($profile['experience'])
-        : null;
+    if (!isset($profile['experience'])) {
+        throw new InvalidArgumentException(
+            'Experience section is required in an external profile.',
+        );
+    }
+    return reader_experience_validate($profile['experience']);
 }
 try {
     $GLOBALS['reader_experience_profile'] = reader_experience_load_profile();
@@ -109,6 +112,14 @@ try {
     add_action('admin_notices', static function () {
         echo '<div class="notice notice-error"><p>WP XP Core compatibility profile is invalid; features are disabled.</p></div>';
     });
+}
+function reader_experience_native(): bool
+{
+    return !defined('PAGENEST_COMPATIBILITY_PROFILE_FILE');
+}
+function reader_experience_external(): bool
+{
+    return !reader_experience_native();
 }
 function reader_experience_configured()
 {
@@ -131,6 +142,17 @@ function reader_experience_lock($key)
 function reader_experience_panel_url()
 {
     $id = reader_experience_config('panel_page_id');
+    if (reader_experience_native()) {
+        $id = (int) get_option('wp_xp_core_panel_page_id', 0);
+        $page = $id > 0 ? get_post($id) : null;
+        $id =
+            $page &&
+            $page->post_type === 'page' &&
+            $page->post_status === 'publish' &&
+            $page->post_password === ''
+                ? $id
+                : 0;
+    }
     return $id > 0 ? get_permalink($id) : (is_singular() ? get_permalink() : home_url('/'));
 }
 function reader_experience_route_matches($route)

@@ -5,7 +5,7 @@
     "format": "node tools/format.cjs --write",
     "format:check": "node tools/format.cjs --check",
     "build": "python3 build-assets.py",
-    "test": "php tests/contracts.php && php tests/runtime.php && python3 -m unittest discover -s tests -p \"test_*.py\"",
+    "test": "php tests/contracts.php && php tests/runtime.php && php tests/installation.php && php tests/panel.php && python3 -m unittest discover -s tests -p \"test_*.py\"",
     "package": "python3 tools/package.py",
     "package:check": "python3 tools/release.py --check-package",
     "identity:check": "python3 tools/identity_scan.py",
@@ -19,6 +19,6 @@
     "prettier": "3.9.6",
     "@playwright/test": "1.55.1"
   },
-  "version": "1.3.1",
+  "version": "1.4.0",
   "license": "GPL-2.0-or-later"
 }

@@ -17,22 +17,24 @@
 - **Reward everyday participation.** Set rewards for daily check-in, valid reading, article publication and eligible comments.
 - **Encourage authors.** Configure three view milestones per article, plus three optional like milestones with PageNest Companion.
 - **Create your growth curve.** Add or remove rows to configure minimum experience for 1–100 levels, without editing code.
-- **Show personal progress.** The account panel displays experience, level, experience needed for the next level, check-in and recent private history.
+- **Show personal progress.** The experience panel displays experience, level, experience needed for the next level, check-in and recent private history.
 - **Keep an award trail.** Experience changes are recorded in an event ledger; repeated requests cannot claim the same reward twice.
 
 The plugin manages experience and levels independently of myCRED. Likes are an optional integration. When the like service is unavailable, its rules are disabled while other settings remain editable.
 
 ## Get started
 
-**Version 1.3.1 is intended for WordPress sites with server administration access and an existing experience ledger.** It requires an external JSON profile and compatible storage, so uploading a ZIP is only part of setup. There is no first-run initialization wizard for a new site; activation does not create tables, migrate historical data or recalculate experience.
+**Current source version: 1.4.0.** On a new site, installing and activating creates the experience ledger and uses default rules. No server JSON profile or other experience plugin is required. Existing users start at zero XP; old articles and historical comments do not trigger automatic backfill.
 
-1. Download `wp-xp-core-VERSION.zip` from the [latest Release](https://github.com/wzf2000/wp-xp-core/releases/latest), rather than GitHub’s automatically generated **Source code** archives.
-2. Ask your server administrator to review the existing ledger, balances, live option and JSON profile using [Server configuration](docs/CONFIGURATION.en.md). Disable the old experience owner before replacing it.
-3. Install and activate the ZIP through **Plugins → Add New Plugin → Upload Plugin** in WordPress.
-4. Add the configured shortcode to an account page. The default is `[reader_experience]`.
-5. Open **Settings → WP XP Core**, adjust the rules and save. See the [user guide](docs/GUIDE.en.md) for steps and troubleshooting.
+1. Download `wp-xp-core-VERSION.zip` from [Releases](https://github.com/wzf2000/wp-xp-core/releases), rather than GitHub’s automatically generated **Source code** archives. Automatic first-install setup requires **1.4.0 or later**; use the release documentation for older versions.
+2. Install and activate the ZIP through **Plugins → Add New Plugin → Upload Plugin** in WordPress.
+3. Open **Settings → WP XP Core** to review or customize rewards and levels. Defaults work immediately.
+4. Create a normal page titled “My experience”, add a **Shortcode** block containing `[reader_experience]`, and publish. See [Create an experience page](docs/GUIDE.en.md#create-an-experience-page).
+5. Back in plugin settings, select that page under **添加经验面板** (Add experience panel) and click **保存面板页面** (Save panel page). Signed-in users can view XP, check in and read their recent history there.
 
-Existing installations can update using the next Release ZIP. No automatic updater is included. For the older Reader Experience directory switch and upgrade requirements, see [Compatibility and upgrades](docs/CONFIGURATION.en.md#compatibility-and-upgrades).
+“My experience” is an ordinary WordPress page; no account plugin is required. Experience content belongs to the currently signed-in user. Activation does not create or publish a page.
+
+Existing sites can update with a new Release ZIP. Deactivating and reactivating preserves experience and settings. No automatic updater is included. External server configuration is an optional [advanced integration](docs/CONFIGURATION.en.md); ordinary first-time installation needs no old-plugin migration work.
 
 ## Configure your experience rules
 
@@ -56,7 +58,7 @@ For value ranges, comment eligibility, counting and examples, see [Rule settings
 
 | Your goal                                                      | Read                                                                      |
 | -------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| Set rewards, add levels or place the account panel             | [User guide](docs/GUIDE.en.md)                                            |
+| Set rewards, add levels or place the experience panel          | [User guide](docs/GUIDE.en.md)                                            |
 | Investigate maintenance messages, missing XP or disabled likes | [Frequently asked questions](docs/GUIDE.en.md#frequently-asked-questions) |
 | Configure server storage or integrate another plugin           | [Configuration and integration](docs/CONFIGURATION.en.md)                 |
 | Review version changes                                         | [Changelog](CHANGELOG.md)                                                 |

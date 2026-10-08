@@ -101,7 +101,7 @@ test('actual settings markup adds removes and submits ordered levels', async ({ 
   await page.locator('.xp-level-remove').nth(2).click();
   await expect(page.locator('.xp-level-row')).toHaveCount(10);
   await expect(page.locator('#xp-level-2')).toHaveValue('60');
-  const data = await page.locator('form').evaluate((form) => [...new FormData(form).entries()]);
+  const data = await page.locator('.xp-form').evaluate((form) => [...new FormData(form).entries()]);
   expect(data.filter(([key]) => key.startsWith('rules[levels]')).map(([key]) => key)).toEqual(
     Array.from({ length: 10 }, (_, i) => `rules[levels][${i}]`),
   );
@@ -126,4 +126,40 @@ test('level list enforces one and one hundred row boundaries', async ({ page }) 
   await expect(page.locator('.xp-level-add')).toBeDisabled();
   await page.locator('.xp-level-remove').last().click();
   await expect(page.locator('.xp-level-add')).toBeEnabled();
+});
+
+test('native panel setup is separate from experience rules', async ({ page }) => {
+  await page.goto('/admin.html');
+  await expect(page.locator('.xp-panel-help')).toContainText('页面 → 新建页面');
+  await expect(page.locator('.xp-panel-help code')).toHaveText('[reader_experience]');
+  await page.locator('#xp-panel-page').selectOption('7');
+  const data = await page
+    .locator('.xp-panel-help form')
+    .evaluate((form) => [...new FormData(form).entries()]);
+  expect(data).toContainEqual(['panel_page_id', '7']);
+  expect(data).toContainEqual(['wp_xp_core_action', 'panel']);
+  expect(data.some(([key]) => key.startsWith('rules['))).toBe(false);
+  await page.setViewportSize({ width: 320, height: 700 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});
+
+test('community levels remain on one line at desktop and mobile widths', async ({ page }) => {
+  await page.goto('/ranking.html');
+  for (const width of [1200, 390, 320]) {
+    await page.setViewportSize({ width, height: 800 });
+    for (const level of ['Level 10', 'Level 100']) {
+      const cell = page.getByRole('cell', { name: level, exact: true });
+      const singleLine = await cell.evaluate((element) => {
+        const range = document.createRange();
+        range.selectNodeContents(element);
+        return (
+          range.getClientRects().length === 1 && getComputedStyle(element).whiteSpace === 'nowrap'
+        );
+      });
+      expect(singleLine).toBe(true);
+    }
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+      true,
+    );
+  }
 });

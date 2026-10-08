@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.4.0
+
+- Set up native experience storage on activation with built-in defaults, without server JSON or another points plugin. Preserve explicit external integrations and all existing data.
+- Validate transactional storage and owned schemas, serialize installation and keep ordinary requests read-only. Preserve data on reactivation; support multisite per-site activation with isolated balances.
+- Add manual experience-page setup guidance and a protected page selector with independent save/revision checks. No pages are created or published automatically.
+- Keep community ranking levels, including Level 10 and Level 100, on one line with contained scrolling at narrow widths.
+- Update both language versions of the installation and page setup guides.
+
 ## 1.3.1
 
 - Prepare public contribution, issue reporting and security documentation with synchronized README guidance.

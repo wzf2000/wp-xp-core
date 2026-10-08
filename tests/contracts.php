@@ -1,5 +1,5 @@
 <?php
-/** An unconfigured install neither writes nor installs account policy hooks. */
+/** A fresh native load registers features but never installs or writes storage. */
 define('ABSPATH', __DIR__);
 $hooks = [];
 function add_action($name, $callback, ...$rest)
@@ -8,6 +8,16 @@ function add_action($name, $callback, ...$rest)
     $hooks[] = $name;
 }
 function add_filter(...$arguments) {}
+function register_activation_hook(...$arguments) {}
+$shortcodes = [];
+function add_shortcode($name, $callback)
+{
+    $GLOBALS['shortcodes'][] = $name;
+}
+function get_option($key, $default = false)
+{
+    return $default;
+}
 require dirname(__DIR__) . '/wp-xp-core.php';
 $checks = 0;
 function check($name, $condition)
@@ -19,8 +29,13 @@ function check($name, $condition)
     $checks++;
 }
 check('absent like provider disabled', WP_XP_Core_Settings::likes_ready() === false);
-check('unconfigured ready false', Reader_Experience::ready() === false);
-check('no policy hooks on load', $hooks === ['admin_menu', 'admin_enqueue_scripts']);
+check('native mode is configured', reader_experience_native() && reader_experience_configured());
+check('not ready before activation', Reader_Experience::ready() === false);
+check('native shortcode registered', $shortcodes === ['reader_experience']);
+check(
+    'usual policy hooks registered',
+    in_array('transition_post_status', $hooks, true) && in_array('rest_api_init', $hooks, true),
+);
 $admin_styles = [];
 $admin_scripts = [];
 function wp_enqueue_script(...$args)
@@ -80,7 +95,7 @@ foreach (
     }
 }
 check(
-    'unconfigured account panel preserves input',
+    'uninstalled native account panel preserves input',
     reader_experience_account_panel('fixture-panel') === 'fixture-panel',
 );
 $GLOBALS['reader_experience_profile'] = reader_experience_validate([
@@ -96,5 +111,5 @@ try {
 } catch (InvalidArgumentException $error) {
     check('long weekly lock rejected', true);
 }
-$GLOBALS['reader_experience_profile'] = null;
+$GLOBALS['reader_experience_profile'] = reader_experience_defaults();
 echo "$checks WP XP Core contract checks passed\n";
