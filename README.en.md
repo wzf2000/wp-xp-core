@@ -1,70 +1,72 @@
-# WP XP Core
+<p align="center"><img src="docs/assets/hero.svg" alt="WP XP Core — Experience for participation, levels for progress" width="100%"></p>
 
-[简体中文](README.md) · English
+<p align="center">
+  <a href="https://github.com/wzf2000/wp-xp-core/releases/latest"><img alt="GitHub Release" src="https://img.shields.io/github/v/release/wzf2000/wp-xp-core?color=4f46e5"></a>
+  <a href="https://github.com/wzf2000/wp-xp-core/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/wzf2000/wp-xp-core/actions/workflows/ci.yml/badge.svg"></a>
+  <img alt="WordPress 6.0+" src="https://img.shields.io/badge/WordPress-6.0%2B-21759b">
+  <img alt="PHP 8.0+" src="https://img.shields.io/badge/PHP-8.0%2B-777bb4">
+  <a href="LICENSE"><img alt="License: GPL-2.0-or-later" src="https://img.shields.io/badge/license-GPL--2.0--or--later-22c55e"></a>
+</p>
 
-Independent WordPress experience system with configurable rewards and levels: daily check-in, reading dwell time, publishing, comments and author milestones. Version **1.3.1**, PHP **8.0+**, WordPress **6.0+**. No third-party points or rank provider is required.
+<p align="center"><strong>Reward participation with experience. Show progress through configurable levels.</strong></p>
+<p align="center"><a href="README.md">简体中文</a> · English</p>
+<p align="center"><a href="#get-started">Get started</a> · <a href="docs/GUIDE.en.md">User guide</a> · <a href="docs/CONFIGURATION.en.md">Server configuration</a> · <a href="CHANGELOG.md">Changelog</a></p>
 
-## Install and use
+## What you can do
 
-1. Build the verified `wp-xp-core-1.3.1.zip` from a committed checkout and install through WordPress.
-2. Have the server administrator configure the shared JSON profile outside the web root, pointing to the existing ledger and policy options. With no valid configuration, experience activity remains inactive; the settings page is still available.
-3. Stop the previous experience owner before enabling this plugin. Retain all existing balances and event records.
-4. Add the configured experience shortcode to the account page, then verify the frontend in an isolated test environment.
+- **Reward everyday participation.** Set rewards for daily check-in, valid reading, article publication and eligible comments.
+- **Encourage authors.** Configure three view milestones per article, plus three optional like milestones with PageNest Companion.
+- **Create your growth curve.** Add or remove rows to configure minimum experience for 1–100 levels, without editing code.
+- **Show personal progress.** The account panel displays experience, level, experience needed for the next level, check-in and recent private history.
+- **Keep an award trail.** Experience changes are recorded in an event ledger; repeated requests cannot claim the same reward twice.
 
-This plugin connects to an existing configured ledger. It does not install tables, initialize accounts or recalculate balances. Deployment status and server configuration are maintained outside this source tree; preparing source or a ZIP does not deploy the plugin.
+The plugin manages experience and levels independently of myCRED. Likes are an optional integration. When the like service is unavailable, its rules are disabled while other settings remain editable.
 
-## Customize experience rules
+## Get started
 
-Open **Settings → WP XP Core**, or use **Settings** on the plugin row. Administrators with `manage_options` can edit global rules; individual account adjustments are not included.
+**Version 1.3.1 is intended for WordPress sites with server administration access and an existing experience ledger.** It requires an external JSON profile and compatible storage, so uploading a ZIP is only part of setup. There is no first-run initialization wizard for a new site; activation does not create tables, migrate historical data or recalculate experience.
 
-| Rule                                     | Default                                       |
-| ---------------------------------------- | --------------------------------------------- |
-| Daily check-in                           | 2 XP, once per day                            |
-| Valid reading                            | 1 XP, at most 3 rewards per day               |
-| First article publication                | 20 XP                                         |
-| Eligible comment                         | 2 XP, at most 3 rewards per day               |
-| Author view milestones: 100 / 500 / 1000 | 5 / 10 / 20 XP                                |
-| Author like milestones: 10 / 30 / 100    | 5 / 10 / 20 XP                                |
-| Level minimums                           | 0, 5, 20, 60, 150, 300, 600, 1000, 1800, 3000 |
+1. Download `wp-xp-core-VERSION.zip` from the [latest Release](https://github.com/wzf2000/wp-xp-core/releases/latest), rather than GitHub’s automatically generated **Source code** archives.
+2. Ask your server administrator to review the existing ledger, balances, live option and JSON profile using [Server configuration](docs/CONFIGURATION.en.md). Disable the old experience owner before replacing it.
+3. Install and activate the ZIP through **Plugins → Add New Plugin → Upload Plugin** in WordPress.
+4. Add the configured shortcode to an account page. The default is `[reader_experience]`.
+5. Open **Settings → WP XP Core**, adjust the rules and save. See the [user guide](docs/GUIDE.en.md) for steps and troubleshooting.
 
-Reward values accept integers from 0 to 1,000,000. Reading and comment daily limits accept 0–1,000. Level minimums accept 1–100 strictly increasing integer thresholds starting at 0, each at most 1,000,000,000. Edit levels as rows, adding or removing entries with JavaScript; the first level remains 0. Views and likes each have three tiers with editable counts and rewards. Counts must be strictly increasing integers from 1 to 1,000,000,000 within each group.
+Existing installations can update using the next Release ZIP. No automatic updater is included. For the older Reader Experience directory switch and upgrade requirements, see [Compatibility and upgrades](docs/CONFIGURATION.en.md#compatibility-and-upgrades).
 
-Each article can earn each tier only once; changing counts does not reset claimed tiers. Saving awards nothing. Unclaimed tiers are evaluated against cumulative ledger counts on the next qualifying activity, so lowering a threshold can make an unclaimed tier eligible on that next activity.
+## Configure your experience rules
 
-New reward rules apply to events first recorded after the change. Historical rewards are never recalculated or reissued. A zero reward still records the event to prevent later duplicate rewards; a zero daily limit disables that category's rewards. Comment removal and restoration use the original award, even when current rules differ. Changing level thresholds immediately changes displayed levels without changing experience balances.
+The settings page groups **daily activities, author milestones and level progression**. You can change rewards, reading/comment daily limits, milestone counts and level thresholds.
 
-Defaults exactly preserve the previous policy. Loading the plugin or settings creates no settings option. Invalid saved data falls back to defaults with an administrator warning; invalid submissions preserve the previous settings. Saves require administrator capability and a valid nonce, and stale forms cannot overwrite newer settings. Settings are stored in `wp_xp_core_rules`; they do not replace the external storage/integration profile.
+| Activity                          | Default rule                                               |
+| --------------------------------- | ---------------------------------------------------------- |
+| Daily check-in                    | +2, once per day                                           |
+| Valid reading                     | At least 15 seconds, +1, at most 3 rewarded visits per day |
+| First article publication         | +20 per article                                            |
+| Eligible comment                  | +2 per comment, at most 3 rewards per day                  |
+| Author view milestones            | 100 / 500 / 1000 views, awarding +5 / +10 / +20            |
+| Author like milestones (optional) | 10 / 30 / 100 likes, awarding +5 / +10 / +20               |
+| Level progression                 | 10 levels: 0, 5, 20, 60, 150, 300, 600, 1000, 1800, 3000   |
 
-The responsive settings page groups daily activities, author milestones and level progression. Its sidebar provides the version, author [wzf2000](https://github.com/wzf2000), license and rule guidance. The [source repository](https://github.com/wzf2000/wp-xp-core) provides documentation, change history and contribution guidance. Admin styles and scripts load only on this plugin’s settings page.
+**Reward changes apply to events first recorded afterward; level threshold changes affect displayed levels immediately.** Changing thresholds leaves balances intact, and saving rules awards no experience. Each article can claim each milestone tier only once. Lowering a count may make an unclaimed tier eligible on the next qualifying activity.
 
-## Frontend and integration
+For value ranges, comment eligibility, counting and examples, see [Rule settings](docs/GUIDE.en.md#set-experience-rules).
 
-The frontend displays experience, the calculated level, the next threshold and recent private history. Balances use `reader_experience_balance` user metadata as a projection of the event ledger. Check-in and reading require authenticated requests; reading still requires 15 seconds of dwell time. Existing eligibility restrictions, daily event deduplication and transactional ledger writes remain in place.
+## Documentation and help
 
-PageNest Companion owns likes. WP XP Core receives the standard like event, records it once with zero XP and applies author milestones. The previous like REST aliases delegate to Companion. Disabling experience does not prevent Companion likes. Like milestones require an available Companion like interface and its likes feature enabled. Otherwise the group is disabled with an explanation, saving other rules preserves stored like settings, and runtime like recording and milestone awards are disabled.
+| Your goal                                                      | Read                                                                      |
+| -------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| Set rewards, add levels or place the account panel             | [User guide](docs/GUIDE.en.md)                                            |
+| Investigate maintenance messages, missing XP or disabled likes | [Frequently asked questions](docs/GUIDE.en.md#frequently-asked-questions) |
+| Configure server storage or integrate another plugin           | [Configuration and integration](docs/CONFIGURATION.en.md)                 |
+| Review version changes                                         | [Changelog](CHANGELOG.md)                                                 |
+| Contribute improvements                                        | [Contributing](CONTRIBUTING.md)                                           |
+| Maintain GitHub releases                                       | [Releasing](docs/RELEASING.md)                                            |
 
-The `site_tools_user_level` filter accepts the fallback and user ID and returns `Level N` when ready; it retains the fallback when unavailable. The `site_tools_account_panel` filter supplies the account panel when the policy is ready and preserves the caller's existing output otherwise.
+Documentation on `main` describes the current source. For an installed release, use the documentation at its Release tag.
 
-## Upgrade from Reader Experience
+[Open an Issue](https://github.com/wzf2000/wp-xp-core/issues/new/choose) with your version, observed behavior and reproduction steps. Report security issues privately under the [security policy](SECURITY.md).
 
-Version 1.1.1 changed the plugin basename to `wp-xp-core/wp-xp-core.php`. Disable `reader-experience/reader-experience.php` before activating WP XP Core; do not load both copies. WordPress identifies these as different plugin entries, so replacing the old installation requires an explicit activation switch. Update server early-loading configuration to the new basename during the same switch. Retain the external compatibility profile and existing account data; the rename performs no database, balance or schedule migration.
+## Author and license
 
-The `Reader_Experience` class, `reader_experience_*` functions, storage and option names, the default `reader-experience/v1` REST namespace, `reader_experience` shortcode, asset handles, `ReaderExperience` JavaScript global and `reader-experience-*` CSS selectors remain stable compatibility interfaces.
-
-Upgrading from 1.1.1 requires no data migration. Existing complete custom policies gain default milestone counts in memory without writes, retaining custom rewards and levels. Installations without saved rules continue using the original defaults.
-
-## Development and release
-
-[Configuration and safety](docs/CONFIGURATION.md) · [Development commands](CONTRIBUTING.md) · [Changelog](CHANGELOG.md) · [License](LICENSE)
-
-Maintain the Chinese and English READMEs together whenever behavior, configuration, installation or release information changes, retaining reciprocal language links.
-
-For local builds, commit the complete candidate, then run `npm run package` and `npm run package:check`. A GitHub remote or `REPOSITORY` value is optional. The manual GitHub release workflow below creates its own tags; do not pre-create a release tag.
-
-Pinned development dependencies, formatters, asset build, contracts, storage runtime tests, browser checks and deterministic package guards are self-contained. The installation ZIP includes PHP, content-hashed JS/CSS and both READMEs, and excludes tests, tools and dependencies. CI runs PHP 8.0/8.2. The optional local identity scanner accepts external rules; public CI needs no secrets.
-
-## Contribute
-
-Use Issues for reproducible bugs or feature discussion, and Pull Requests for improvements. Read [Contributing](CONTRIBUTING.md) first. Report security issues privately under the [security policy](SECURITY.md); never post credentials, user data or exploit details publicly.
-
-CI runs the same read-only checks for pushes and Pull Requests; contributors need no site credentials. Maintainers can manually run the release workflow from `main`: it builds artifacts by default and creates a GitHub Release only when publishing is explicitly selected. Releases never deploy to any site; see [Releasing](docs/RELEASING.md).
+Maintained by [wzf2000](https://github.com/wzf2000), under **[GPL-2.0-or-later](LICENSE)**. Issues and Pull Requests are welcome.

@@ -1,7 +1,7 @@
 # 发布流程 / Releasing
 
 此流程只生成安装包或发布 GitHub Release，不连接或更新 WordPress 站点。插件仍需要站点管理员配置已有账本与外部 JSON，详见 [配置说明](CONFIGURATION.md)。
-This workflow builds packages or publishes a GitHub Release; it never connects to or updates WordPress sites. Administrators still configure an existing ledger and external JSON profile; see [Configuration](CONFIGURATION.md).
+This workflow builds packages or publishes a GitHub Release; it never connects to or updates WordPress sites. Administrators still configure an existing ledger and external JSON profile; see [Configuration](CONFIGURATION.en.md).
 
 1. 通过 Pull Request 更新版本、变更日志及中英文 README。版本必须一致：插件头、运行时常量、`package.json`、`package-lock.json` 根包。
    Update the version, changelog and both READMEs through a Pull Request. Keep the plugin header, runtime constant and root package/lock versions aligned.
