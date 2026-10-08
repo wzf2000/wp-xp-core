@@ -9,7 +9,7 @@
  * Requires PHP: 8.0
  * Requires at least: 6.0
  * Update URI: https://github.com/wzf2000/wp-xp-core
- * Version: 1.4.0
+ * Version: 1.4.1
  */
 defined('ABSPATH') || exit();
 require_once __DIR__ . '/config.php';
@@ -18,7 +18,7 @@ require_once __DIR__ . '/lifecycle.php';
 register_activation_hook(__FILE__, [WP_XP_Core_Lifecycle::class, 'activate']);
 final class Reader_Experience
 {
-    const VERSION = '1.4.0';
+    const VERSION = '1.4.1';
     const BALANCE_META = 'reader_experience_balance';
     const MINS = [0, 5, 20, 60, 150, 300, 600, 1000, 1800, 3000];
     private static bool $writing = false;

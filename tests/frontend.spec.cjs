@@ -143,7 +143,9 @@ test('native panel setup is separate from experience rules', async ({ page }) =>
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
 
-test('community levels remain on one line at desktop and mobile widths', async ({ page }) => {
+test('community levels stay on one line despite theme cell wrapping at desktop and mobile widths', async ({
+  page,
+}) => {
   await page.goto('/ranking.html');
   for (const width of [1200, 390, 320]) {
     await page.setViewportSize({ width, height: 800 });

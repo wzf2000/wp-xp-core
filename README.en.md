@@ -24,7 +24,7 @@ The plugin manages experience and levels independently of myCRED. Likes are an o
 
 ## Get started
 
-**Current source version: 1.4.0.** On a new site, installing and activating creates the experience ledger and uses default rules. No server JSON profile or other experience plugin is required. Existing users start at zero XP; old articles and historical comments do not trigger automatic backfill.
+**Current source version: 1.4.1.** On a new site, installing and activating creates the experience ledger and uses default rules. No server JSON profile or other experience plugin is required. Existing users start at zero XP; old articles and historical comments do not trigger automatic backfill.
 
 1. Download `wp-xp-core-VERSION.zip` from [Releases](https://github.com/wzf2000/wp-xp-core/releases), rather than GitHub’s automatically generated **Source code** archives. Automatic first-install setup requires **1.4.0 or later**; use the release documentation for older versions.
 2. Install and activate the ZIP through **Plugins → Add New Plugin → Upload Plugin** in WordPress.
