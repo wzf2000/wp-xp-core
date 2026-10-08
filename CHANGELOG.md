@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.4.1
+
+- Preserve single-line community ranking levels when a theme forces table cells to wrap; keep the override scoped to the level column.
+- Add a regression fixture with the theme’s important cell wrapping rule.
+
 ## 1.4.0
 
 - Set up native experience storage on activation with built-in defaults, without server JSON or another points plugin. Preserve explicit external integrations and all existing data.
