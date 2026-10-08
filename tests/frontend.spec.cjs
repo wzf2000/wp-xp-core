@@ -4,7 +4,10 @@ const state = {
   level: 2,
   next: 20,
   checked_in: false,
-  history: [{ local_day: '2026-01-01', kind: 'checkin', xp: 2 }],
+  history: [
+    { local_day: '2026-01-01', kind: 'checkin', xp: 2 },
+    { local_day: '2026-01-01', kind: 'reconciliation', xp: 10 },
+  ],
 };
 test.beforeEach(async ({ page }) => {
   await page.route('**/*', (route) =>
@@ -33,6 +36,7 @@ test('state, check-in and safe history rendering', async ({ page }) => {
   });
   await page.goto('/');
   await expect(page.locator('.reader-experience-state')).toContainText('经验 5');
+  await expect(page.locator('.reader-experience-history')).toContainText('历史账本校准 +10');
   await page.locator('.reader-experience-checkin').click();
   await expect(page.locator('.reader-experience-checkin')).toBeDisabled();
   await expect(page.locator('.reader-experience-message')).toContainText('签到成功');

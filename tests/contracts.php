@@ -37,6 +37,7 @@ check(
 foreach (
     [
         ['unknown' => 1],
+        ['rank_option' => 'legacy_ranks'],
         ['table_suffix' => 'events;DROP'],
         ['panel_page_id' => '7'],
         ['rest_aliases' => ['bad/url']],

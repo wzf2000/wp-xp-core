@@ -1,13 +1,14 @@
 <?php
 /** Plugin Name: Reader Experience
- * Description: Bounded experience events, ten ranks and private activity history.
- * Version: 1.0.0
+ * Description: Bounded experience events, ten levels and private activity history.
+ * Version: 1.1.0
  */
 defined('ABSPATH') || exit();
 require_once __DIR__ . '/config.php';
 final class Reader_Experience
 {
-    const VERSION = '1.0.0';
+    const VERSION = '1.1.0';
+    const BALANCE_META = 'reader_experience_balance';
     const MINS = [0, 5, 20, 60, 150, 300, 600, 1000, 1800, 3000];
     private static bool $writing = false;
     public static function ready(): bool
@@ -93,9 +94,7 @@ final class Reader_Experience
     }
     public static function guard($check, $uid, $key)
     {
-        return in_array($key, ['mycred_default', 'mycred_default_total'], true) && !self::$writing
-            ? false
-            : $check;
+        return $key === self::BALANCE_META && !self::$writing ? false : $check;
     }
     public static function set_balance(int $uid, int $value): void
     {
@@ -104,28 +103,30 @@ final class Reader_Experience
         }
         wp_cache_delete($uid, 'user_meta');
         $value = max(0, $value);
-        update_user_meta($uid, 'mycred_default', $value);
-        update_user_meta($uid, 'mycred_default_total', $value);
-        $ranks = get_option(reader_experience_config('rank_option'), []);
-        $level = 0;
-        foreach (self::MINS as $i => $min) {
-            if ($value >= $min) {
-                $level = $i;
-            }
-        }
-        if (isset($ranks[$level])) {
-            update_user_meta($uid, 'mycred_rank', (int) $ranks[$level]);
-            update_user_meta($uid, 'mycred_rank_ids', [(int) $ranks[$level]]);
-            delete_user_meta($uid, 'mycred_promoted_rank_ids');
-            delete_user_meta($uid, 'mycred_demoted_rank_ids');
-            foreach ($ranks as $id) {
-                delete_post_meta($id, 'mycred_rank_users');
-            }
-        }
-        wp_cache_delete($uid, 'user_meta');
-        if ((int) get_user_meta($uid, 'mycred_default', true) !== $value) {
+        $existing = metadata_exists('user', $uid, self::BALANCE_META);
+        $previous = get_user_meta($uid, self::BALANCE_META, true);
+        $saved = update_user_meta($uid, self::BALANCE_META, $value);
+        // WordPress returns false for both a failed write and an unchanged existing value.
+        if ($saved === false && (!$existing || (string) $previous !== (string) $value)) {
             throw new RuntimeException('Experience write failed');
         }
+        wp_cache_delete($uid, 'user_meta');
+        if (
+            !metadata_exists('user', $uid, self::BALANCE_META) ||
+            (string) get_user_meta($uid, self::BALANCE_META, true) !== (string) $value
+        ) {
+            throw new RuntimeException('Experience write failed');
+        }
+    }
+    public static function level(int $experience): int
+    {
+        $level = 1;
+        foreach (self::MINS as $i => $min) {
+            if ($experience >= $min) {
+                $level = $i + 1;
+            }
+        }
+        return $level;
     }
     public static function exists(string $key): bool
     {
@@ -184,7 +185,7 @@ final class Reader_Experience
         );
         if ($xp !== 0) {
             wp_cache_delete($uid, 'user_meta');
-            self::set_balance($uid, (int) get_user_meta($uid, 'mycred_default', true) + $xp);
+            self::set_balance($uid, (int) get_user_meta($uid, self::BALANCE_META, true) + $xp);
         }
         return true;
     }
@@ -203,13 +204,8 @@ final class Reader_Experience
     {
         global $wpdb;
         wp_cache_delete($uid, 'user_meta');
-        $xp = (int) get_user_meta($uid, 'mycred_default', true);
-        $level = 1;
-        foreach (self::MINS as $i => $min) {
-            if ($xp >= $min) {
-                $level = $i + 1;
-            }
-        }
+        $xp = (int) get_user_meta($uid, self::BALANCE_META, true);
+        $level = self::level($xp);
         return [
             'experience' => $xp,
             'level' => $level,
@@ -560,19 +556,6 @@ final class Reader_Experience
         if (!self::ready()) {
             return;
         }
-        global $wp_filter;
-        foreach (array_keys($wp_filter) as $hook) {
-            if (preg_match('/^wp_ajax_(?:nopriv_)?(?:mycred|buycred|sell_content)/i', $hook)) {
-                remove_all_actions($hook);
-                add_action(
-                    $hook,
-                    function () {
-                        wp_send_json_error(['message' => '经验不可购买、转让或手动调整。'], 410);
-                    },
-                    0,
-                );
-            }
-        }
         remove_all_actions('wp_ajax_bigfa_like');
         remove_all_actions('wp_ajax_nopriv_bigfa_like');
         foreach (['wp_ajax_bigfa_like', 'wp_ajax_nopriv_bigfa_like'] as $name) {
@@ -600,16 +583,28 @@ final class Reader_Experience
         }
         try {
             $week = wp_date('o-W', null, new DateTimeZone('Asia/Shanghai'));
-            self::transaction(function () use ($week) {
+            $users = self::transaction(function () use ($week) {
                 global $wpdb;
                 if (get_option(reader_experience_config('week_option')) === $week) {
-                    return;
+                    return [];
+                }
+                $users = $wpdb->get_col(
+                    "SELECT DISTINCT user_id FROM {$wpdb->usermeta} WHERE meta_key IN ('max_2048_score_weekly','max_2048_fib_score_weekly')",
+                );
+                if ($wpdb->last_error !== '') {
+                    throw new RuntimeException('Weekly score lookup failed');
                 }
                 self::q(
                     "DELETE FROM {$wpdb->usermeta} WHERE meta_key IN ('max_2048_score_weekly','max_2048_fib_score_weekly')",
                 );
-                update_option(reader_experience_config('week_option'), $week, false);
+                if (!update_option(reader_experience_config('week_option'), $week, false)) {
+                    throw new RuntimeException('Weekly marker write failed');
+                }
+                return $users;
             });
+            foreach ($users as $uid) {
+                wp_cache_delete((int) $uid, 'user_meta');
+            }
         } finally {
             $wpdb->get_var(
                 $wpdb->prepare('SELECT RELEASE_LOCK(%s)', reader_experience_lock('weekly_lock')),
@@ -701,27 +696,23 @@ function reader_experience_account_panel($original)
     return Reader_Experience::ready() ? Reader_Experience::panel() : $original;
 }
 add_filter('site_tools_account_panel', 'reader_experience_account_panel');
+function reader_experience_user_level($fallback, $uid)
+{
+    if (!Reader_Experience::ready() || !is_numeric($uid) || (int) $uid < 1) {
+        return $fallback;
+    }
+    return 'Level ' .
+        Reader_Experience::level(
+            (int) get_user_meta((int) $uid, Reader_Experience::BALANCE_META, true),
+        );
+}
+add_filter('site_tools_user_level', 'reader_experience_user_level', 10, 2);
 if (!reader_experience_configured()) {
     return;
 }
-add_filter('mycred_add', '__return_false', PHP_INT_MAX);
 foreach (['update_user_metadata', 'add_user_metadata', 'delete_user_metadata'] as $hook) {
     add_filter($hook, [Reader_Experience::class, 'guard'], PHP_INT_MAX, 3);
 }
-add_filter('option_mycred_pref_hooks', function ($v) {
-    if (is_array($v)) {
-        $v['active'] = [];
-    }
-    return $v;
-});
-add_filter('option_mycred_pref_addons', function ($v) {
-    if (is_array($v)) {
-        $v['active'] = array_values(
-            array_diff($v['active'] ?? [], ['transfer', 'buy-creds', 'sell-content', 'gateway']),
-        );
-    }
-    return $v;
-});
 add_action('init', [Reader_Experience::class, 'legacy'], PHP_INT_MAX);
 add_action('rest_api_init', [Reader_Experience::class, 'routes']);
 add_action('transition_post_status', [Reader_Experience::class, 'published'], 20, 3);

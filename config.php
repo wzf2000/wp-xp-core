@@ -6,7 +6,6 @@ function reader_experience_defaults()
     return [
         'table_suffix' => 'reader_experience_events',
         'live_option' => 'reader_experience_live',
-        'rank_option' => 'reader_experience_rank_ids',
         'week_option' => 'reader_experience_week_rotated',
         'event_lock' => 'reader_experience_events',
         'weekly_lock' => 'reader_experience_scoring',
@@ -25,15 +24,7 @@ function reader_experience_validate($input)
     }
     $config = array_replace($defaults, $input);
     foreach (
-        [
-            'table_suffix',
-            'live_option',
-            'rank_option',
-            'week_option',
-            'event_lock',
-            'weekly_lock',
-            'weekly_hook',
-        ]
+        ['table_suffix', 'live_option', 'week_option', 'event_lock', 'weekly_lock', 'weekly_hook']
         as $key
     ) {
         if (
