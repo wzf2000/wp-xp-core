@@ -1,4 +1,4 @@
-name: Reader Experience CI
+name: WP XP Core CI
 on:
   push:
   pull_request:
@@ -60,7 +60,7 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: reader-experience-browser-failures-${{ matrix.php }}-${{ inputs.source_sha || github.sha }}
+          name: wp-xp-core-browser-failures-${{ matrix.php }}-${{ inputs.source_sha || github.sha }}
           path: |
             test-results/
             playwright-report/
@@ -77,11 +77,11 @@ jobs:
         if: matrix.php == '8.2'
         uses: actions/upload-artifact@v4
         with:
-          name: reader-experience-release-${{ inputs.source_sha || github.sha }}
+          name: wp-xp-core-release-${{ inputs.source_sha || github.sha }}
           path: |
-            dist/reader-experience-*.zip
-            dist/reader-experience-*.zip.sha256
-            dist/reader-experience-*.manifest.json
+            dist/wp-xp-core-*.zip
+            dist/wp-xp-core-*.zip.sha256
+            dist/wp-xp-core-*.manifest.json
             dist/release-notes.md
             dist/release-validation.json
           if-no-files-found: error

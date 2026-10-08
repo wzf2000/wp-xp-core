@@ -1,5 +1,5 @@
 {
-  "name": "reader-experience",
+  "name": "wp-xp-core",
   "private": true,
   "scripts": {
     "format": "node tools/format.cjs --write",
@@ -19,6 +19,6 @@
     "prettier": "3.9.6",
     "@playwright/test": "1.55.1"
   },
-  "version": "1.1.0",
+  "version": "1.1.1",
   "license": "GPL-2.0-or-later"
 }

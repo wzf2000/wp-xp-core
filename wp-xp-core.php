@@ -1,13 +1,13 @@
 <?php
-/** Plugin Name: Reader Experience
+/** Plugin Name: WP XP Core
  * Description: Bounded experience events, ten levels and private activity history.
- * Version: 1.1.0
+ * Version: 1.1.1
  */
 defined('ABSPATH') || exit();
 require_once __DIR__ . '/config.php';
 final class Reader_Experience
 {
-    const VERSION = '1.1.0';
+    const VERSION = '1.1.1';
     const BALANCE_META = 'reader_experience_balance';
     const MINS = [0, 5, 20, 60, 150, 300, 600, 1000, 1800, 3000];
     private static bool $writing = false;

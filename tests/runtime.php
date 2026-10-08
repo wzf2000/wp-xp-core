@@ -175,7 +175,7 @@ function update_option($key, $value, $autoload = null)
         ),
     ) > 0;
 }
-require dirname(__DIR__) . '/reader-experience.php';
+require dirname(__DIR__) . '/wp-xp-core.php';
 $GLOBALS['reader_experience_profile'] = reader_experience_validate([]);
 $checks = 0;
 function verify($name, $condition)

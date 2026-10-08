@@ -8,7 +8,7 @@ function add_action($name, $callback, ...$rest)
     $hooks[] = $name;
 }
 function add_filter(...$arguments) {}
-require dirname(__DIR__) . '/reader-experience.php';
+require dirname(__DIR__) . '/wp-xp-core.php';
 $checks = 0;
 function check($name, $condition)
 {
@@ -69,4 +69,4 @@ try {
     check('long weekly lock rejected', true);
 }
 $GLOBALS['reader_experience_profile'] = null;
-echo "$checks Reader Experience contract checks passed\n";
+echo "$checks WP XP Core contract checks passed\n";

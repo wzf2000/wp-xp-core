@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.1
+
+- Rename the plugin and installation package to WP XP Core (`wp-xp-core/wp-xp-core.php`).
+- Preserve the existing experience policy, ledger, balances, options, runtime API and frontend integration identifiers.
+- Update release tooling, CI and fixtures for the new package identity; no data migration is performed.
+
 ## 1.1.0
 
 - Maintain independent balances in `reader_experience_balance` within the existing ledger transaction and lock.

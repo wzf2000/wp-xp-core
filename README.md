@@ -1,22 +1,30 @@
-# Reader Experience
+# WP XP Core
 
-Independent WordPress plugin for the existing ten-level reader experience policy: daily check-in, reading dwell time, publishing, comments and author milestones. Version **1.1.0**, PHP **8.0+**, WordPress **6.0+**.
+Independent WordPress plugin for the existing ten-level reader experience policy: daily check-in, reading dwell time, publishing, comments and author milestones. Version **1.1.1**, PHP **8.0+**, WordPress **6.0+**.
 
 This plugin connects to an existing configured ledger. It does not establish a new balance policy, install tables or recalculate accounts. Deployment status and server configuration are maintained outside this source tree; preparing source or a ZIP does not deploy the plugin.
 
 ## Install and use
 
-1. Build the verified `reader-experience-1.1.0.zip` from a committed checkout and install through WordPress.
+1. Build the verified `wp-xp-core-1.1.1.zip` from a committed checkout and install through WordPress.
 2. Have the server administrator configure the shared JSON profile outside the web root, pointing to the existing ledger and policy options. With no configuration the plugin remains inactive.
 3. Stop the previous experience owner before enabling this plugin. Retain all existing balances and event records.
 4. Add the configured experience shortcode to the account page, then verify check-in, history and login return with a test account.
 
-The frontend displays experience, level and recent history. Balances use the independent `reader_experience_balance` user metadata; the ten level boundaries remain unchanged. No third-party points or rank provider is required. Check-in and reading require authenticated requests. PageNest Companion owns likes; Reader Experience receives the standard like event, records it once with zero XP and applies the existing author milestones. The previous like REST aliases delegate to Companion. Disabling experience does not prevent Companion likes.
+The frontend displays experience, level and recent history. Balances use the independent `reader_experience_balance` user metadata; the ten level boundaries remain unchanged. No third-party points or rank provider is required. Check-in and reading require authenticated requests. PageNest Companion owns likes; WP XP Core receives the standard like event, records it once with zero XP and applies the existing author milestones. The previous like REST aliases delegate to Companion. Disabling experience does not prevent Companion likes.
 
 The `site_tools_user_level` filter accepts the fallback and user ID and returns `Level N` when ready; it retains the fallback when unavailable. The `site_tools_account_panel` filter supplies the account panel when the policy is ready and preserves the caller's existing output otherwise.
+
+## Upgrade from Reader Experience
+
+Version 1.1.1 changes the plugin basename to `wp-xp-core/wp-xp-core.php`. Disable the previous `reader-experience/reader-experience.php` entry before activating WP XP Core; do not load both copies. WordPress identifies these as different plugin entries, so replacing the old installation requires an explicit activation switch. Update any server early-loading configuration that references the old plugin basename to the new basename during the same switch. Retain the external compatibility profile and all existing account data; this rename performs no database, balance or schedule migration.
+
+The `Reader_Experience` class, `reader_experience_*` functions, storage and option names, the default `reader-experience/v1` REST namespace, `reader_experience` shortcode, asset handles, `ReaderExperience` JavaScript global and `reader-experience-*` CSS selectors deliberately remain stable. Existing integrations and content continue to use them.
 
 ## Development and release
 
 [Configuration and safety](docs/CONFIGURATION.md) · [Development commands](CONTRIBUTING.md) · [Changelog](CHANGELOG.md) · [License](LICENSE)
+
+The plugin supports a local Git release workflow without a remote: commit the complete candidate, run `npm run package` and `npm run package:check`, then tag the verified commit as `v1.1.1`. A GitHub remote or `REPOSITORY` value is optional.
 
 Pinned development dependencies, formatter, asset build, contracts, browser checks and deterministic package guards are self-contained. The installation ZIP includes PHP, content-hashed JS/CSS and user documentation, and excludes tests, tools and dependencies. CI runs PHP 8.0/8.2; identity rules are supplied externally.

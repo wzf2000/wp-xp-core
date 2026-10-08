@@ -11,8 +11,8 @@ import zipfile
 
 ROOT = Path(__file__).resolve().parent.parent
 SLUG = json.loads((ROOT / "package.json").read_text())["name"]
-assert SLUG in {"reader-experience"}, "Unknown package slug"
-HEADER = "reader-experience.php"
+assert SLUG == "wp-xp-core", "Unknown package slug"
+HEADER = "wp-xp-core.php"
 VERSION_RE = r"(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-(?:alpha|beta|rc)\.[1-9]\d*)?"
 
 
@@ -34,9 +34,15 @@ def digest(data):
 def identity(version, sha):
     assert re.fullmatch(VERSION_RE, version), "Invalid version"
     assert re.fullmatch(r"[0-9a-f]{40}", sha), "Invalid source SHA"
-    header_version = re.search(r"Version:\s*(\S+)", (ROOT / HEADER).read_text()).group(1)
+    header = (ROOT / HEADER).read_text()
+    assert re.search(r"Plugin Name:\s*WP XP Core\s*(?:\n|$)", header), "Plugin name mismatch"
+    assert not (ROOT / "reader-experience.php").exists(), "Retired plugin entry remains"
+    header_version = re.search(r"Version:\s*(\S+)", header).group(1)
     package = json.loads((ROOT / "package.json").read_text())
     lock = json.loads((ROOT / "package-lock.json").read_text())
+    assert (
+        package["name"] == lock["name"] == lock["packages"][""]["name"] == SLUG
+    ), "Package name mismatch"
     assert (
         header_version
         == package["version"]

@@ -19,12 +19,12 @@ class ReleaseGuards(unittest.TestCase):
         shutil.copy(
             Path(__file__).resolve().parent.parent / "tools/release.py", self.root / "tools"
         )
-        package = {"name": "reader-experience", "version": "1.0.0"}
-        lock = {"version": "1.0.0", "packages": {"": package}}
+        package = {"name": "wp-xp-core", "version": "1.0.0"}
+        lock = {"name": "wp-xp-core", "version": "1.0.0", "packages": {"": package}}
         for name, value in [("package.json", package), ("package-lock.json", lock)]:
             (self.root / name).write_text(json.dumps(value))
         for name, value in {
-            "reader-experience.php": "<?php // Version: 1.0.0\n",
+            "wp-xp-core.php": "<?php // Plugin Name: WP XP Core\n// Version: 1.0.0\n",
             "index.php": "<?php\n",
             "README.md": "Read me\n",
             "LICENSE": "GPL\n",
@@ -69,9 +69,28 @@ class ReleaseGuards(unittest.TestCase):
         (self.root / "package-lock.json").write_text("{}")
         self.run_tool(ok=False)
 
+    def test_package_rename_identity_guards(self):
+        self.run_tool("--identity-only")
+        lock_path = self.root / "package-lock.json"
+        original_lock = lock_path.read_text()
+        lock = json.loads(original_lock)
+        lock["packages"][""]["name"] = "retired-package"
+        lock_path.write_text(json.dumps(lock))
+        self.assertIn("Package name mismatch", self.run_tool("--identity-only", ok=False).stderr)
+        lock_path.write_text(original_lock)
+        header_path = self.root / "wp-xp-core.php"
+        original_header = header_path.read_text()
+        header_path.write_text(original_header.replace("WP XP Core", "Retired Product"))
+        self.assertIn("Plugin name mismatch", self.run_tool("--identity-only", ok=False).stderr)
+        header_path.write_text(original_header)
+        (self.root / "reader-experience.php").write_text(original_header)
+        self.assertIn(
+            "Retired plugin entry remains", self.run_tool("--identity-only", ok=False).stderr
+        )
+
     def test_determinism_and_installation_allowlist(self):
         self.run_tool()
-        archive = self.root / "dist/reader-experience-1.0.0.zip"
+        archive = self.root / "dist/wp-xp-core-1.0.0.zip"
         first = hashlib.sha256(archive.read_bytes()).hexdigest()
         self.run_tool()
         self.assertEqual(first, hashlib.sha256(archive.read_bytes()).hexdigest())
@@ -86,8 +105,10 @@ class ReleaseGuards(unittest.TestCase):
                 )
             )
         with zipfile.ZipFile(archive) as bundle:
-            self.assertNotIn("reader-experience/theme.json", bundle.namelist())
-            self.assertNotIn("reader-experience/screenshot.png", bundle.namelist())
+            self.assertIn("wp-xp-core/wp-xp-core.php", bundle.namelist())
+            self.assertNotIn("wp-xp-core/reader-experience.php", bundle.namelist())
+            self.assertNotIn("wp-xp-core/theme.json", bundle.namelist())
+            self.assertNotIn("wp-xp-core/screenshot.png", bundle.namelist())
         self.run_tool("--check-package")
 
     def test_nested_installation_files_and_commit_bytes(self):
@@ -124,9 +145,9 @@ class ReleaseGuards(unittest.TestCase):
 
     def test_tampered_bundle_manifest_and_checksum(self):
         for name in [
-            "reader-experience-1.0.0.zip",
-            "reader-experience-1.0.0.manifest.json",
-            "reader-experience-1.0.0.zip.sha256",
+            "wp-xp-core-1.0.0.zip",
+            "wp-xp-core-1.0.0.manifest.json",
+            "wp-xp-core-1.0.0.zip.sha256",
             "release-notes.md",
         ]:
             with self.subTest(name=name):

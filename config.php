@@ -107,7 +107,7 @@ try {
 } catch (Throwable $error) {
     $GLOBALS['reader_experience_profile'] = null;
     add_action('admin_notices', static function () {
-        echo '<div class="notice notice-error"><p>Reader Experience compatibility profile is invalid; features are disabled.</p></div>';
+        echo '<div class="notice notice-error"><p>WP XP Core compatibility profile is invalid; features are disabled.</p></div>';
     });
 }
 function reader_experience_configured()
