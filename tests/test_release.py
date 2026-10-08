@@ -24,11 +24,12 @@ class ReleaseGuards(unittest.TestCase):
         for name, value in [("package.json", package), ("package-lock.json", lock)]:
             (self.root / name).write_text(json.dumps(value))
         for name, value in {
-            "wp-xp-core.php": "<?php // Plugin Name: WP XP Core\n// Version: 1.0.0\n",
+            "wp-xp-core.php": "<?php // Plugin Name: WP XP Core\n// Version: 1.0.0\nfinal class Reader_Experience { const VERSION = '1.0.0'; }\n",
             "index.php": "<?php\n",
             "README.md": "Read me\n",
             "README.en.md": "English readme\n",
             "LICENSE": "GPL\n",
+            "SECURITY.md": "Private reporting\n",
             "CHANGELOG.md": "# Changes\n\n## 1.0.0\n\n- Current functionality.\n",
             "theme.json": "{}\n",
             "screenshot.png": "fixture",
@@ -69,6 +70,16 @@ class ReleaseGuards(unittest.TestCase):
         self.run_tool("--repository", "https://example.invalid/repo", ok=False)
         (self.root / "package-lock.json").write_text("{}")
         self.run_tool(ok=False)
+
+    def test_runtime_version_must_match_release(self):
+        path = self.root / "wp-xp-core.php"
+        original = path.read_text()
+        self.run_tool("--identity-only")
+        for declaration in ["const VERSION = '0.9.0';", "const OTHER = '1.0.0';"]:
+            path.write_text(original.replace("const VERSION = '1.0.0';", declaration))
+            self.assertIn(
+                "Runtime version mismatch", self.run_tool("--identity-only", ok=False).stderr
+            )
 
     def test_package_rename_identity_guards(self):
         self.run_tool("--identity-only")

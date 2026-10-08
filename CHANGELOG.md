@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.3.1
+
+- Prepare public contribution, issue reporting and security documentation with synchronized README guidance.
+- Add read-only pull request checks, a stable required gate and a manually dispatched, verified release pipeline.
+- Remove unrelated game guidance and private-repository labels from settings without changing runtime integrations.
+
 ## 1.3.0
 
 - Configure view and like milestone counts while retaining stable claimed-tier identities and existing custom policies.

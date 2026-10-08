@@ -38,6 +38,10 @@ def identity(version, sha):
     assert re.search(r"Plugin Name:\s*WP XP Core\s*(?:\n|$)", header), "Plugin name mismatch"
     assert not (ROOT / "reader-experience.php").exists(), "Retired plugin entry remains"
     header_version = re.search(r"Version:\s*(\S+)", header).group(1)
+    runtime_version = re.search(
+        r"class Reader_Experience\s*\{\s*const VERSION\s*=\s*[\"']([^\"']+)[\"']\s*;", header
+    )
+    assert runtime_version and runtime_version.group(1) == version, "Runtime version mismatch"
     package = json.loads((ROOT / "package.json").read_text())
     lock = json.loads((ROOT / "package-lock.json").read_text())
     assert (
@@ -58,7 +62,7 @@ def identity(version, sha):
 def source_files():
     # Installation allowlist excludes development tools, tests and dependencies.
     names = {p.name for p in ROOT.glob("*.php")}
-    names |= {"README.md", "README.en.md", "LICENSE", "CHANGELOG.md"}
+    names |= {"README.md", "README.en.md", "LICENSE", "CHANGELOG.md", "SECURITY.md"}
     if (ROOT / "CONTRIBUTING.md").is_file():
         names.add("CONTRIBUTING.md")
     names |= {
@@ -78,7 +82,15 @@ def installation_name(name):
     if len(path.parts) == 1:
         return (
             path.suffix == ".php"
-            or name in {"README.md", "README.en.md", "LICENSE", "CHANGELOG.md", "CONTRIBUTING.md"}
+            or name
+            in {
+                "README.md",
+                "README.en.md",
+                "LICENSE",
+                "CHANGELOG.md",
+                "SECURITY.md",
+                "CONTRIBUTING.md",
+            }
             or (SLUG == "pagenest" and name in {"style.css", "theme.json", "screenshot.png"})
         )
     return (

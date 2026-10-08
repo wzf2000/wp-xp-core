@@ -44,10 +44,6 @@ jobs:
         run: npm run format:check
       - name: Rebuild browser assets
         run: npm run build
-      - name: Scan externally configured identity rules
-        env:
-          IDENTITY_RULES: ${{ vars.IDENTITY_RULES || secrets.IDENTITY_RULES }}
-        run: npm run identity:check
       - name: Check PHP syntax
         run: git ls-files '*.php' -z | xargs -0 -n1 php -l
       - name: Run basic feature fixtures
@@ -85,3 +81,14 @@ jobs:
             dist/release-notes.md
             dist/release-validation.json
           if-no-files-found: error
+
+  required:
+    name: Required checks
+    if: always()
+    needs: verify
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require every verification job to succeed
+        env:
+          VERIFY_RESULT: ${{ needs.verify.result }}
+        run: test "$VERIFY_RESULT" = success

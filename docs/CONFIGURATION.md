@@ -41,7 +41,7 @@ Administrators can open **Settings → WP XP Core** to configure rewards, readin
 
 Saving requires `manage_options` and a valid nonce. A database-scoped advisory lock serializes settings saves; a revision hash rejects stale forms, and invalid values leave the previous option untouched. An event transaction snapshots one complete policy. Zero rewards retain idempotency markers; zero caps suppress that reward category. Author milestone counts and XP are configurable in three stable tiers per kind. Historical events are not recalculated: comment reversals and restorations use the original event amount. Level changes immediately affect display without rewriting balances. No individual account adjustment interface is provided.
 
-The settings screen groups activity rules, author milestones and levels in responsive cards. Its information sidebar links to the author, license and access-controlled source repository. The `admin_css` and `admin_js` asset manifest entries are content-hashed and enqueued only for `settings_page_wp-xp-core`; it adds no external fonts, scripts or network dependencies. Plugin metadata identifies the author and repository; `Update URI` does not implement an automatic updater.
+The settings screen groups activity rules, author milestones and levels in responsive cards. Its information sidebar links to the author, license and source repository. The `admin_css` and `admin_js` asset manifest entries are content-hashed and enqueued only for `settings_page_wp-xp-core`; it adds no external fonts, scripts or network dependencies. Plugin metadata identifies the author and repository; `Update URI` does not implement an automatic updater.
 
 ## Editable milestones and level lists in 1.3.0
 
@@ -52,3 +52,7 @@ Milestone keys remain `milestone:kind:post:originalSlot`, preserving claimed tie
 Likes require both `pagenest_companion_like` and `pagenest_companion_feature`, with the `likes` feature enabled. Companion only loads these functions after its profile validates. Without this provider, the settings fieldset and runtime like awards are disabled. Under the settings save lock, omitted or forged like fields are replaced with the stored values; other rules remain editable. No independent like service is included.
 
 Level inputs submit an ordered array. The first value is read-only zero; add/remove controls reindex rows, with a maximum of 100. Server-side validation remains authoritative. Without JavaScript existing rows remain editable, while adding or removing rows requires JavaScript.
+
+## Optional legacy integration
+
+The configured `weekly_hook` and `weekly_lock` retain the existing shared weekly game-score reset integration for deployments that use it. This compatibility code is unchanged; it does not award experience and is not part of the settings UI. Configure the integration only for a site with the corresponding score metadata and scheduler.
