@@ -186,10 +186,18 @@ final class WP_XP_Core_Settings
             if ($old === $rules) {
                 return true;
             }
-            if (!update_option(self::OPTION, $rules, false)) {
-                return new WP_Error('storage', '设置未能保存，请重试。', ['status' => 503]);
-            }
-            return true;
+            // Store the new policy and its audit entry together on transactional options storage.
+            return Reader_Experience::transaction(function () use ($old, $rules) {
+                WP_XP_Core_Management::require_options_transaction();
+                if (!update_option(self::OPTION, $rules, false)) {
+                    throw new RuntimeException('Experience settings write failed');
+                }
+                WP_XP_Core_Management::audit_rules($old, $rules);
+                return true;
+            });
+        } catch (Throwable $e) {
+            WP_XP_Core_Management::clear_option_cache();
+            return new WP_Error('storage', '设置未能保存，请重试。', ['status' => 503]);
         } finally {
             $wpdb->get_var($wpdb->prepare('SELECT RELEASE_LOCK(%s)', $lock));
         }
@@ -361,6 +369,9 @@ final class WP_XP_Core_Settings
                 '"><p>' .
                 esc_html(is_wp_error($result) ? $result->get_error_message() : '设置已保存。') .
                 '</p></div>';
+        }
+        if (class_exists('WP_XP_Core_Management_UI')) {
+            WP_XP_Core_Management_UI::nav('rules');
         }
         $raw = get_option(self::OPTION, null);
         if ($raw !== null) {

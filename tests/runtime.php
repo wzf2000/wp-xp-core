@@ -28,7 +28,9 @@ function wp_date($format, ...$args)
 }
 function get_userdata($uid)
 {
-    return $uid > 0 ? (object) ['ID' => $uid] : false;
+    return $uid > 0 && !in_array($uid, $GLOBALS['deleted_users'] ?? [], true)
+        ? (object) ['ID' => $uid, 'display_name' => 'User ' . $uid]
+        : false;
 }
 function get_current_user_id()
 {
@@ -40,11 +42,18 @@ function is_user_logged_in()
 }
 function current_user_can(...$args)
 {
+    if (
+        $args[0] === 'edit_user' &&
+        in_array((int) $args[1], $GLOBALS['denied_users'] ?? [], true)
+    ) {
+        return false;
+    }
     return $GLOBALS['capable'];
 }
 function wp_verify_nonce($nonce, $action)
 {
-    return $nonce === 'fixture-nonce';
+    return $nonce === 'fixture-nonce' &&
+        (!isset($GLOBALS['nonce_action']) || $GLOBALS['nonce_action'] === $action);
 }
 class WP_Error
 {
@@ -61,6 +70,7 @@ final class FixtureStorage
     public int $releases = 0;
     public string $last_error = '';
     public bool $failOptionWrite = false;
+    public ?string $failOptionName = null;
     public function __construct()
     {
         $this->db = new PDO('sqlite::memory:');
@@ -92,6 +102,9 @@ final class FixtureStorage
     }
     public function get_var($sql)
     {
+        if (str_contains($sql, 'information_schema.TABLES')) {
+            return 'InnoDB';
+        }
         if (str_contains($sql, 'GET_LOCK')) {
             return $this->lockBusy ? 0 : 1;
         }
@@ -174,7 +187,7 @@ function get_option($key, $default = false)
 function update_option($key, $value, $autoload = null)
 {
     global $wpdb;
-    if ($wpdb->failOptionWrite || get_option($key) === $value) {
+    if ($wpdb->failOptionWrite || $wpdb->failOptionName === $key || get_option($key) === $value) {
         return false;
     }
     if ($key === WP_XP_Core_Settings::OPTION) {
@@ -452,6 +465,9 @@ verify('invalid stored policy safely defaults', WP_XP_Core_Settings::rules() ===
 update_option(WP_XP_Core_Settings::OPTION, $custom);
 function get_post($id)
 {
+    if (array_key_exists($id, $GLOBALS['posts'] ?? [])) {
+        return $GLOBALS['posts'][$id];
+    }
     return $id
         ? (object) [
             'ID' => $id,

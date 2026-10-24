@@ -15,6 +15,8 @@ defined('ABSPATH') || exit();
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/settings.php';
 require_once __DIR__ . '/lifecycle.php';
+require_once __DIR__ . '/management.php';
+require_once __DIR__ . '/management-ui.php';
 register_activation_hook(__FILE__, [WP_XP_Core_Lifecycle::class, 'activate']);
 final class Reader_Experience
 {
@@ -22,6 +24,7 @@ final class Reader_Experience
     const BALANCE_META = 'reader_experience_balance';
     const MINS = [0, 5, 20, 60, 150, 300, 600, 1000, 1800, 3000];
     private static bool $writing = false;
+    private static array $touched_users = [];
     public static function ready(): bool
     {
         global $wpdb;
@@ -96,6 +99,7 @@ final class Reader_Experience
             throw new RuntimeException('Experience busy');
         }
         $old = self::$writing;
+        self::$touched_users = [];
         self::$writing = true;
         try {
             self::q('START TRANSACTION');
@@ -105,6 +109,10 @@ final class Reader_Experience
             return $r;
         } catch (Throwable $e) {
             $wpdb->query('ROLLBACK');
+            foreach (self::$touched_users as $uid) {
+                wp_cache_delete($uid, 'user_meta');
+            }
+            WP_XP_Core_Management::clear_option_cache();
             wp_cache_flush_runtime();
             throw $e;
         } finally {
@@ -124,6 +132,7 @@ final class Reader_Experience
         if (!self::$writing) {
             throw new RuntimeException('Experience transaction required');
         }
+        self::$touched_users[$uid] = $uid;
         wp_cache_delete($uid, 'user_meta');
         $value = max(0, $value);
         $existing = metadata_exists('user', $uid, self::balance_meta());
@@ -453,19 +462,31 @@ final class Reader_Experience
         ) {
             return;
         }
+        $attempt = null;
         try {
-            self::transaction(
-                fn() => self::record(
+            self::transaction(function () use ($p, &$attempt) {
+                $attempt = [
+                    'event_key' => 'article:' . $p->ID,
+                    'kind' => 'article',
+                    'object_id' => (int) $p->ID,
+                    'user_id' => (int) $p->post_author,
+                    'xp' => WP_XP_Core_Settings::rules()['article_xp'],
+                    'local_day' => self::day(),
+                ];
+                return self::record(
                     'article:' . $p->ID,
                     (int) $p->post_author,
                     'article',
                     (int) $p->ID,
-                    WP_XP_Core_Settings::rules()['article_xp'],
-                    self::day(),
-                ),
-            );
+                    $attempt['xp'],
+                    $attempt['local_day'],
+                );
+            });
         } catch (Throwable $e) {
             error_log('reader_experience publish failed: ' . $p->ID);
+            if ($attempt !== null) {
+                WP_XP_Core_Management::capture_failure($attempt);
+            }
         }
     }
     public static function comment(int $id): void
@@ -477,8 +498,9 @@ final class Reader_Experience
         if (!$c) {
             return;
         }
+        $attempt = null;
         try {
-            self::transaction(function () use ($id, $c) {
+            self::transaction(function () use ($id, $c, &$attempt) {
                 global $wpdb;
                 $p = get_post($c->comment_post_ID);
                 $uid = (int) $c->user_id;
@@ -505,13 +527,21 @@ final class Reader_Experience
                         self::count_day($uid, 'comment', self::day()) <
                             WP_XP_Core_Settings::rules()['comment_limit']
                     ) {
+                        $attempt = [
+                            'event_key' => 'comment:' . $id,
+                            'kind' => 'comment',
+                            'object_id' => $id,
+                            'user_id' => $uid,
+                            'xp' => WP_XP_Core_Settings::rules()['comment_xp'],
+                            'local_day' => self::day(),
+                        ];
                         self::record(
                             'comment:' . $id,
                             $uid,
                             'comment',
                             $id,
-                            WP_XP_Core_Settings::rules()['comment_xp'],
-                            self::day(),
+                            $attempt['xp'],
+                            $attempt['local_day'],
                         );
                     }
                     return;
@@ -553,6 +583,9 @@ final class Reader_Experience
             });
         } catch (Throwable $e) {
             error_log('reader_experience comment failed: ' . $id);
+            if ($attempt !== null) {
+                WP_XP_Core_Management::capture_failure($attempt);
+            }
         }
     }
     public static function deleting_comment(int $id): void
