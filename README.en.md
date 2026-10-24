@@ -15,7 +15,7 @@
 ## What you can do
 
 - **Reward everyday participation.** Set rewards for daily check-in, valid reading, article publication and eligible comments.
-- **Encourage authors.** Configure configurable view milestones per article, plus three optional like milestones with PageNest Companion.
+- **Encourage authors.** Add or remove view milestones per article, plus optional like milestones with PageNest Companion.
 - **Create your growth curve.** Add or remove rows to configure minimum experience for 1–100 levels, without editing code.
 - **Show personal progress.** The experience panel displays experience, level, experience needed for the next level, check-in and recent private history.
 - **Keep an award trail.** Experience changes are recorded in an event ledger; repeated requests cannot claim the same reward twice.

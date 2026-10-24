@@ -67,7 +67,7 @@ The settings screen groups activity rules, author milestones and levels in respo
 
 ### Milestone identity and level rows
 
-Policies add activity `enabled` switches, content `scope`, `dwell_seconds` (5–3600) and `timezone`. Either `scope.post_ids` or `scope.category_ids` can match; both empty means unrestricted scope. Pages do not match article categories. Time zones cannot change once the ledger has any events. Activity switches do not block reversals/restorations of existing comment awards at their original amounts.
+Policies add activity `activities` switches, content `scope`, `dwell_seconds` (5–3600) and `timezone`. Either `scope.post_ids` or `scope.category_ids` can match; both empty means unrestricted scope. Pages do not match article categories. Time zones cannot change once the ledger has any events. Activity switches do not block reversals/restorations of existing comment awards at their original amounts.
 
 `milestones.view` and `milestones.like` are ordered lists of at most 20 tiers each, with stable `id`, actual `threshold` and `xp`. Removing and saving retires an identifier in `retired_milestones`; it cannot be reused. New tiers receive new identifiers. Legacy six-tier policies normalize in memory while preserving tier identity and prior claims, with no migration writes on reads.
 

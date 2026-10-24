@@ -69,7 +69,7 @@ Reward changes apply only to events first recorded afterward. Historical experie
 2. Enter the user ID, signed XP change and reason. A single adjustment accepts a nonzero integer from -1,000,000 to 1,000,000; deductions cannot exceed the balance. The operation appends an event with its administrator and reason.
 3. To undo a mistake, provide the original manual-adjustment event ID and a reversal reason. Each manual adjustment can be reversed once. Reversal appends an opposite event; it never deletes the original or allows a negative balance.
 
-Exports cover the current filter and page, not the entire ledger automatically. They may contain private activity and management reasons; handle them as private site data.
+Exports cover the current filter and page, not the entire ledger automatically. They include user IDs, activity sources, XP changes and dates, without management reasons; handle them as private site data.
 
 **运行诊断** (Diagnostics) compares ledger totals to balances page by page without repairing them. Controlled retry covers only explicitly recorded failures of first article/comment awards. Supply a reason; eligibility and limits are checked again. It does not scan old posts or comments, and an old failure may no longer qualify. Configuration audit history helps review rule changes.
 

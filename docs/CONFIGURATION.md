@@ -63,7 +63,7 @@
 
 ### 里程碑标识与等级列表
 
-规则增加 `enabled` 活动开关、`scope` 内容范围、`dwell_seconds`（5–3600）与 `timezone`。`scope.post_ids` 和 `scope.category_ids` 任意命中即可；两者为空表示不限，页面不匹配文章分类。已有事件后禁止改时区，避免日键重解释。活动关闭不阻止既有评论奖励按原金额撤销／恢复。
+规则增加 `activities` 活动开关、`scope` 内容范围、`dwell_seconds`（5–3600）与 `timezone`。`scope.post_ids` 和 `scope.category_ids` 任意命中即可；两者为空表示不限，页面不匹配文章分类。已有事件后禁止改时区，避免日键重解释。活动关闭不阻止既有评论奖励按原金额撤销／恢复。
 
 `milestones.view`／`milestones.like` 为每组最多 20 个的有序档位列表，条目包含稳定 `id`、实际 `threshold` 和 `xp`。移除保存后，标识进入 `retired_milestones`，不能复用；新增档位获得独立标识。旧六档规则在内存规范化，保留原档位身份与已领取状态，读取不触发迁移写入。
 
