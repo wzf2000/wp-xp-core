@@ -2,7 +2,7 @@
 
 ## 2.0.0-rc.2
 
-This branch previews the next candidate; it has not been released or deployed. The published 2.0.0-rc.1 prerelease remains documented at its Release tag.
+Prerelease adding activity leaderboards and read-only incentive insights.
 
 - Add manually placed weekly/monthly activity boards with positive net XP, negative compensation, competition ranks and live pagination; exclude historical imports, reconciliation, manual adjustments and honor-only events. Weeks and months never reset balances.
 - Add a nonce-protected current-user position lookup and JavaScript-enhanced personal panel. Public rows expose only display name, public author link, net XP and rank.

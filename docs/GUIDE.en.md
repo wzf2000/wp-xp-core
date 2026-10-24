@@ -2,7 +2,7 @@
 
 [简体中文](GUIDE.md) · English · [Back to overview](../README.en.md)
 
-This administrator guide describes the **2.0.0-rc.2 development candidate preview (not released or deployed)**. For released versions, use the guide at the matching Release tag. From 1.4.0, new sites can install and activate with default rules, without server JSON configuration. See [Get started](../README.en.md#get-started) for installation.
+This administrator guide describes the **2.0.0-rc.2 prerelease**. For released versions, use the guide at the matching Release tag. From 1.4.0, new sites can install and activate with default rules, without server JSON configuration. See [Get started](../README.en.md#get-started) for installation.
 
 ## Create an experience page
 
