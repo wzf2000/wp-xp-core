@@ -1,6 +1,6 @@
 # Changelog
 
-## 2.0.0-rc.2 (development candidate, unreleased)
+## 2.0.0-rc.2
 
 This branch previews the next candidate; it has not been released or deployed. The published 2.0.0-rc.1 prerelease remains documented at its Release tag.
 
