@@ -37,3 +37,9 @@ Pull Requests and pushes share read-only CI. `Required checks` aggregates all ve
 
 维护者发布见 [发布流程](docs/RELEASING.md)。贡献者不需要创建标签；手动 GitHub 发布工作流会安全地创建新标签和附件。发布与站点部署相互独立。
 See [Releasing](docs/RELEASING.md) for maintainer steps. Contributors need not create tags; the manual release workflow creates new tags and verified attachments. Publishing does not deploy to a site.
+
+## Growth preview / 成长功能预览
+
+`feature/xp-growth-rounds-1-4` prepares the unreleased `2.0.0-rc.1` candidate. Keep both READMEs and both GUIDE/CONFIGURATION language versions synchronized. Validate management permissions, append-only corrections, duplicate/rollback behavior, rule and task version boundaries, private response isolation and atomic derived rewards in isolated fixtures. Do not use real accounts to exercise adjustments, retries or review awards. Preparing this branch does not authorize a release or site deployment.
+
+本分支准备尚未发行的 `2.0.0-rc.1` 候选。同步维护中英文 README、使用指南和配置文档；在隔离环境检查管理权限、追加式撤销、重复／回滚行为、规则与任务版本边界、私人响应隔离及派生奖励的原子性。不要用真实账号测试调分、重试或审核授予；准备候选不等于发行或部署授权。

@@ -3,6 +3,7 @@
 defined('ABSPATH') || exit();
 final class WP_XP_Core_Management_UI
 {
+    private static bool $retain_request = true;
     public static function boot(): void
     {
         add_action('admin_menu', [self::class, 'menu']);
@@ -34,6 +35,7 @@ final class WP_XP_Core_Management_UI
             'ledger' => ['wp-xp-ledger', '事件账本', ''],
             'diagnostics' => ['wp-xp-ledger', '运行诊断', 'diagnostics'],
         ];
+        $links['growth'] = ['wp-xp-growth', '成长中心', ''];
         if (class_exists('WP_XP_Core_Achievements_UI')) {
             $links['tasks'] = ['wp-xp-achievements', '任务与成就', ''];
         }
@@ -84,6 +86,7 @@ final class WP_XP_Core_Management_UI
     {
         wp_nonce_field('wp_xp_core_manage');
         $token =
+            self::$retain_request &&
             $_SERVER['REQUEST_METHOD'] === 'POST' &&
             ($_POST['operation'] ?? '') === $action &&
             is_string($_POST['request_id'] ?? null)
@@ -147,6 +150,8 @@ final class WP_XP_Core_Management_UI
             'manual_reversal' => '撤销人工调整',
             'migration' => '历史初始化',
             'reconciliation' => '历史校准',
+            'streak_reward' => '签到阶段奖励',
+            'management_retry' => '失败事件重试',
             'task_complete' => '完成任务',
             'achievement_submit' => '成就申请',
             'achievement_review' => '成就审核',
@@ -180,6 +185,7 @@ final class WP_XP_Core_Management_UI
                 ),
                 default => new WP_Error('operation', '请选择有效操作。'),
             };
+            self::$retain_request = is_wp_error($result);
         }
         $view = self::value('view') === 'diagnostics' ? 'diagnostics' : 'ledger';
         echo '<div class="wrap wp-xp-core-admin"><header class="xp-header"><span class="xp-mark" aria-hidden="true">XP</span><div><h1>' .

@@ -1,6 +1,7 @@
 <?php
 /** Policy and observer contracts on the dedicated synthetic WordPress instance. */
 if (
+    PHP_SAPI !== 'cli' ||
     getenv('WP_XP_TEST_DATABASE') !== 'wp_xp_core_ci' ||
     DB_NAME !== 'wp_xp_core_ci' ||
     wp_get_environment_type() !== 'local'

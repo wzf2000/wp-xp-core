@@ -138,10 +138,7 @@
           article.append(button);
         }
       } else {
-        const pending = (data.pending || data.submissions).find(
-          (row) =>
-            row.task_id === task.id && row.period === task.period_key && row.status === 'pending',
-        );
+        const pending = task.pending_submission;
         if (pending) article.append(el('p', '已提交说明，等待管理员审核。'));
         else {
           const form = el('form', undefined, 'xp-task-submission');

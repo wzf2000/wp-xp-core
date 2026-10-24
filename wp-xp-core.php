@@ -9,7 +9,7 @@
  * Requires PHP: 8.0
  * Requires at least: 6.0
  * Update URI: https://github.com/wzf2000/wp-xp-core
- * Version: 1.4.1
+ * Version: 2.0.0-rc.1
  */
 defined('ABSPATH') || exit();
 require_once __DIR__ . '/config.php';
@@ -17,10 +17,14 @@ require_once __DIR__ . '/settings.php';
 require_once __DIR__ . '/lifecycle.php';
 require_once __DIR__ . '/management.php';
 require_once __DIR__ . '/management-ui.php';
+require_once __DIR__ . '/growth.php';
+require_once __DIR__ . '/growth-ui.php';
+require_once __DIR__ . '/achievements.php';
+require_once __DIR__ . '/achievements-ui.php';
 register_activation_hook(__FILE__, [WP_XP_Core_Lifecycle::class, 'activate']);
 final class Reader_Experience
 {
-    const VERSION = '1.4.1';
+    const VERSION = '2.0.0-rc.1';
     const BALANCE_META = 'reader_experience_balance';
     const MINS = [0, 5, 20, 60, 150, 300, 600, 1000, 1800, 3000];
     private static bool $writing = false;
@@ -259,7 +263,7 @@ final class Reader_Experience
             wp_cache_delete($uid, 'user_meta');
             self::set_balance($uid, (int) get_user_meta($uid, self::balance_meta(), true) + $xp);
         }
-        self::$pending_events[] = [
+        $event = [
             'id' => (int) $wpdb->get_var(
                 $wpdb->prepare('SELECT id FROM ' . self::table() . ' WHERE event_key=%s', $key),
             ),
@@ -275,6 +279,11 @@ final class Reader_Experience
             'before_level' => self::level($before),
             'after_level' => self::level(max(0, $before + $xp)),
         ];
+        if ($wpdb->last_error !== '' || $event['id'] < 1) {
+            throw new RuntimeException('Experience event receipt unavailable');
+        }
+        self::$pending_events[] = $event;
+        WP_XP_Core_Growth::apply($event);
         return true;
     }
     public static function available_post(int $id): bool
@@ -840,33 +849,9 @@ final class Reader_Experience
         if (!self::ready()) {
             return '<p>经验系统维护中，请稍后再试。</p>';
         }
-        $state = is_user_logged_in() ? self::state(get_current_user_id()) : null;
-        $manifest = json_decode(file_get_contents(__DIR__ . '/assets/assets.json'), true);
-        $text = $state
-            ? '经验 ' .
-                $state['experience'] .
-                ' · Level ' .
-                $state['level'] .
-                ($state['next'] !== null
-                    ? ' · 距下一级 ' . ($state['next'] - $state['experience'])
-                    : ' · 已达最高等级')
-            : '登录后签到、记录访问和查看经验。';
-        return '<link rel="stylesheet" href="' .
-            esc_url(plugins_url('assets/' . $manifest['css'], __FILE__)) .
-            '"><section class="reader-experience-panel" aria-label="经验与签到"><h2>经验与等级</h2><p class="reader-experience-state">' .
-            esc_html($text) .
-            '</p>' .
-            ($state
-                ? '<button type="button" class="reader-experience-checkin"' .
-                    ($state['checked_in'] ? ' disabled' : '') .
-                    '>' .
-                    ($state['checked_in'] ? '今日已签到' : '每日签到 +' . $state['checkin_xp']) .
-                    '</button><p class="reader-experience-message" role="status"></p><details><summary>最近经验记录</summary><ul class="reader-experience-history"></ul></details>'
-                : '<a href="' .
-                    esc_url(wp_login_url(reader_experience_panel_url())) .
-                    '">登录</a>') .
-            '</section>';
+        return WP_XP_Core_Growth_UI::panel();
     }
+
     public static function admin_profile($user): void
     {
         if (self::ready()) {

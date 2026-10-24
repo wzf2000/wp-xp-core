@@ -15,7 +15,7 @@
 ## What you can do
 
 - **Reward everyday participation.** Set rewards for daily check-in, valid reading, article publication and eligible comments.
-- **Encourage authors.** Configure three view milestones per article, plus three optional like milestones with PageNest Companion.
+- **Encourage authors.** Configure configurable view milestones per article, plus three optional like milestones with PageNest Companion.
 - **Create your growth curve.** Add or remove rows to configure minimum experience for 1–100 levels, without editing code.
 - **Show personal progress.** The experience panel displays experience, level, experience needed for the next level, check-in and recent private history.
 - **Keep an award trail.** Experience changes are recorded in an event ledger; repeated requests cannot claim the same reward twice.
@@ -24,7 +24,7 @@ The plugin manages experience and levels independently of myCRED. Likes are an o
 
 ## Get started
 
-**Current source version: 1.4.1.** On a new site, installing and activating creates the experience ledger and uses default rules. No server JSON profile or other experience plugin is required. Existing users start at zero XP; old articles and historical comments do not trigger automatic backfill.
+**This branch is a 2.0.0-rc.1 development preview, not released or deployed.** New management, growth and achievement features below describe this branch only; use the documentation at your Release tag for an installed release. On a new site, installing and activating creates the experience ledger and uses default rules. No server JSON profile or other experience plugin is required. Existing users start at zero XP; old articles and historical comments do not trigger automatic backfill.
 
 1. Download `wp-xp-core-VERSION.zip` from [Releases](https://github.com/wzf2000/wp-xp-core/releases), rather than GitHub’s automatically generated **Source code** archives. Automatic first-install setup requires **1.4.0 or later**; use the release documentation for older versions.
 2. Install and activate the ZIP through **Plugins → Add New Plugin → Upload Plugin** in WordPress.
@@ -38,7 +38,7 @@ Existing sites can update with a new Release ZIP. Deactivating and reactivating 
 
 ## Configure your experience rules
 
-The settings page groups **daily activities, author milestones and level progression**. You can change rewards, reading/comment daily limits, milestone counts and level thresholds.
+The settings page groups **daily activities, author milestones and level progression**. Configure activity switches, content scope, reading dwell time, rewards and daily limits, and add or remove milestone tiers and levels. The daily time zone can change only before the ledger has any events.
 
 | Activity                          | Default rule                                               |
 | --------------------------------- | ---------------------------------------------------------- |
@@ -53,6 +53,14 @@ The settings page groups **daily activities, author milestones and level progres
 **Reward changes apply to events first recorded afterward; level threshold changes affect displayed levels immediately.** Changing thresholds leaves balances intact, and saving rules awards no experience. Each article can claim each milestone tier only once. Lowering a count may make an unclaimed tier eligible on the next qualifying activity.
 
 For value ranges, comment eligibility, counting and examples, see [Rule settings](docs/GUIDE.en.md#set-experience-rules).
+
+## Management and growth
+
+- **Ledger and diagnostics:** filter events by user, source and date; adjust individual XP with a reason or reverse a manual adjustment; compare balances to the ledger without writes and handle explicitly recorded failed rewards.
+- **Growth center:** customize level names, character icons, colors and descriptions. Personal pages show check-in calendars, consecutive and cumulative counts, progress and private history. Optional check-in stage rewards start disabled and count new check-ins only.
+- **Tasks and achievements:** create once-only, daily or weekly tasks. Automatic tasks combine activity steps; reviewed tasks accept a user's explanation. Achievements are honors with no extra XP, and earned badges retain their original name and icon.
+
+See the [user guide](docs/GUIDE.en.md) for steps and change effects. These features do not backfill all historical activity, schedule cron jobs or provide a shop or spendable currency.
 
 ## Documentation and help
 

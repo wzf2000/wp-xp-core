@@ -2,6 +2,8 @@
 
 [简体中文](CONFIGURATION.md) · English · [Back to overview](../README.en.md) · [User guide](GUIDE.en.md)
 
+This document describes the **2.0.0-rc.1 development preview**, not released or deployed. Installed releases follow their tagged documentation.
+
 This page is for integrators. **Ordinary first-time installation needs no external configuration: upload and activate a 1.4.0+ installation ZIP.** For page setup, see the [user guide](GUIDE.en.md). External JSON is only for advanced deployments with custom storage or existing integrations.
 
 ## Default installation
@@ -59,15 +61,17 @@ The `site_tools_account_panel` filter returns the existing experience panel when
 
 Administrators can open **Settings → WP XP Core** to configure rewards, reading/comment daily caps and 1–100 increasing level thresholds. Rules use `wp_xp_core_rules`; advanced external profiles continue to configure storage and integration. Reading never creates the option. Missing or invalid settings use the original defaults. See the [user guide](GUIDE.en.md) for ranges and defaults.
 
-Saving requires `manage_options` and a valid nonce. A database-scoped advisory lock serializes settings saves; a revision hash rejects stale forms, and invalid values leave the previous option untouched. An event transaction snapshots one complete policy. Zero rewards retain idempotency markers; zero caps suppress that reward category. Author milestone counts and XP are configurable in three stable tiers per kind. Historical events are not recalculated: comment reversals and restorations use the original event amount. Level changes immediately affect display without rewriting balances. No individual account adjustment interface is provided.
+Saving requires `manage_options` and a valid nonce. A database-scoped advisory lock serializes settings saves; a revision hash rejects stale forms, and invalid values leave the previous option untouched. An event transaction snapshots one complete policy. Zero rewards retain idempotency markers; zero caps suppress that reward category. Milestone counts, rewards and tier lists are configurable. Historical events are not recalculated: comment reversals and restorations use the original event amount. Level changes immediately affect display without rewriting balances. Manual adjustments and reversals append ledger events rather than editing projections.
 
-The settings screen groups activity rules, author milestones and levels in responsive cards. Its information sidebar links to the author, license and source repository. The `admin_css` and `admin_js` asset manifest entries are content-hashed and enqueued only for `settings_page_wp-xp-core`; it adds no external fonts, scripts or network dependencies. Plugin metadata identifies the author and repository; `Update URI` does not implement an automatic updater.
+The settings screen groups activity rules, author milestones and levels in responsive cards. Its information sidebar links to the author, license and source repository. The `admin_css` and `admin_js` asset manifest entries are content-hashed and enqueued only for the corresponding plugin administration pages; it adds no external fonts, scripts or network dependencies. Plugin metadata identifies the author and repository; `Update URI` does not implement an automatic updater.
 
 ### Milestone identity and level rows
 
-The six `view_100_threshold`, `view_500_threshold`, `view_1000_threshold`, `like_10_threshold`, `like_30_threshold` and `like_100_threshold` fields store current counts. Their suffixes are stable tier identifiers, not the configured counts. Each group must strictly increase within 1–1000000000. Complete old policies without all six fields normalize in memory using defaults; partial new policies are invalid. No load-time migration or option write occurs.
+Policies add activity `enabled` switches, content `scope`, `dwell_seconds` (5–3600) and `timezone`. Either `scope.post_ids` or `scope.category_ids` can match; both empty means unrestricted scope. Pages do not match article categories. Time zones cannot change once the ledger has any events. Activity switches do not block reversals/restorations of existing comment awards at their original amounts.
 
-Milestone keys remain `milestone:kind:post:originalSlot`, preserving claimed tiers across threshold changes. New events record the actual threshold in detail. Saving does not award XP or reset tiers. On the next qualifying event, unclaimed tiers use cumulative ledger counts, including previously recorded activity. Lowering a threshold can therefore qualify a previously unclaimed tier on that event.
+`milestones.view` and `milestones.like` are ordered lists of at most 20 tiers each, with stable `id`, actual `threshold` and `xp`. Removing and saving retires an identifier in `retired_milestones`; it cannot be reused. New tiers receive new identifiers. Legacy six-tier policies normalize in memory while preserving tier identity and prior claims, with no migration writes on reads.
+
+Idempotency uses the article, kind and stable tier, not its editable count. Saving awards nothing. The next qualifying event evaluates unclaimed tiers against cumulative ledger counts, so a lowered threshold may qualify then. Removing and re-adding creates a new tier rather than restoring old claim state.
 
 Likes require both `pagenest_companion_like` and `pagenest_companion_feature`, with the `likes` feature enabled. Companion only loads these functions after its profile validates. Without this provider, the settings fieldset and runtime like awards are disabled. Under the settings save lock, omitted or forged like fields are replaced with the stored values; other rules remain editable. No independent like service is included.
 
@@ -78,6 +82,22 @@ Level inputs submit an ordered array. The first value is read-only zero; add/rem
 `reader_experience_balance` is the only running balance projection. The existing event ledger remains the source of changes; no cumulative or rank metadata is written. The default ten minimum balances are `0, 5, 20, 60, 150, 300, 600, 1000, 1800, 3000`, and levels are computed on demand using the currently configured thresholds. Metadata writes outside the ledger transaction are rejected, including ordinary add, update and delete calls.
 
 The `site_tools_user_level` filter receives `($fallback, $user_id)` and returns `Level N` when ready, or the original fallback otherwise. It reads no rank posts and has no third-party provider dependency. The plugin preserves the configured weekly schedule and rotates game weekly scores using the same scoring lock as verified settlement.
+
+## Management, growth and achievement storage
+
+Management requires `manage_options`; writes also validate nonces, operation identity and target-user permissions. `manual_adjust` and `manual_reversal` append events with an actor and reason. Reversal only accepts an unreversed manual adjustment and cannot make a balance negative. Diagnostics compare ledger totals and projections without repairing either. Retry covers explicitly captured failures of first article/comment attempts and rechecks current eligibility; it is not a historical award endpoint. `wp_xp_core_rule_audit` and `wp_xp_core_failed_events` each retain at most 200 entries, not a permanent complete audit trail.
+
+`wp_xp_core_growth` stores level profiles and optional check-in stages. A new rule generation and event boundary limit stage rewards to subsequent check-ins; personal-page reads do not award XP. `wp_xp_core_achievements` stores versioned tasks, at most 50 including disabled tasks, with at most eight automatic steps. Task changes use a new event boundary. Once-only, daily and weekly periods bound progress; weeks start Monday. Reviewed tasks grant zero-XP honors. Earned achievements snapshot titles and icons rather than following later task edits.
+
+Personal history, submissions and review status are isolated to the current user. Do not publicly cache authenticated personal responses. Extra check-in rewards start disabled; there is no cron, full-history scan or automatic backfill. Initial personal information is server-rendered, with JavaScript enhancing interaction and pagination.
+
+## Developer event contract
+
+New events include `detail.rule_revision`. After the transaction commits and releases its event lock, `wp_xp_core_event_committed($event)` runs. If that event changed the user's calculated level, `wp_xp_core_level_changed($event)` also runs. Editing level settings creates no user events and does not broadcast a level hook for every user.
+
+The event contains `id`, `key`, `user_id`, `kind`, `object_id`, `xp`, `day`, `detail`, `before_xp`, `after_xp`, `before_level` and `after_level`. Values describe that event's change; with several events in one transaction they need not equal a later balance read. Duplicates and rolled-back transactions dispatch neither hook.
+
+Observer exceptions are logged without rolling back committed rewards or reporting a successful award as failed; dispatch continues for subsequent events. Native WordPress `do_action` means later listeners on the same hook invocation may not run after an earlier listener throws. Listeners should handle exceptions and remain idempotent. Do not use notifications for mandatory atomic awards: native derived rewards, such as check-in stages, run in the source transaction; writes from external listeners are separate transactions.
 
 ## Compatibility and upgrades
 
