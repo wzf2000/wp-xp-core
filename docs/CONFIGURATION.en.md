@@ -12,6 +12,8 @@ Without `PAGENEST_COMPATIBILITY_PROFILE_FILE`, the plugin uses built-in configur
 
 Activation requires InnoDB support, with WordPress user metadata, post metadata and options already using InnoDB. The plugin does not convert other tables. It verifies schema and unique event keys and serializes installation with a database lock; failed setup leaves rewards disabled. Deactivation and reactivation preserve the ledger, balances, rules and any existing maintenance switch, without recalculating or backfilling XP. Normal requests never initialize storage.
 
+Incentive statistics require the database functions `JSON_VALID` and `JSON_EXTRACT`; MySQL 8.0 and MariaDB 11.4 have been verified. Check function support before using an older database; the plugin does not upgrade the database server.
+
 Create an experience page manually with `[reader_experience]`. The separate `wp_xp_core_panel_page_id` option stores the administrator’s selected public, unpassworded page; it is independent of rewards. Without a selection, links use the current page or home. Administrators create and publish pages; the plugin never publishes content automatically.
 
 Multisite supports activation separately on each site, not network-wide activation. Native balances are scoped by the site table prefix, as are ledgers and installation options. Integrators can use `Reader_Experience::balance_meta()` for the current balance key.
