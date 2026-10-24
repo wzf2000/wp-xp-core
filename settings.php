@@ -8,13 +8,16 @@ final class WP_XP_Core_Settings
     private static ?array $snapshot = null;
     public static function begin(): void
     {
+        wp_cache_delete(self::OPTION, 'options');
+        wp_cache_delete('alloptions', 'options');
+        wp_cache_delete('notoptions', 'options');
         self::$snapshot = self::rules();
     }
     public static function end(): void
     {
         self::$snapshot = null;
     }
-    public static function defaults(): array
+    private static function flat_defaults(): array
     {
         return [
             'checkin_xp' => 2,
@@ -38,67 +41,104 @@ final class WP_XP_Core_Settings
             'levels' => [0, 5, 20, 60, 150, 300, 600, 1000, 1800, 3000],
         ];
     }
+    public static function defaults(): array
+    {
+        return self::flat_defaults() + [
+            'activities' => array_fill_keys(
+                ['checkin', 'visit', 'article', 'comment', 'view', 'like'],
+                true,
+            ),
+            'dwell_seconds' => 15,
+            'timezone' => 'Asia/Shanghai',
+            'scope' => ['post_ids' => [], 'category_ids' => []],
+            'milestones' => self::legacy_milestones(self::flat_defaults()),
+            'retired_milestones' => ['view' => [], 'like' => []],
+        ];
+    }
+    private static function legacy_milestones(array $flat): array
+    {
+        $out = [];
+        foreach (self::tiers() as $kind => $slots) {
+            $out[$kind] = [];
+            foreach ($slots as $id) {
+                $out[$kind][] = [
+                    'id' => (string) $id,
+                    'threshold' => $flat[$kind . '_' . $id . '_threshold'],
+                    'xp' => $flat[$kind . '_' . $id],
+                ];
+            }
+        }
+        return $out;
+    }
+    private static function number($value, int $min, int $max): int
+    {
+        if (
+            (!is_int($value) && !is_string($value)) ||
+            !preg_match('/^(0|[1-9][0-9]*)$/D', (string) $value) ||
+            strlen((string) $value) > 16 ||
+            (int) $value < $min ||
+            (int) $value > $max
+        ) {
+            throw new InvalidArgumentException('请填写范围内的整数。');
+        }
+        return (int) $value;
+    }
+    private static function ids($value): array
+    {
+        if (is_string($value)) {
+            $value = trim($value) === '' ? [] : preg_split('/[\s,，]+/u', trim($value));
+        }
+        if (!is_array($value) || count($value) > 200) {
+            throw new InvalidArgumentException('每组适用范围最多填写 200 个 ID。');
+        }
+        $ids = array_values(
+            array_unique(array_map(fn($id) => self::number($id, 1, PHP_INT_MAX), $value)),
+        );
+        sort($ids, SORT_NUMERIC);
+        return $ids;
+    }
     public static function validate($input): array
     {
         $defaults = self::defaults();
-        // Old complete policies gain thresholds in memory only; partial new policies are invalid.
+        $flat = self::flat_defaults();
         $legacy = array_filter(
-            $defaults,
+            $flat,
             fn($key) => !str_ends_with($key, '_threshold'),
             ARRAY_FILTER_USE_KEY,
         );
         if (
-            is_array($input) &&
-            !array_diff(array_keys($input), array_keys($legacy)) &&
-            !array_diff(array_keys($legacy), array_keys($input))
-        ) {
-            $input = array_replace($defaults, $input);
-        }
-        if (
             !is_array($input) ||
             array_diff(array_keys($input), array_keys($defaults)) ||
-            array_diff(array_keys($defaults), array_keys($input))
+            array_diff(array_keys($legacy), array_keys($input))
         ) {
             throw new InvalidArgumentException('设置字段不完整或包含未知字段。');
         }
+        $thresholds = array_diff_key($flat, $legacy);
+        $provided = array_intersect_key($input, $thresholds);
+        if ($provided && count($provided) !== count($thresholds)) {
+            throw new InvalidArgumentException('里程碑次数设置不完整。');
+        }
+        $input += $thresholds;
         $out = [];
-        foreach ($defaults as $key => $default) {
-            if ($key === 'levels') {
-                continue;
-            }
-            $threshold = str_ends_with($key, '_threshold');
-            $max = $threshold ? 1000000000 : (str_ends_with($key, '_limit') ? 1000 : 1000000);
-            $value = $input[$key];
-            if (
-                (!is_int($value) && !is_string($value)) ||
-                !preg_match('/^(0|[1-9][0-9]*)$/D', (string) $value) ||
-                strlen((string) $value) > 10 ||
-                ($threshold && (int) $value < 1) ||
-                (int) $value > $max
-            ) {
-                throw new InvalidArgumentException(
-                    '经验须为 0–1000000，每日次数须为 0–1000，里程碑次数须为 1–1000000000 的整数。',
+        foreach ($flat as $key => $default) {
+            if ($key !== 'levels') {
+                $threshold = str_ends_with($key, '_threshold');
+                $out[$key] = self::number(
+                    $input[$key],
+                    $threshold ? 1 : 0,
+                    $threshold ? 1000000000 : (str_ends_with($key, '_limit') ? 1000 : 1000000),
                 );
             }
-            $out[$key] = (int) $value;
         }
-        foreach (self::tiers() as $kind => $slots) {
-            $previous = 0;
-            foreach ($slots as $slot) {
-                $value = $out[$kind . '_' . $slot . '_threshold'];
-                if ($value <= $previous) {
-                    throw new InvalidArgumentException('每组里程碑次数必须严格递增。');
-                }
-                $previous = $value;
-            }
-        }
+        // Retained flat fields are the compatibility values for the six original stable IDs.
+        // Dynamic form saves synchronize these fields before validation.
         $levels = $input['levels'];
         if (is_string($levels)) {
             $levels = preg_split('/[\s,，]+/u', trim($levels));
         }
         if (
             !is_array($levels) ||
-            array_keys($levels) !== range(0, count($levels) - 1) ||
+            ($levels && array_keys($levels) !== range(0, count($levels) - 1)) ||
             count($levels) < 1 ||
             count($levels) > 100
         ) {
@@ -106,23 +146,133 @@ final class WP_XP_Core_Settings
         }
         $previous = -1;
         foreach ($levels as $i => $level) {
-            if (
-                (!is_int($level) && !is_string($level)) ||
-                !preg_match('/^(0|[1-9][0-9]*)$/D', (string) $level) ||
-                strlen((string) $level) > 10 ||
-                (int) $level > 1000000000 ||
-                (int) $level <= $previous ||
-                ($i === 0 && (int) $level !== 0)
-            ) {
+            $level = self::number($level, 0, 1000000000);
+            if ($level <= $previous || ($i === 0 && $level !== 0)) {
                 throw new InvalidArgumentException(
                     '等级门槛必须从 0 开始、严格递增，且不超过 1000000000。',
                 );
             }
-            $previous = (int) $level;
-            $levels[$i] = $previous;
+            $levels[$i] = $previous = $level;
         }
         $out['levels'] = $levels;
+        $activities = $input['activities'] ?? $defaults['activities'];
+        if (
+            !is_array($activities) ||
+            array_diff(array_keys($activities), array_keys($defaults['activities'])) ||
+            array_diff(array_keys($defaults['activities']), array_keys($activities))
+        ) {
+            throw new InvalidArgumentException('活动开关不完整。');
+        }
+        foreach ($activities as $key => $value) {
+            if (!in_array($value, [true, false, 0, 1, '0', '1'], true)) {
+                throw new InvalidArgumentException('活动开关无效。');
+            }
+            $activities[$key] = (bool) $value;
+        }
+        $out['activities'] = array_replace($defaults['activities'], $activities);
+        $out['dwell_seconds'] = self::number($input['dwell_seconds'] ?? 15, 5, 3600);
+        $timezone = $input['timezone'] ?? 'Asia/Shanghai';
+        if (
+            !is_string($timezone) ||
+            !in_array($timezone, DateTimeZone::listIdentifiers(DateTimeZone::ALL_WITH_BC), true)
+        ) {
+            throw new InvalidArgumentException('请选择有效时区。');
+        }
+        $out['timezone'] = $timezone;
+        $scope = $input['scope'] ?? $defaults['scope'];
+        if (
+            !is_array($scope) ||
+            array_diff(array_keys($scope), ['post_ids', 'category_ids']) ||
+            !array_key_exists('post_ids', $scope) ||
+            !array_key_exists('category_ids', $scope)
+        ) {
+            throw new InvalidArgumentException('适用内容设置无效。');
+        }
+        $out['scope'] = [
+            'post_ids' => self::ids($scope['post_ids']),
+            'category_ids' => self::ids($scope['category_ids']),
+        ];
+        $retired = $input['retired_milestones'] ?? $defaults['retired_milestones'];
+        $milestones = $input['milestones'] ?? self::legacy_milestones($out);
+        if (
+            !is_array($milestones) ||
+            !is_array($retired) ||
+            array_diff(array_keys($milestones), ['view', 'like']) ||
+            array_diff(array_keys($retired), ['view', 'like'])
+        ) {
+            throw new InvalidArgumentException('里程碑设置无效。');
+        }
+        $out['milestones'] = [];
+        $out['retired_milestones'] = [];
+        foreach (['view', 'like'] as $kind) {
+            if (
+                !isset($milestones[$kind], $retired[$kind]) ||
+                !is_array($milestones[$kind]) ||
+                !is_array($retired[$kind]) ||
+                count($milestones[$kind]) > 20
+            ) {
+                throw new InvalidArgumentException('每组最多设置 20 档里程碑。');
+            }
+            $retired_ids = array_values(array_unique($retired[$kind]));
+            foreach ($retired_ids as $id) {
+                if (!is_string($id) || !preg_match('/^[a-z0-9_]{1,48}$/D', $id)) {
+                    throw new InvalidArgumentException('停用里程碑标识无效。');
+                }
+            }
+            $out['retired_milestones'][$kind] = $retired_ids;
+            $out['milestones'][$kind] = [];
+            $previous = 0;
+            $seen = [];
+            foreach (array_values($milestones[$kind]) as $row) {
+                if (
+                    !is_array($row) ||
+                    array_diff(array_keys($row), ['id', 'threshold', 'xp']) ||
+                    !isset($row['id'], $row['threshold'], $row['xp']) ||
+                    !is_string($row['id']) ||
+                    !preg_match('/^[a-z0-9_]{1,48}$/D', $row['id']) ||
+                    isset($seen[$row['id']]) ||
+                    in_array($row['id'], $retired_ids, true)
+                ) {
+                    throw new InvalidArgumentException('里程碑标识重复、无效或已经停用。');
+                }
+                $id = $row['id'];
+                $seen[$id] = true;
+                $old = in_array($id, array_map('strval', self::tiers()[$kind]), true);
+                $threshold = $old
+                    ? $out[$kind . '_' . $id . '_threshold']
+                    : self::number($row['threshold'], 1, 1000000000);
+                $xp = $old ? $out[$kind . '_' . $id] : self::number($row['xp'], 0, 1000000);
+                if ($threshold <= $previous) {
+                    throw new InvalidArgumentException('每组里程碑次数必须严格递增。');
+                }
+                $previous = $threshold;
+                $out['milestones'][$kind][] = ['id' => $id, 'threshold' => $threshold, 'xp' => $xp];
+            }
+        }
         return $out;
+    }
+    public static function enabled(string $kind): bool
+    {
+        return self::rules()['activities'][$kind] ?? false;
+    }
+    public static function in_scope(int $id): bool
+    {
+        $scope = self::rules()['scope'];
+        if (!$scope['post_ids'] && !$scope['category_ids']) {
+            return true;
+        }
+        if (in_array($id, $scope['post_ids'], true)) {
+            return true;
+        }
+        $post = $id > 0 ? get_post($id) : null;
+        return $post &&
+            $post->post_type === 'post' &&
+            $scope['category_ids'] &&
+            has_category($scope['category_ids'], $id);
+    }
+    public static function policy_revision(): string
+    {
+        return self::revision(self::rules());
     }
     public static function rules(): array
     {
@@ -164,17 +314,64 @@ final class WP_XP_Core_Settings
                     'status' => 409,
                 ]);
             }
-            // Disabled controls are omitted by browsers. Preserve the stored policy under the same lock,
-            // ignoring forged like fields as well, before validating the submitted complete policy.
-            if (!self::likes_ready() && is_array($input)) {
-                try {
-                    $saved = self::validate($old);
-                } catch (InvalidArgumentException $e) {
-                    $saved = self::defaults();
-                }
-                foreach (self::tiers()['like'] as $slot) {
-                    foreach (['like_' . $slot, 'like_' . $slot . '_threshold'] as $key) {
+            try {
+                $saved = self::validate($old);
+            } catch (InvalidArgumentException $e) {
+                $saved = self::defaults();
+            }
+            if (is_array($input)) {
+                // Older clients submit only the original fields. Keep newer settings intact.
+                foreach (
+                    array_diff_key(self::defaults(), self::flat_defaults())
+                    as $key => $default
+                ) {
+                    if (!array_key_exists($key, $input)) {
                         $input[$key] = $saved[$key];
+                    }
+                }
+                if (!self::likes_ready()) {
+                    foreach (self::tiers()['like'] as $slot) {
+                        foreach (['like_' . $slot, 'like_' . $slot . '_threshold'] as $key) {
+                            $input[$key] = $saved[$key];
+                        }
+                    }
+                    $input['activities']['like'] = $saved['activities']['like'];
+                    $input['milestones']['like'] = $saved['milestones']['like'];
+                }
+                foreach (['view', 'like'] as $kind) {
+                    if (($input['milestones'][$kind] ?? null) === '') {
+                        $input['milestones'][$kind] = [];
+                    }
+                }
+                // Retirement is server-owned and survives old forms and forged submissions.
+                $input['retired_milestones'] = $saved['retired_milestones'];
+                foreach (['view', 'like'] as $kind) {
+                    if (
+                        !isset($input['milestones'][$kind]) ||
+                        !is_array($input['milestones'][$kind])
+                    ) {
+                        continue;
+                    }
+                    $old_rows = array_column($saved['milestones'][$kind], null, 'id');
+                    $ids = [];
+                    foreach ($input['milestones'][$kind] as $row) {
+                        if (!is_array($row) || !isset($row['id']) || !is_string($row['id'])) {
+                            continue;
+                        }
+                        $id = $row['id'];
+                        $ids[] = $id;
+                        if (
+                            in_array($id, array_map('strval', self::tiers()[$kind]), true) &&
+                            (!isset($old_rows[$id]) || $row != $old_rows[$id])
+                        ) {
+                            $input[$kind . '_' . $id] = $row['xp'] ?? null;
+                            $input[$kind . '_' . $id . '_threshold'] = $row['threshold'] ?? null;
+                        }
+                    }
+                    foreach ($saved['milestones'][$kind] as $row) {
+                        if (!in_array($row['id'], $ids, true)) {
+                            $input['retired_milestones'][$kind][] = $row['id'];
+                        }
                     }
                 }
             }
@@ -187,8 +384,21 @@ final class WP_XP_Core_Settings
                 return true;
             }
             // Store the new policy and its audit entry together on transactional options storage.
-            return Reader_Experience::transaction(function () use ($old, $rules) {
+            return Reader_Experience::transaction(function () use ($old, $rules, $saved) {
+                if ($rules['timezone'] !== $saved['timezone']) {
+                    global $wpdb;
+                    if (
+                        $wpdb->get_var('SELECT id FROM ' . Reader_Experience::table() . ' LIMIT 1')
+                    ) {
+                        return new WP_Error(
+                            'timezone_locked',
+                            '已有经验记录，不能修改时区，以免重复领取每日奖励。',
+                            ['status' => 409],
+                        );
+                    }
+                }
                 WP_XP_Core_Management::require_options_transaction();
+                Reader_Experience::touch_option(self::OPTION);
                 if (!update_option(self::OPTION, $rules, false)) {
                     throw new RuntimeException('Experience settings write failed');
                 }
@@ -340,6 +550,48 @@ final class WP_XP_Core_Settings
             ($limit ? '次 / 日' : '经验') .
             '</span></div></div>';
     }
+    private static function activity(string $kind, string $label, array $rules): void
+    {
+        echo '<label class="xp-activity-toggle"><input type="hidden" name="rules[activities][' .
+            esc_attr($kind) .
+            ']" value="0"><input type="checkbox" name="rules[activities][' .
+            esc_attr($kind) .
+            ']" value="1"' .
+            ($rules['activities'][$kind] ? ' checked' : '') .
+            '> ' .
+            esc_html($label) .
+            '</label>';
+    }
+    private static function milestone_row(string $kind, array $row, int $index): void
+    {
+        $prefix = 'rules[milestones][' . $kind . '][' . $index . ']';
+        $id = $kind . '_' . $row['id'];
+        echo '<div class="xp-milestone-row"><input type="hidden" data-field="id" name="' .
+            esc_attr($prefix . '[id]') .
+            '" value="' .
+            esc_attr($row['id']) .
+            '"><span class="xp-tier">第 ' .
+            ($index + 1) .
+            ' 档</span><div class="xp-field"><label data-for="threshold" for="xp-' .
+            esc_attr($id) .
+            '-threshold">所需次数</label><div class="xp-input-unit"><input type="number" data-field="threshold" id="xp-' .
+            esc_attr($id) .
+            '-threshold" name="' .
+            esc_attr($prefix . '[threshold]') .
+            '" value="' .
+            (int) $row['threshold'] .
+            '" min="1" max="1000000000" step="1" required><span>次</span></div></div><div class="xp-field"><label data-for="xp" for="xp-' .
+            esc_attr($id) .
+            '">奖励经验</label><div class="xp-input-unit"><input type="number" data-field="xp" id="xp-' .
+            esc_attr($id) .
+            '" name="' .
+            esc_attr($prefix . '[xp]') .
+            '" value="' .
+            (int) $row['xp'] .
+            '" min="0" max="1000000" step="1" required><span>经验</span></div></div><button type="button" class="button xp-milestone-remove" aria-label="移除第 ' .
+            ($index + 1) .
+            ' 档">移除</button></div>';
+    }
     public static function page(): void
     {
         if (!current_user_can('manage_options')) {
@@ -388,54 +640,79 @@ final class WP_XP_Core_Settings
         echo '<section class="xp-card" aria-labelledby="xp-activity-title"><div class="xp-card-heading"><span class="xp-step" aria-hidden="true">01</span><div><h2 id="xp-activity-title">日常活动</h2><p>设置每次参与的奖励，以及每日可获得奖励的次数。</p></div></div><div class="xp-fields">';
         foreach (
             [
-                'checkin_xp' => '每日签到',
-                'article_xp' => '首次发表文章',
-                'visit_xp' => '有效阅读',
-                'comment_xp' => '有效评论',
-                'visit_limit' => '每日阅读奖励次数',
-                'comment_limit' => '每日评论奖励次数',
+                'checkin' => '每日签到',
+                'article' => '首次发表文章',
+                'visit' => '有效阅读',
+                'comment' => '有效评论',
             ]
-            as $key => $label
+            as $kind => $label
         ) {
-            self::field($key, $label, $rules);
+            echo '<div class="xp-activity-group">';
+            self::activity($kind, '启用' . $label, $rules);
+            self::field($kind . '_xp', $label . '奖励', $rules);
+            if (in_array($kind, ['visit', 'comment'], true)) {
+                self::field($kind . '_limit', '每日奖励次数', $rules);
+            }
+            echo '</div>';
         }
-        echo '</div><p class="xp-footnote">签到每日奖励一次；阅读仍需满足停留条件。次数为 0 时停发对应类别奖励。</p></section>';
-        echo '<section class="xp-card" aria-labelledby="xp-milestones-title"><div class="xp-card-heading"><span class="xp-step" aria-hidden="true">02</span><div><h2 id="xp-milestones-title">作者里程碑</h2><p>设置每一档所需次数和奖励经验。</p></div></div>';
+        echo '</div><div class="xp-field"><label for="xp-dwell">有效阅读停留时间</label><div class="xp-input-unit"><input type="number" id="xp-dwell" name="rules[dwell_seconds]" min="5" max="3600" required value="' .
+            $rules['dwell_seconds'] .
+            '"><span>秒</span></div></div><p class="xp-footnote">签到每日奖励一次；阅读须满足停留时间。关闭活动或将次数设为 0 后停止发放新奖励，已发评论的撤销与恢复继续按原金额处理。</p><details class="xp-scope"><summary>适用内容与每日统计时区</summary><p class="xp-help">以下范围用于阅读、文章、评论与作者里程碑。两项都留空表示全部；填写后，只要内容 ID 或所属分类命中一项即可。不会开放原本无权访问的内容。</p><div class="xp-field"><label for="xp-scope-posts">文章与页面 ID</label><input id="xp-scope-posts" name="rules[scope][post_ids]" value="' .
+            esc_attr(implode(', ', $rules['scope']['post_ids'])) .
+            '" placeholder="例如 12, 35"><p class="xp-help">用逗号分隔，可在文章或页面编辑地址中找到 ID。</p></div><div class="xp-field"><label for="xp-scope-categories">文章分类 ID</label><input id="xp-scope-categories" name="rules[scope][category_ids]" value="' .
+            esc_attr(implode(', ', $rules['scope']['category_ids'])) .
+            '" placeholder="例如 3, 8"><p class="xp-help">用逗号分隔，页面不按文章分类匹配。</p></div><div class="xp-field"><label for="xp-timezone">每日统计时区</label><input id="xp-timezone" name="rules[timezone]" value="' .
+            esc_attr($rules['timezone']) .
+            '" list="xp-timezones" required><datalist id="xp-timezones">';
+        foreach (DateTimeZone::listIdentifiers() as $zone) {
+            echo '<option value="' . esc_attr($zone) . '"></option>';
+        }
+        echo '</datalist><p class="xp-help">默认 Asia/Shanghai。已有经验记录后不能修改，以免同一天重复领取奖励。</p></div></details></section>';
+        echo '<section class="xp-card" aria-labelledby="xp-milestones-title"><div class="xp-card-heading"><span class="xp-step" aria-hidden="true">02</span><div><h2 id="xp-milestones-title">作者里程碑</h2><p>每组可设置 0–20 档，次数须从小到大排列。</p></div></div>';
+        // Keep original flat values for older integrations; nested rows are the current form controls.
         foreach (self::tiers() as $kind => $slots) {
+            foreach ($slots as $slot) {
+                foreach ([$kind . '_' . $slot, $kind . '_' . $slot . '_threshold'] as $key) {
+                    echo '<input type="hidden" name="rules[' .
+                        esc_attr($key) .
+                        ']" value="' .
+                        (int) $rules[$key] .
+                        '">';
+                }
+            }
+        }
+        foreach ($rules['milestones'] as $kind => $rows) {
             $disabled = $kind === 'like' && !self::likes_ready();
-            echo '<fieldset class="xp-milestone-group"' .
+            echo '<fieldset class="xp-milestone-group" data-kind="' .
+                $kind .
+                '"' .
                 ($disabled ? ' disabled' : '') .
                 '><legend>' .
                 ($kind === 'view' ? '浏览里程碑' : '点赞里程碑') .
                 '</legend>';
+            self::activity(
+                $kind,
+                '启用' . ($kind === 'view' ? '有效浏览累计与奖励' : '有效点赞累计与奖励'),
+                $rules,
+            );
             if ($kind === 'like') {
                 echo '<p class="xp-help">' .
                     ($disabled
                         ? '未启用点赞服务：需要 PageNest Companion 及其点赞功能。此组暂不可编辑和发奖，已有设置会保留。'
-                        : '点赞服务已启用：由 PageNest Companion 提供，按经验账本记录的有效点赞累计。') .
+                        : '点赞服务已启用，按经验账本记录的有效点赞累计。') .
                     '</p>';
             }
-            foreach ($slots as $i => $slot) {
-                $key = $kind . '_' . $slot;
-                echo '<div class="xp-milestone-row"><span class="xp-tier">第 ' .
-                    ($i + 1) .
-                    ' 档</span><div class="xp-field"><label for="xp-' .
-                    esc_attr($key) .
-                    '-threshold">所需' .
-                    ($kind === 'view' ? '浏览' : '点赞') .
-                    '次数</label><div class="xp-input-unit"><input id="xp-' .
-                    esc_attr($key) .
-                    '-threshold" name="rules[' .
-                    esc_attr($key) .
-                    '_threshold]" type="number" min="1" max="1000000000" step="1" required value="' .
-                    esc_attr((string) $rules[$key . '_threshold']) .
-                    '"><span>次</span></div></div>';
-                self::field($key, '奖励经验', $rules);
-                echo '</div>';
+            echo '<input type="hidden" name="rules[milestones][' .
+                $kind .
+                ']" value=""><div class="xp-milestone-rows">';
+            foreach ($rows as $index => $row) {
+                self::milestone_row($kind, $row, $index);
             }
-            echo '</fieldset>';
+            echo '</div><template class="xp-milestone-template">';
+            self::milestone_row($kind, ['id' => '', 'threshold' => 1, 'xp' => 0], 0);
+            echo '</template><button type="button" class="button xp-milestone-add" hidden>添加档位</button><p class="xp-milestone-message" role="status" aria-live="polite"></p></fieldset>';
         }
-        echo '<p class="xp-footnote">每组次数须严格递增；每篇作品每档仅奖励一次，修改次数不会重置已领取档位。保存不发奖；未领取档位在下一次有效活动时按累计次数判断。</p></section>';
+        echo '<p class="xp-footnote">每篇作品每档仅奖励一次，修改次数不会重置已领取档位。移除后保存，该档位会永久停用；新增档位使用独立标识。保存规则不补发历史奖励，之后的有效活动会按累计次数判断。</p></section>';
         echo '<section class="xp-card" aria-labelledby="xp-levels-title"><div class="xp-card-heading"><span class="xp-step" aria-hidden="true">03</span><div><h2 id="xp-levels-title">等级成长</h2><p>逐级设置最低经验，当前共 <span id="xp-level-count">' .
             count($rules['levels']) .
             '</span> 级。</p></div></div><div id="xp-levels" aria-describedby="xp-levels-help">';

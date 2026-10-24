@@ -25,6 +25,8 @@ final class Reader_Experience
     const MINS = [0, 5, 20, 60, 150, 300, 600, 1000, 1800, 3000];
     private static bool $writing = false;
     private static array $touched_users = [];
+    private static array $touched_options = [];
+    private static array $pending_events = [];
     public static function ready(): bool
     {
         global $wpdb;
@@ -49,7 +51,7 @@ final class Reader_Experience
     }
     public static function day(): string
     {
-        return wp_date('Y-m-d', null, new DateTimeZone('Asia/Shanghai'));
+        return wp_date('Y-m-d', null, new DateTimeZone(WP_XP_Core_Settings::rules()['timezone']));
     }
     public static function q(string $sql)
     {
@@ -88,9 +90,23 @@ final class Reader_Experience
             }
         }
     }
+    public static function transaction_active(): bool
+    {
+        return self::$writing;
+    }
+    public static function touch_option(string $option): void
+    {
+        if (!self::$writing) {
+            throw new RuntimeException('Experience transaction required');
+        }
+        self::$touched_options[$option] = true;
+    }
     public static function transaction(callable $fn)
     {
         global $wpdb;
+        if (self::$writing) {
+            throw new RuntimeException('Nested experience transactions are not allowed');
+        }
         if (
             (int) $wpdb->get_var(
                 $wpdb->prepare('SELECT GET_LOCK(%s,10)', reader_experience_lock('event_lock')),
@@ -98,29 +114,50 @@ final class Reader_Experience
         ) {
             throw new RuntimeException('Experience busy');
         }
-        $old = self::$writing;
-        self::$touched_users = [];
+        self::$touched_users = self::$touched_options = self::$pending_events = [];
         self::$writing = true;
+        $events = [];
         try {
             self::q('START TRANSACTION');
             WP_XP_Core_Settings::begin();
-            $r = $fn();
+            $result = $fn();
             self::q('COMMIT');
-            return $r;
+            $events = self::$pending_events;
         } catch (Throwable $e) {
             $wpdb->query('ROLLBACK');
             foreach (self::$touched_users as $uid) {
                 wp_cache_delete($uid, 'user_meta');
+            }
+            foreach (array_keys(self::$touched_options) as $option) {
+                wp_cache_delete($option, 'options');
             }
             WP_XP_Core_Management::clear_option_cache();
             wp_cache_flush_runtime();
             throw $e;
         } finally {
             WP_XP_Core_Settings::end();
-            self::$writing = $old;
+            self::$writing = false;
+            self::$pending_events = [];
             $wpdb->get_var(
                 $wpdb->prepare('SELECT RELEASE_LOCK(%s)', reader_experience_lock('event_lock')),
             );
+        }
+        // Plugins may start a new transaction from here. Never report a committed award as failed
+        // because an observer throws, and continue dispatching subsequent committed events.
+        foreach ($events as $event) {
+            self::committed_hook('wp_xp_core_event_committed', $event);
+            if ($event['before_level'] !== $event['after_level']) {
+                self::committed_hook('wp_xp_core_level_changed', $event);
+            }
+        }
+        return $result;
+    }
+    private static function committed_hook(string $hook, array $event): void
+    {
+        try {
+            do_action($hook, $event);
+        } catch (Throwable $e) {
+            error_log('reader_experience committed observer failed: ' . $hook);
         }
     }
     public static function guard($check, $uid, $key)
@@ -200,6 +237,9 @@ final class Reader_Experience
         if (!get_userdata($uid)) {
             return false;
         }
+        wp_cache_delete($uid, 'user_meta');
+        $before = (int) get_user_meta($uid, self::balance_meta(), true);
+        $detail['rule_revision'] = WP_XP_Core_Settings::policy_revision();
         self::q(
             $wpdb->prepare(
                 'INSERT INTO ' .
@@ -219,6 +259,22 @@ final class Reader_Experience
             wp_cache_delete($uid, 'user_meta');
             self::set_balance($uid, (int) get_user_meta($uid, self::balance_meta(), true) + $xp);
         }
+        self::$pending_events[] = [
+            'id' => (int) $wpdb->get_var(
+                $wpdb->prepare('SELECT id FROM ' . self::table() . ' WHERE event_key=%s', $key),
+            ),
+            'key' => $key,
+            'user_id' => $uid,
+            'kind' => $kind,
+            'object_id' => $obj,
+            'xp' => $xp,
+            'day' => $day,
+            'detail' => $detail,
+            'before_xp' => $before,
+            'after_xp' => max(0, $before + $xp),
+            'before_level' => self::level($before),
+            'after_level' => self::level(max(0, $before + $xp)),
+        ];
         return true;
     }
     public static function available_post(int $id): bool
@@ -243,6 +299,10 @@ final class Reader_Experience
             'level' => $level,
             'next' => WP_XP_Core_Settings::rules()['levels'][$level] ?? null,
             'checkin_xp' => WP_XP_Core_Settings::rules()['checkin_xp'],
+            'activities' => WP_XP_Core_Settings::rules()['activities'],
+            'dwell_seconds' => WP_XP_Core_Settings::rules()['dwell_seconds'],
+            'timezone' => WP_XP_Core_Settings::rules()['timezone'],
+            'rule_revision' => WP_XP_Core_Settings::policy_revision(),
             'checked_in' => self::exists('checkin:' . $uid . ':' . self::day()),
             'visit_today' => self::count_day($uid, 'visit', self::day()),
             'comment_today' => self::count_day($uid, 'comment', self::day()),
@@ -312,7 +372,9 @@ final class Reader_Experience
             $pid = (int) ($v['post_id'] ?? 0);
             if (
                 in_array($action, ['ticket', 'visit', 'like'], true) &&
-                (!is_int($v['post_id']) || !self::available_post($pid))
+                (!is_int($v['post_id']) ||
+                    !self::available_post($pid) ||
+                    !WP_XP_Core_Settings::in_scope($pid))
             ) {
                 return new WP_Error('missing', '页面不可用。', ['status' => 404]);
             }
@@ -323,6 +385,7 @@ final class Reader_Experience
                 $now = time();
                 return [
                     'issued' => $now,
+                    'dwell_seconds' => WP_XP_Core_Settings::rules()['dwell_seconds'],
                     'signature' => hash_hmac('sha256', "$uid:$pid:$now", wp_salt('nonce')),
                 ];
             }
@@ -330,8 +393,9 @@ final class Reader_Experience
                 $action === 'visit' &&
                 (!is_int($v['issued']) ||
                     !is_string($v['signature']) ||
-                    time() - $v['issued'] < 15 ||
-                    time() - $v['issued'] > 3600 ||
+                    time() - $v['issued'] < WP_XP_Core_Settings::rules()['dwell_seconds'] ||
+                    time() - $v['issued'] >
+                        max(3600, WP_XP_Core_Settings::rules()['dwell_seconds'] + 300) ||
                     !hash_equals(
                         hash_hmac('sha256', "$uid:$pid:" . $v['issued'], wp_salt('nonce')),
                         $v['signature'],
@@ -351,13 +415,22 @@ final class Reader_Experience
                 $out['likes'] = $liked['count'];
                 return $out;
             }
-            return self::transaction(function () use ($action, $uid, $pid) {
+            return self::transaction(function () use ($action, $uid, $pid, $v) {
                 if (!self::ready()) {
                     throw new RuntimeException('Maintenance');
                 }
                 $day = self::day();
                 $rules = WP_XP_Core_Settings::rules();
-                if ($action === 'checkin') {
+                if (
+                    $action === 'visit' &&
+                    (!self::available_post($pid) || !WP_XP_Core_Settings::in_scope($pid))
+                ) {
+                    return new WP_Error('missing', '页面不可用。', ['status' => 404]);
+                }
+                if ($action === 'visit' && time() - $v['issued'] < $rules['dwell_seconds']) {
+                    return new WP_Error('dwell', '请在页面停留后再记录访问。', ['status' => 400]);
+                }
+                if ($action === 'checkin' && WP_XP_Core_Settings::enabled('checkin')) {
                     self::record(
                         "checkin:$uid:$day",
                         $uid,
@@ -368,7 +441,10 @@ final class Reader_Experience
                     );
                 }
                 if ($action === 'visit') {
-                    if (self::count_day($uid, 'visit', $day) < $rules['visit_limit']) {
+                    if (
+                        WP_XP_Core_Settings::enabled('visit') &&
+                        self::count_day($uid, 'visit', $day) < $rules['visit_limit']
+                    ) {
                         self::record(
                             "visit:$uid:$day:$pid",
                             $uid,
@@ -380,6 +456,7 @@ final class Reader_Experience
                     }
                     $p = get_post($pid);
                     if (
+                        WP_XP_Core_Settings::enabled('view') &&
                         $p &&
                         $p->post_type === 'post' &&
                         $p->post_status === 'publish' &&
@@ -399,12 +476,21 @@ final class Reader_Experience
     }
     public static function liked(int $uid, int $pid, int $count): void
     {
-        if (!self::ready() || !WP_XP_Core_Settings::likes_ready()) {
+        if (
+            !self::ready() ||
+            !WP_XP_Core_Settings::likes_ready() ||
+            !WP_XP_Core_Settings::enabled('like') ||
+            !WP_XP_Core_Settings::in_scope($pid)
+        ) {
             return;
         }
         try {
             self::transaction(function () use ($uid, $pid) {
-                if (!self::ready()) {
+                if (
+                    !self::ready() ||
+                    !WP_XP_Core_Settings::enabled('like') ||
+                    !WP_XP_Core_Settings::in_scope($pid)
+                ) {
                     return;
                 }
                 if (self::record("like:$uid:$pid", $uid, 'like', $pid, 0, self::day())) {
@@ -419,7 +505,9 @@ final class Reader_Experience
     {
         global $wpdb;
         if (
-            !isset(WP_XP_Core_Settings::tiers()[$kind]) ||
+            !isset(WP_XP_Core_Settings::rules()['milestones'][$kind]) ||
+            !WP_XP_Core_Settings::enabled($kind) ||
+            !WP_XP_Core_Settings::in_scope($pid) ||
             ($kind === 'like' && !WP_XP_Core_Settings::likes_ready())
         ) {
             return;
@@ -435,19 +523,17 @@ final class Reader_Experience
                 $kind,
             ),
         );
-        foreach (WP_XP_Core_Settings::tiers()[$kind] as $slot) {
-            $rules = WP_XP_Core_Settings::rules();
-            $threshold = $rules[$kind . '_' . $slot . '_threshold'];
-            if ($n >= $threshold) {
-                $xp = $rules[$kind . '_' . $slot];
+        foreach (WP_XP_Core_Settings::rules()['milestones'][$kind] as $row) {
+            if ($n >= $row['threshold']) {
+                $id = $row['id'];
                 self::record(
-                    "milestone:$kind:$pid:$slot",
+                    "milestone:$kind:$pid:$id",
                     (int) $p->post_author,
                     'milestone_' . $kind,
                     $pid,
-                    $xp,
+                    $row['xp'],
                     self::day(),
-                    ['threshold' => $threshold],
+                    ['threshold' => $row['threshold'], 'milestone_id' => $id],
                 );
             }
         }
@@ -458,13 +544,21 @@ final class Reader_Experience
             !self::ready() ||
             $new !== 'publish' ||
             $old === 'publish' ||
-            $p->post_type !== 'post'
+            $p->post_type !== 'post' ||
+            !WP_XP_Core_Settings::enabled('article') ||
+            !WP_XP_Core_Settings::in_scope((int) $p->ID)
         ) {
             return;
         }
         $attempt = null;
         try {
             self::transaction(function () use ($p, &$attempt) {
+                if (
+                    !WP_XP_Core_Settings::enabled('article') ||
+                    !WP_XP_Core_Settings::in_scope((int) $p->ID)
+                ) {
+                    return false;
+                }
                 $attempt = [
                     'event_key' => 'article:' . $p->ID,
                     'kind' => 'article',
@@ -524,6 +618,8 @@ final class Reader_Experience
                 if (!$first) {
                     if (
                         $eligible &&
+                        WP_XP_Core_Settings::enabled('comment') &&
+                        WP_XP_Core_Settings::in_scope((int) $c->comment_post_ID) &&
                         self::count_day($uid, 'comment', self::day()) <
                             WP_XP_Core_Settings::rules()['comment_limit']
                     ) {

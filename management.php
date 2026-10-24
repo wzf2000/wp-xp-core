@@ -243,7 +243,9 @@ final class WP_XP_Core_Management
                 'balance' => $balance,
                 'ledger_total' => (int) $row['ledger_total'],
                 'event_count' => (int) $row['event_count'],
-                'consistent' => (bool) $valid && $balance === (int) $row['ledger_total'],
+                'consistent' =>
+                    ((bool) $valid && $balance === (int) $row['ledger_total']) ||
+                    ((int) $row['balance_rows'] === 0 && (int) $row['event_count'] === 0),
             ];
         }
         return $items;
@@ -294,6 +296,7 @@ final class WP_XP_Core_Management
     }
     private static function store_rows(string $name, array $rows): void
     {
+        Reader_Experience::touch_option($name);
         $value = wp_json_encode($rows);
         if (
             !is_string($value) ||
@@ -334,14 +337,24 @@ final class WP_XP_Core_Management
     /** Called under the settings transaction and its revision lock. */
     public static function audit_rules($before, array $after): void
     {
+        self::audit('rules', $before, $after);
+    }
+    /** The caller checks capability, nonce and revision before starting its transaction. */
+    public static function audit(string $action, $before, $after): void
+    {
+        if (!Reader_Experience::transaction_active()) {
+            throw new RuntimeException('Experience transaction required');
+        }
         self::require_options_transaction();
         $rows = self::option_rows(self::AUDIT_OPTION);
         $rows[] = [
-            'action' => 'rules',
+            'action' => $action,
             'actor' => get_current_user_id(),
             'created_at' => time(),
             'before' => $before,
             'after' => $after,
+            'before_revision' => WP_XP_Core_Settings::revision($before),
+            'after_revision' => WP_XP_Core_Settings::revision($after),
         ];
         self::store_rows(self::AUDIT_OPTION, array_slice($rows, -self::MAX_AUDIT));
     }
@@ -693,12 +706,16 @@ final class WP_XP_Core_Management
     }
     private static function retry_eligible(array $failure): bool
     {
+        if (!WP_XP_Core_Settings::enabled($failure['kind'])) {
+            return false;
+        }
         if ($failure['kind'] === 'article') {
             $p = get_post((int) $failure['object_id']);
             return $p &&
                 $p->post_type === 'post' &&
                 $p->post_status === 'publish' &&
-                (int) $p->post_author === (int) $failure['user_id'];
+                (int) $p->post_author === (int) $failure['user_id'] &&
+                WP_XP_Core_Settings::in_scope((int) $p->ID);
         }
         $c = get_comment((int) $failure['object_id']);
         if (!$c) {
@@ -714,6 +731,7 @@ final class WP_XP_Core_Management
             $p->post_status === 'publish' &&
             in_array($p->post_type, ['post', 'page'], true) &&
             (int) $p->post_author !== $uid &&
+            WP_XP_Core_Settings::in_scope((int) $c->comment_post_ID) &&
             (!$parent || (int) $parent->user_id !== $uid) &&
             Reader_Experience::count_day($uid, 'comment', $failure['local_day']) <
                 WP_XP_Core_Settings::rules()['comment_limit'];

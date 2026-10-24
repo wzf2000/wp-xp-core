@@ -3,7 +3,20 @@
 define('ABSPATH', __DIR__);
 define('DB_NAME', 'fixture');
 define('ARRAY_A', PDO::FETCH_ASSOC);
-function add_action(...$args) {}
+function add_action($hook, $callback, ...$args)
+{
+    $GLOBALS['fixture_hooks'][$hook][] = $callback;
+}
+function do_action($hook, ...$args)
+{
+    foreach ($GLOBALS['fixture_hooks'][$hook] ?? [] as $callback) {
+        $callback(...$args);
+    }
+}
+function has_category($ids, $post_id)
+{
+    return (bool) array_intersect($ids, $GLOBALS['categories'][$post_id] ?? []);
+}
 function register_activation_hook(...$args) {}
 $GLOBALS['likes_enabled'] = true;
 function pagenest_companion_like() {}
@@ -329,7 +342,9 @@ verify(
 );
 verify(
     'weekly rotation invalidates affected user caches',
-    $GLOBALS['cache_deletions'] === [[7, 'user_meta'], [8, 'user_meta']],
+    array_values(
+        array_filter($GLOBALS['cache_deletions'], fn($args) => $args[1] === 'user_meta'),
+    ) === [[7, 'user_meta'], [8, 'user_meta']],
 );
 verify(
     'weekly rotation preserves lifetime score',
@@ -340,7 +355,10 @@ $GLOBALS['cache_deletions'] = [];
 Reader_Experience::weekly();
 verify(
     'same-week rotation is idempotent',
-    get_user_meta(7, 'max_2048_score_weekly', true) === '42' && $GLOBALS['cache_deletions'] === [],
+    get_user_meta(7, 'max_2048_score_weekly', true) === '42' &&
+        array_values(
+            array_filter($GLOBALS['cache_deletions'], fn($args) => $args[1] === 'user_meta'),
+        ) === [],
 );
 update_option(reader_experience_config('week_option'), 'older-week');
 $wpdb->failOptionWrite = true;
@@ -445,7 +463,7 @@ foreach (
 ) {
     $bad = array_replace($custom, $bad);
     verify(
-        'invalid policy rejected',
+        'invalid policy rejected: ' . json_encode($bad),
         WP_XP_Core_Settings::save($bad, 'fixture-nonce', WP_XP_Core_Settings::revision($custom))
             ->code === 'input',
     );
@@ -645,6 +663,7 @@ foreach (['view' => [100, 500, 1000], 'like' => [10, 30, 100]] as $kind => $thre
         );
     }
 }
+$custom = WP_XP_Core_Settings::validate($custom);
 $legacy = array_filter(
     $custom,
     fn($key) => !str_ends_with($key, '_threshold'),

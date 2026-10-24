@@ -36,17 +36,25 @@
               : ' · 已达最高等级')),
       );
     document.querySelectorAll('.reader-experience-checkin').forEach((el) => {
-      el.disabled = v.checked_in;
-      el.textContent = v.checked_in ? '今日已签到' : `每日签到 +${v.checkin_xp}`;
+      el.disabled = v.checked_in || v.activities?.checkin === false;
+      el.textContent =
+        v.activities?.checkin === false
+          ? '签到奖励已关闭'
+          : v.checked_in
+            ? '今日已签到'
+            : `每日签到 +${v.checkin_xp}`;
     });
-    document.querySelectorAll('.reader-experience-history').forEach((el) => {
-      el.replaceChildren();
-      for (const h of v.history) {
-        const li = document.createElement('li');
-        li.textContent = `${h.local_day} ${labels[h.kind] || '经验记录'} ${Number(h.xp) > 0 ? '+' : ''}${h.xp}`;
-        el.append(li);
-      }
-    });
+    document
+      .querySelectorAll('.reader-experience-panel:not(.xp-growth-panel) .reader-experience-history')
+      .forEach((el) => {
+        el.replaceChildren();
+        for (const h of v.history) {
+          const li = document.createElement('li');
+          li.textContent = `${h.local_day} ${labels[h.kind] || '经验记录'} ${Number(h.xp) > 0 ? '+' : ''}${h.xp}`;
+          el.append(li);
+        }
+      });
+    document.dispatchEvent(new CustomEvent('wp-xp-core-state', { detail: v }));
   }
   function message(s) {
     document.querySelectorAll('.reader-experience-message').forEach((el) => (el.textContent = s));
@@ -70,7 +78,7 @@
     true,
   );
   if (c.logged) {
-    if (document.querySelector('.reader-experience-panel'))
+    if (document.querySelector('.reader-experience-panel:not(.xp-growth-panel)'))
       api('state')
         .then(state)
         .catch((e) => message(e.message));
@@ -87,15 +95,21 @@
         const now = performance.now();
         if (!document.hidden) visible += Math.min(now - last, 1500);
         last = now;
-        if (done || busy || visible < 15000 || !ticket) return;
+        if (done || busy || visible < Number(ticket?.dwell_seconds || 15) * 1000 || !ticket) return;
         busy = true;
         try {
-          state(await api('visit', { post_id: c.postId, ...ticket }));
+          state(
+            await api('visit', {
+              post_id: c.postId,
+              issued: ticket.issued,
+              signature: ticket.signature,
+            }),
+          );
           done = true;
           clearInterval(timer);
         } catch (e) {
           message(e.message);
-          if (visible > 60000) {
+          if (visible > Number(ticket?.dwell_seconds || 15) * 1000 + 45000) {
             done = true;
             clearInterval(timer);
           }
