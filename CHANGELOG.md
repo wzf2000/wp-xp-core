@@ -2,7 +2,7 @@
 
 ## 2.0.0-rc.1
 
-Development preview; not released or deployed.
+Prerelease with experience management, growth profiles and honor-only achievements.
 
 - Add administrator ledger queries, reasoned manual adjustments and reversals, read-only diagnostics, bounded configuration audit and controlled retries of explicitly failed initial article/comment awards.
 - Add activity switches, content scope, configurable reading dwell/time zone, stable editable milestone lists and committed-event integration hooks.

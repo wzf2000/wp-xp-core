@@ -2,7 +2,7 @@
 
 [简体中文](CONFIGURATION.md) · English · [Back to overview](../README.en.md) · [User guide](GUIDE.en.md)
 
-This document describes the **2.0.0-rc.1 development preview**, not released or deployed. Installed releases follow their tagged documentation.
+This document describes the **2.0.0-rc.1 prerelease**. Installed releases follow their tagged documentation.
 
 This page is for integrators. **Ordinary first-time installation needs no external configuration: upload and activate a 1.4.0+ installation ZIP.** For page setup, see the [user guide](GUIDE.en.md). External JSON is only for advanced deployments with custom storage or existing integrations.
 
