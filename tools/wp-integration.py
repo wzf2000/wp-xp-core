@@ -218,7 +218,7 @@ try {
     results["concurrency"] = json.loads(wp("eval-file", fixture, mode="concurrency-verify"))
     results["concurrency"]["clients"] = clients
     (lab / "results.json").write_text(json.dumps(results, indent=2) + "\n")
-    for stage in ("management", "policy", "growth"):
+    for stage in ("management", "policy", "growth", "insights"):
         results[stage] = json.loads(
             wp("eval-file", str(ROOT / ("tests/wordpress-" + stage + ".php")))
         )

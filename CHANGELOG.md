@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.0.0-rc.2 (development candidate, unreleased)
+
+This branch previews the next candidate; it has not been released or deployed. The published 2.0.0-rc.1 prerelease remains documented at its Release tag.
+
+- Add manually placed weekly/monthly activity boards with positive net XP, negative compensation, competition ranks and live pagination; exclude historical imports, reconciliation, manual adjustments and honor-only events. Weeks and months never reset balances.
+- Add a nonce-protected current-user position lookup and JavaScript-enhanced personal panel. Public rows expose only display name, public author link, net XP and rank.
+- Add administrator source aggregates with bounded date ranges, zero-XP participation and separately identified manual changes, plus current-version/current-cycle task completion rates based on participants and completers.
+- Keep all statistics read-only over existing storage, without migrations, indexes, statistics caches, cron jobs or retrospective awards.
+
 ## 2.0.0-rc.1
 
 Prerelease with experience management, growth profiles and honor-only achievements.

@@ -39,6 +39,9 @@ final class WP_XP_Core_Management_UI
         if (class_exists('WP_XP_Core_Achievements_UI')) {
             $links['tasks'] = ['wp-xp-achievements', '任务与成就', ''];
         }
+        if (class_exists('WP_XP_Core_Insights_UI')) {
+            $links['insights'] = ['wp-xp-insights', '激励效果', ''];
+        }
         foreach ($links as $key => [$slug, $label, $view]) {
             $url = admin_url('options-general.php?page=' . $slug . ($view ? '&view=' . $view : ''));
             echo '<a href="' .

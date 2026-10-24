@@ -586,3 +586,27 @@
     display: grid;
   }
 }
+
+.wp-xp-core-admin .xp-insight-totals {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  padding: 20px 0;
+  margin: 0;
+}
+.wp-xp-core-admin .xp-insight-totals dt {
+  color: #5a6c86;
+}
+.wp-xp-core-admin .xp-insight-totals dd {
+  margin: 8px 0 0;
+  font-size: 28px;
+  line-height: 1.2;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  color: #193c60;
+}
+@media (max-width: 680px) {
+  .wp-xp-core-admin .xp-insight-totals {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

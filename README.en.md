@@ -24,7 +24,9 @@ The plugin manages experience and levels independently of myCRED. Likes are an o
 
 ## Get started
 
-**The current version is the 2.0.0-rc.1 prerelease.** Back up existing sites and verify updates in an isolated environment first; use the documentation at your Release tag for version-specific behavior. On a new site, installing and activating creates the experience ledger and uses default rules. No server JSON profile or other experience plugin is required. Existing users start at zero XP; old articles and historical comments do not trigger automatic backfill.
+**This branch previews the 2.0.0-rc.2 development candidate, which has not been released or deployed.** For the published 2.0.0-rc.1 prerelease, use the documentation at [its Release tag](https://github.com/wzf2000/wp-xp-core/releases/tag/v2.0.0-rc.1).
+
+Back up existing sites and verify updates in an isolated environment first; use the documentation at your Release tag for version-specific behavior. On a new site, installing and activating creates the experience ledger and uses default rules. No server JSON profile or other experience plugin is required. Existing users start at zero XP; old articles and historical comments do not trigger automatic backfill.
 
 1. Download `wp-xp-core-VERSION.zip` from [Releases](https://github.com/wzf2000/wp-xp-core/releases), rather than GitHub’s automatically generated **Source code** archives. Automatic first-install setup requires **1.4.0 or later**; use the release documentation for older versions.
 2. Install and activate the ZIP through **Plugins → Add New Plugin → Upload Plugin** in WordPress.
@@ -59,6 +61,7 @@ For value ranges, comment eligibility, counting and examples, see [Rule settings
 - **Ledger and diagnostics:** filter events by user, source and date; adjust individual XP with a reason or reverse a manual adjustment; compare balances to the ledger without writes and handle explicitly recorded failed rewards.
 - **Growth center:** customize level names, character icons, colors and descriptions. Personal pages show check-in calendars, consecutive and cumulative counts, progress and private history. Optional check-in stage rewards start disabled and count new check-ins only.
 - **Tasks and achievements:** create once-only, daily or weekly tasks. Automatic tasks combine activity steps; reviewed tasks accept a user's explanation. Achievements are honors with no extra XP, and earned badges retain their original name and icon.
+- **Weekly/monthly boards and insights:** manually place `[xp_leaderboard period="week" limit="10"]` or its monthly variant to rank net activity XP. Personal panels show the current user’s position; administrators can review source aggregates and current task completion rates. New weeks and months do not reset XP balances.
 
 See the [user guide](docs/GUIDE.en.md) for steps and change effects. These features do not backfill all historical activity, schedule cron jobs or provide a shop or spendable currency.
 
@@ -73,7 +76,7 @@ See the [user guide](docs/GUIDE.en.md) for steps and change effects. These featu
 | Contribute improvements                                        | [Contributing](CONTRIBUTING.md)                                           |
 | Maintain GitHub releases                                       | [Releasing](docs/RELEASING.md)                                            |
 
-Documentation on `main` describes the current source. For an installed release, use the documentation at its Release tag.
+Documentation on this branch describes the 2.0.0-rc.2 development candidate. For an installed release, use the documentation at its Release tag.
 
 [Open an Issue](https://github.com/wzf2000/wp-xp-core/issues/new/choose) with your version, observed behavior and reproduction steps. Report security issues privately under the [security policy](SECURITY.md).
 

@@ -149,3 +149,144 @@ file_put_contents(
         $assets['growth_js'] .
         '"></script></html>',
 );
+
+function reader_experience_configured()
+{
+    return true;
+}
+function add_shortcode(...$args) {}
+function wp_enqueue_style(...$args) {}
+function shortcode_atts($defaults, $values, $name)
+{
+    return array_replace($defaults, array_intersect_key($values, $defaults));
+}
+function sanitize_text_field($value)
+{
+    return strip_tags($value);
+}
+function wp_unslash($value)
+{
+    return $value;
+}
+function get_permalink()
+{
+    return '/board.html';
+}
+function number_format_i18n($number, $decimals = 0)
+{
+    return number_format($number, $decimals);
+}
+function is_wp_error($value)
+{
+    return false;
+}
+function admin_url($path)
+{
+    return '/admin/' . $path;
+}
+function selected($a, $b, $echo = false)
+{
+    return $a === $b ? ' selected' : '';
+}
+function add_query_arg($key, $value = null, $url = null)
+{
+    $args = is_array($key) ? $key : [$key => $value];
+    $base = is_array($key) ? $value : $url;
+    return ($base ?: '/') . '?' . http_build_query($args);
+}
+class WP_XP_Core_Insights
+{
+    public static function leaderboard($input = [])
+    {
+        return [
+            'period' => 'week',
+            'from' => '2026-10-19',
+            'to' => '2026-10-24',
+            'timezone' => 'Asia/Shanghai',
+            'rows' => [
+                [
+                    'display_name' => '合成用户 <img src=x>',
+                    'author_url' => '/author/synthetic-one/',
+                    'rank' => 1,
+                    'xp' => 10,
+                ],
+                [
+                    'display_name' => '用于检查换行的合成参与者名称',
+                    'author_url' => '/author/synthetic-two/',
+                    'rank' => 1,
+                    'xp' => 10,
+                ],
+            ],
+            'total' => 12,
+            'has_more' => true,
+            'offset' => 0,
+            'limit' => 10,
+        ];
+    }
+    public static function sources($input = [])
+    {
+        return [
+            'period' => 'week',
+            'from' => '2026-10-19',
+            'to' => '2026-10-24',
+            'timezone' => 'Asia/Shanghai',
+            'rows' => [
+                [
+                    'kind' => 'checkin',
+                    'event_count' => 2,
+                    'user_count' => 2,
+                    'positive_xp' => 0,
+                    'negative_xp' => 0,
+                    'net_xp' => 0,
+                ],
+            ],
+            'totals' => [
+                'event_count' => 2,
+                'user_count' => 2,
+                'positive_xp' => 0,
+                'negative_xp' => 0,
+                'net_xp' => 0,
+            ],
+        ];
+    }
+    public static function task_rates()
+    {
+        return [
+            'timezone' => 'Asia/Shanghai',
+            'rows' => [
+                [
+                    'id' => 't_aaaaaaaaaaaaaaaa',
+                    'title' => '合成多步骤目标',
+                    'type' => 'automatic',
+                    'version' => 2,
+                    'period' => 'week',
+                    'from' => '2026-10-19',
+                    'to' => '2026-10-24',
+                    'participants' => 2,
+                    'completed' => 1,
+                    'rate' => 0.5,
+                ],
+            ],
+        ];
+    }
+}
+require $root . '/management-ui.php';
+require $root . '/achievements-ui.php';
+require $root . '/insights-ui.php';
+$head =
+    '<!doctype html><html lang="zh"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><style>body{margin:20px;font:16px/1.6 sans-serif;max-width:1000px}*{box-sizing:border-box}</style>';
+file_put_contents(
+    $dir . '/board.html',
+    $head .
+        '<link rel="stylesheet" href="' .
+        $assets['css'] .
+        '">' .
+        WP_XP_Core_Insights_UI::board(),
+);
+ob_start();
+WP_XP_Core_Insights_UI::page();
+$insights = ob_get_clean();
+file_put_contents(
+    $dir . '/insights.html',
+    $head . '<link rel="stylesheet" href="' . $assets['admin_css'] . '">' . $insights,
+);

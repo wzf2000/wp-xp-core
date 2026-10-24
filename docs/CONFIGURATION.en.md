@@ -2,7 +2,7 @@
 
 [简体中文](CONFIGURATION.md) · English · [Back to overview](../README.en.md) · [User guide](GUIDE.en.md)
 
-This document describes the **2.0.0-rc.1 prerelease**. Installed releases follow their tagged documentation.
+This document describes the **2.0.0-rc.2 development candidate preview (not released or deployed)**. Installed releases follow their tagged documentation.
 
 This page is for integrators. **Ordinary first-time installation needs no external configuration: upload and activate a 1.4.0+ installation ZIP.** For page setup, see the [user guide](GUIDE.en.md). External JSON is only for advanced deployments with custom storage or existing integrations.
 
@@ -90,6 +90,18 @@ Management requires `manage_options`; writes also validate nonces, operation ide
 `wp_xp_core_growth` stores level profiles and optional check-in stages. A new rule generation and event boundary limit stage rewards to subsequent check-ins; personal-page reads do not award XP. `wp_xp_core_achievements` stores versioned tasks, at most 50 including disabled tasks, with at most eight automatic steps. Task changes use a new event boundary. Once-only, daily and weekly periods bound progress; weeks start Monday. Reviewed tasks grant zero-XP honors. Earned achievements snapshot titles and icons rather than following later task edits.
 
 Personal history, submissions and review status are isolated to the current user. Do not publicly cache authenticated personal responses. Extra check-in rewards start disabled; there is no cron, full-history scan or automatic backfill. Initial personal information is server-rendered, with JavaScript enhancing interaction and pagination.
+
+## Leaderboards and insights interfaces
+
+`[xp_leaderboard period="week" limit="10"]` is a separate, manually placed public entry point. `period` also accepts `month`; page sizes range from 1–50. The external `shortcodes` field does not rename it, and it creates no pages. Reporting uses the current experience time zone and ledger `local_day`, from Monday or month start through today, with positive net activity XP required. Ties use competition ranks such as 1, 1, 3, with user ID providing stable tie ordering without appearing in public rows. One SQL statement calculates the page, total and ranks within one database snapshot. Activity between offset pagination requests can still move results.
+
+`WP_XP_Core_Insights::leaderboard()` accepts only `period`, `limit` (1–50) and `offset` (0–1,000,000). Public rows contain only `display_name`, `author_url`, `xp` and `rank`, accompanied by date, time-zone and pagination metadata. They contain no user ID, login name or private history. Deleted users and users no longer belonging to the current multisite site are excluded. Eligible kinds are `checkin`, `visit`, `article`, `comment`, `comment_adjust`, `milestone_view`, `milestone_like` and `streak_reward`, including negative compensation. Rankings do not use balance projections.
+
+Personal positions use `POST /position` in the primary `rest_namespace` and all `rest_aliases`, retaining the existing personal-interface permission checks. Requests require sign-in, `read` capability and a valid `X-WP-Nonce`. The JSON object accepts only an optional `period` field (`week` or `month`, default `week`), for example `{"period":"month"}`, with no target user ID or other fields and a body limit of 1,000 bytes. The server forces the current user. Response `position` has the public-row shape, or `null` when unranked. JavaScript enhances the growth panel using this endpoint. Reads generate no events; personal responses must not enter shared caches.
+
+`WP_XP_Core_Insights::sources()` and `task_rates()` require `manage_options` and have no public statistics REST routes. Sources accept `week`, `month` or `custom`. Custom `from`/`to` values use `YYYY-MM-DD`, include both endpoints, span at most 366 days and cannot end after today. Automatic periods reject custom date fields. Sources include the activity kinds above plus separate `manual_adjust` and `manual_reversal` rows. Eligible zero-XP activity counts toward events and participants; total participants are deduplicated across sources. Deleted users’ historical events remain only in anonymized aggregates. Historical imports, reconciliation and honors are excluded.
+
+Task rates read only enabled definitions, their current version and current cycle. The denominator is the distinct union of matching activity/review-submission users and completers. Exact task/version/cycle achievement events identify the numerator. A zero denominator returns `rate: null`; source date parameters do not affect task rates. User membership scope matches the public board. Statistics store no ranking metadata and create no tables, migrations, indexes, caches or cron jobs. They do not change balances, task progress or award behavior.
 
 ## Developer event contract
 

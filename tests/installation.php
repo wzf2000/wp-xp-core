@@ -283,7 +283,10 @@ verify(
     'activation callback registered',
     $GLOBALS['activation'] === [WP_XP_Core_Lifecycle::class, 'activate'],
 );
-verify('native shortcode registered', $GLOBALS['registered_shortcodes'] === ['reader_experience']);
+verify(
+    'native shortcode registered',
+    $GLOBALS['registered_shortcodes'] === ['xp_leaderboard', 'reader_experience'],
+);
 verify('preinstall panel returns maintenance', str_contains(Reader_Experience::panel(), '维护'));
 verify(
     'ordinary panel and readiness reads never install',

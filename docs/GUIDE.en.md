@@ -2,7 +2,7 @@
 
 [简体中文](GUIDE.md) · English · [Back to overview](../README.en.md)
 
-This administrator guide describes the **2.0.0-rc.1 prerelease**. For released versions, use the guide at the matching Release tag. From 1.4.0, new sites can install and activate with default rules, without server JSON configuration. See [Get started](../README.en.md#get-started) for installation.
+This administrator guide describes the **2.0.0-rc.2 development candidate preview (not released or deployed)**. For released versions, use the guide at the matching Release tag. From 1.4.0, new sites can install and activate with default rules, without server JSON configuration. See [Get started](../README.en.md#get-started) for installation.
 
 ## Create an experience page
 
@@ -87,6 +87,33 @@ Open **任务与成就** (Tasks and achievements), enter a title, description an
 - **Reviewed tasks:** define no automatic steps. Users submit an explanation on their personal page; administrators approve or return it from the pending queue. Rejection requires feedback. Each user can submit at most five attempts per task/version/period, with only one pending at a time.
 
 Achievements are honors and award no extra XP. Editing a task creates a new version whose progress counts only subsequent events, without carrying old progress forward or backfilling history. Earned badges retain their awarded text and icon; editing or disabling a task does not erase them. Finalize task content and periods before inviting users, since frequent edits restart current progress.
+
+## Place weekly and monthly boards
+
+Create a normal page, add a Shortcode block, and manually publish either shortcode as needed:
+
+```text
+[xp_leaderboard period="week" limit="10"]
+[xp_leaderboard period="month" limit="10"]
+```
+
+`period` accepts `week` (default) or `month`. `limit` is the page size, defaulting to 10 with a range of 1–50. The plugin does not create or publish leaderboard pages. Anonymous visitors can view boards, which show only rank, display name, public author link and net XP for the period.
+
+Weeks run from Monday through today and months from the first day through today, using the current experience time zone shown with the date range. Scores include check-in, reading, publication, comments, author milestones and check-in stage rewards. Reversals and restorations affect the net total according to their ledger dates. Historical imports, balance reconciliation, manual adjustments and zero-XP honors are excluded. Only existing users with positive net activity XP appear; deleted users and users who left the current multisite site are excluded. Changing weeks or months changes the reporting range without resetting balances.
+
+Ties share competition ranks, such as 1, 1, 3. Results are live: new activity between pagination requests may change ranks and which users appear on a page. JavaScript enhances the signed-in growth panel with the current user’s weekly/monthly position. Users without positive qualifying net XP have no position. This lookup is restricted to the current account.
+
+## Review incentive insights
+
+Open **Settings → 激励效果** (Incentive insights), or use plugin navigation. Access requires `manage_options`.
+
+**Experience sources** supports this week, this month or custom dates. Custom ranges include both endpoints, span at most 366 days and cannot end after today in the experience time zone. Each source shows positive XP, negative XP, net XP, event count and distinct participants. Eligible zero-XP activity counts toward events and participants. The total participant count is deduplicated across sources, so source counts cannot be added together.
+
+Manual adjustments and their reversals have separate source rows and are included in totals, unlike the public activity boards. Historical imports, reconciliation and zero-XP honors are excluded. Historical events for deleted users remain in anonymized aggregates without individual details.
+
+**Current task completion rates** cover only enabled tasks, their current version and current cycle, independently of the source date filter above. The denominator is the distinct union of users with matching activity (automatic tasks) or review submissions (reviewed tasks), plus users who earned the achievement. The numerator is distinct users who earned that version’s achievement in that cycle. This is neither an impression conversion rate nor the completion share of all registered users. With no participants, the display reads “尚无参与” (No participants), rather than 0%. Editing a task creates a new version; older participation and completion records are excluded from that version.
+
+Boards, personal positions and insights are read-only. Viewing them awards no XP, resets no tasks and triggers no backfill, statistics tables or cron jobs.
 
 ## Frequently asked questions
 

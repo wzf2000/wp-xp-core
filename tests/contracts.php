@@ -31,7 +31,7 @@ function check($name, $condition)
 check('absent like provider disabled', WP_XP_Core_Settings::likes_ready() === false);
 check('native mode is configured', reader_experience_native() && reader_experience_configured());
 check('not ready before activation', Reader_Experience::ready() === false);
-check('native shortcode registered', $shortcodes === ['reader_experience']);
+check('native shortcode registered', $shortcodes === ['xp_leaderboard', 'reader_experience']);
 check(
     'usual policy hooks registered',
     in_array('transition_post_status', $hooks, true) && in_array('rest_api_init', $hooks, true),

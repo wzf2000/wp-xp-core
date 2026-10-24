@@ -79,6 +79,8 @@ class ReleasePipeline(unittest.TestCase):
                 "growth-ui.php",
                 "achievements.php",
                 "achievements-ui.php",
+                "insights.php",
+                "insights-ui.php",
                 "README.md",
                 "README.en.md",
                 "LICENSE",
