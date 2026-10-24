@@ -200,6 +200,28 @@
       submissions.append(details);
     }
   }
+  const positions = new WeakMap();
+  async function position(panel, period) {
+    const previous = positions.get(panel) || { sequence: 0 };
+    const current = { period, sequence: previous.sequence + 1 };
+    positions.set(panel, current);
+    panel.querySelector('.xp-personal-standing').hidden = false;
+    const output = panel.querySelector('.xp-personal-position');
+    output.textContent = '正在读取本期位置…';
+    panel.querySelectorAll('[data-xp-position-period]').forEach((button) => {
+      button.setAttribute('aria-pressed', String(button.dataset.xpPositionPeriod === period));
+    });
+    try {
+      const data = await api('position', { period });
+      if (positions.get(panel) !== current) return;
+      output.textContent = data.position
+        ? `${period === 'month' ? '本月' : '本周'}第 ${data.position.rank} 名 · 活动净经验 +${data.position.xp}`
+        : '本期还没有计入榜单的活动净经验。';
+    } catch (error) {
+      if (positions.get(panel) === current)
+        output.textContent = error.message + ' 点击周期可重试。';
+    }
+  }
   async function refresh() {
     const sequence = ++refreshSequence;
     try {
@@ -208,6 +230,7 @@
       for (const panel of panels) {
         render(panel, value);
         renderTasks(panel, tasks);
+        position(panel, positions.get(panel)?.period || 'week');
         if (previousLevel !== null && previousLevel < value.level)
           message(panel, `已升至 ${value.level_profile.name}！`);
       }
@@ -217,6 +240,9 @@
     }
   }
   for (const panel of panels) {
+    panel.querySelectorAll('[data-xp-position-period]').forEach((button) => {
+      button.addEventListener('click', () => position(panel, button.dataset.xpPositionPeriod));
+    });
     let cursor = null,
       sequence = 0,
       filters = {};

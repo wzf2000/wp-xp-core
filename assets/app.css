@@ -266,3 +266,73 @@
     min-height: 44px;
   }
 }
+
+.xp-growth-panel .xp-personal-standing {
+  padding: 20px 0;
+  border-top: 1px solid #dce5ee;
+}
+.xp-growth-panel .xp-personal-standing[hidden] {
+  display: none;
+}
+.xp-growth-panel .xp-position-switch {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.xp-growth-panel .xp-position-switch button {
+  min-height: 40px;
+  padding: 6px 16px;
+}
+.xp-growth-panel .xp-position-switch button[aria-pressed='true'] {
+  background: #3b53b2;
+  color: #fff;
+}
+.reader-experience-panel.xp-period-board {
+  max-width: 100%;
+}
+.xp-period-board .xp-board-scroll {
+  overflow-x: auto;
+}
+.xp-period-board table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.xp-period-board th,
+.xp-period-board td {
+  text-align: left;
+  padding: 12px;
+  border-bottom: 1px solid #dce5ee;
+}
+.xp-period-board th:first-child,
+.xp-period-board td:first-child,
+.xp-period-board th:last-child,
+.xp-period-board td:last-child {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.xp-period-board td:nth-child(2) {
+  overflow-wrap: anywhere;
+  min-width: 6em;
+}
+.xp-period-board th {
+  color: #193c60;
+}
+.xp-period-board .xp-board-period,
+.xp-period-board .xp-board-note {
+  color: #596e88;
+  font-size: 0.9em;
+}
+.xp-period-board .xp-board-pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding-top: 16px;
+}
+@media (max-width: 480px) {
+  .xp-period-board th,
+  .xp-period-board td {
+    padding: 10px 6px;
+  }
+}
