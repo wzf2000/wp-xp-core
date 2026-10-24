@@ -14,7 +14,8 @@ permissions:
   contents: read
 jobs:
   verify:
-    runs-on: ubuntu-latest
+    # Keep the pinned Playwright browser on its supported runner OS.
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
