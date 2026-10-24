@@ -87,3 +87,65 @@ file_put_contents(
         htmlspecialchars($assets['css']) .
         '"><style>body{margin:0;padding:20px;font:14px/1.8 sans-serif}table{width:100%;border-collapse:collapse}td,th{padding:18px;border:1px solid #dce5e3}th:last-child{width:6em}.pagenest-article-body :is(th,td){white-space:normal!important;overflow-wrap:break-word!important}</style><div class="pagenest-article-body"><section class="site-tools-ranking" data-ranking="community-ranking"><table><thead><tr><th>#</th><th>用户名</th><th>个人简介</th><th>经验</th><th>等级</th></tr></thead><tbody><tr><td>1</td><td>合成用户一</td><td>用于检查等级列的合成介绍，不使用真实账号。</td><td>3000</td><td>Level 10</td></tr><tr><td>2</td><td>合成用户二</td><td>支持最多一百级时仍保持单行。</td><td>9000</td><td>Level 100</td></tr></tbody></table></section></div></html>',
 );
+
+// Exercise actual growth markup with private synthetic API responses supplied by Playwright.
+function plugins_url($path, $file)
+{
+    return basename($path);
+}
+function wp_enqueue_script(...$args) {}
+function is_user_logged_in()
+{
+    return true;
+}
+function get_current_user_id()
+{
+    return 7;
+}
+function esc_url($url)
+{
+    return htmlspecialchars($url, ENT_QUOTES);
+}
+class WP_XP_Core_Growth
+{
+    public static function summary($uid)
+    {
+        return [
+            'experience' => 5,
+            'level' => 2,
+            'next' => 20,
+            'checked_in' => false,
+            'checkin_xp' => 2,
+            'activities' => ['checkin' => true, 'visit' => true, 'comment' => true],
+            'level_profile' => [
+                'name' => '探索者',
+                'icon' => '芽',
+                'color' => '#3856b0',
+                'description' => '合成成长资料',
+            ],
+            'progress_percent' => 0,
+            'day' => '2026-10-24',
+            'dwell_seconds' => 30,
+            'checkins' => [
+                'consecutive' => 2,
+                'cumulative' => 9,
+                'dates' => ['2026-10-24', '2026-10-23'],
+            ],
+            'streak' => ['enabled' => false, 'mode' => 'consecutive', 'days' => 0, 'rewards' => []],
+            'today' => ['visits' => 1, 'visit_limit' => 3, 'comments' => 0, 'comment_limit' => 3],
+        ];
+    }
+}
+require $root . '/growth-ui.php';
+file_put_contents($dir . '/growth-state.json', json_encode(WP_XP_Core_Growth::summary(7)));
+file_put_contents(
+    $dir . '/growth.html',
+    '<!doctype html><html lang="zh"><meta charset="utf-8"><meta name="viewport" content="width=device-width">' .
+        '<style>body{margin:20px;font:16px/1.6 sans-serif;max-width:1000px}*{box-sizing:border-box}</style>' .
+        WP_XP_Core_Growth_UI::panel() .
+        '<script>window.ReaderExperience={endpoint:"/api/",nonce:"synthetic-nonce",logged:true,postId:null};</script><script src="' .
+        $assets['js'] .
+        '"></script><script src="' .
+        $assets['growth_js'] .
+        '"></script></html>',
+);

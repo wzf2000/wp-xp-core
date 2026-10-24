@@ -218,6 +218,11 @@ try {
     results["concurrency"] = json.loads(wp("eval-file", fixture, mode="concurrency-verify"))
     results["concurrency"]["clients"] = clients
     (lab / "results.json").write_text(json.dumps(results, indent=2) + "\n")
+    for stage in ("management", "policy", "growth"):
+        results[stage] = json.loads(
+            wp("eval-file", str(ROOT / ("tests/wordpress-" + stage + ".php")))
+        )
+        (lab / "results.json").write_text(json.dumps(results, indent=2) + "\n")
     print(
         json.dumps({key: len(value.get("checks", [])) for key, value in results.items()}, indent=2)
     )

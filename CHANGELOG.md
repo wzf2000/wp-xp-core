@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.0.0-rc.1
+
+Prerelease with experience management, growth profiles and honor-only achievements.
+
+- Add administrator ledger queries, reasoned manual adjustments and reversals, read-only diagnostics, bounded configuration audit and controlled retries of explicitly failed initial article/comment awards.
+- Add activity switches, content scope, configurable reading dwell/time zone, stable editable milestone lists and committed-event integration hooks.
+- Add level profiles, personal check-in calendar and private paginated history, with optional future-only stage rewards committed with check-in.
+- Add versioned multi-step automatic tasks and reviewed submissions, once/daily/weekly periods and persistent zero-XP achievement snapshots.
+- Preserve historical events and balances; do not schedule cron jobs or backfill past activity.
+
 ## 1.4.1
 
 - Preserve single-line community ranking levels when a theme forces table cells to wrap; keep the override scoped to the level column.

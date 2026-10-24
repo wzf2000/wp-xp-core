@@ -24,7 +24,7 @@ test('state, check-in and safe history rendering', async ({ page }) => {
     await route.fulfill({
       json:
         action === 'ticket'
-          ? { ticket: 'synthetic-ticket', issued: 1 }
+          ? { signature: 'synthetic-signature', issued: 1 }
           : action === 'checkin'
             ? {
                 ...state,
@@ -71,14 +71,14 @@ test('visible reading sends one ticketed visit after fifteen seconds', async ({ 
     const action = route.request().url().split('/').pop();
     if (action === 'visit') visits.push(route.request().postDataJSON());
     await route.fulfill({
-      json: action === 'ticket' ? { ticket: 'synthetic-ticket', issued: 1 } : state,
+      json: action === 'ticket' ? { signature: 'synthetic-signature', issued: 1 } : state,
     });
   });
   await page.goto('/');
   await expect(page.locator('.reader-experience-state')).toContainText('经验 5');
   await page.clock.runFor(16000);
   await expect.poll(() => visits.length).toBe(1);
-  expect(visits[0]).toEqual({ post_id: 9, ticket: 'synthetic-ticket', issued: 1 });
+  expect(visits[0]).toEqual({ post_id: 9, signature: 'synthetic-signature', issued: 1 });
   await page.clock.runFor(20000);
   expect(visits).toHaveLength(1);
 });
@@ -105,7 +105,7 @@ test('actual settings markup adds removes and submits ordered levels', async ({ 
   expect(data.filter(([key]) => key.startsWith('rules[levels]')).map(([key]) => key)).toEqual(
     Array.from({ length: 10 }, (_, i) => `rules[levels][${i}]`),
   );
-  expect(data.some(([key]) => key.startsWith('rules[like_'))).toBe(false);
+  expect(data.some(([key]) => key.startsWith('rules[milestones][like]'))).toBe(false);
   expect(data).toContainEqual(['rules[view_100_threshold]', '100']);
   await page.setViewportSize({ width: 390, height: 844 });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
@@ -164,4 +164,41 @@ test('community levels stay on one line despite theme cell wrapping at desktop a
       true,
     );
   }
+});
+
+test('dynamic milestones preserve identities while adding and removing tiers', async ({ page }) => {
+  await page.goto('/admin.html');
+  const group = page.locator('.xp-milestone-group[data-kind="view"]');
+  const ids = () =>
+    group
+      .locator('.xp-milestone-row [data-field="id"]')
+      .evaluateAll((nodes) => nodes.map((node) => node.value));
+  const original = await ids();
+  await group.locator('.xp-milestone-add').click();
+  await expect(group.locator('.xp-milestone-row')).toHaveCount(4);
+  const added = (await ids())[3];
+  expect(added).toMatch(/^m_[a-f0-9]{32}$/);
+  await group.locator('.xp-milestone-remove').nth(1).click();
+  expect(await ids()).toEqual([original[0], original[2], added]);
+  const data = await page.locator('.xp-form').evaluate((form) => [...new FormData(form).entries()]);
+  expect(data).toContainEqual(['rules[milestones][view][2][id]', added]);
+});
+
+test('custom dwell time is observed without forwarding ticket metadata', async ({ page }) => {
+  await page.clock.install();
+  const visits = [];
+  await page.route('**/api/*', async (route) => {
+    const action = route.request().url().split('/').pop();
+    if (action === 'visit') visits.push(route.request().postDataJSON());
+    await route.fulfill({
+      json: action === 'ticket' ? { signature: 'signed', issued: 1, dwell_seconds: 30 } : state,
+    });
+  });
+  await page.goto('/');
+  await expect(page.locator('.reader-experience-state')).toContainText('经验 5');
+  await page.clock.runFor(16000);
+  expect(visits).toHaveLength(0);
+  await page.clock.runFor(16000);
+  await expect.poll(() => visits.length).toBe(1);
+  expect(visits[0]).toEqual({ post_id: 9, signature: 'signed', issued: 1 });
 });

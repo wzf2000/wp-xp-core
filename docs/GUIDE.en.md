@@ -2,7 +2,7 @@
 
 [简体中文](GUIDE.md) · English · [Back to overview](../README.en.md)
 
-This guide is for site administrators. From 1.4.0, new sites can install and activate with default rules, without server JSON configuration. See [Get started](../README.en.md#get-started) for installation.
+This administrator guide describes the **2.0.0-rc.1 prerelease**. For released versions, use the guide at the matching Release tag. From 1.4.0, new sites can install and activate with default rules, without server JSON configuration. See [Get started](../README.en.md#get-started) for installation.
 
 ## Create an experience page
 
@@ -28,24 +28,26 @@ Open **Settings → WP XP Core**, or select **Settings** on the plugin row. Savi
 
 ### Daily activities
 
-Set XP for check-in, valid reading, publication and comments, plus reading and comment daily reward limits. Rewards accept integers **0–1,000,000**; daily limits accept **0–1,000**.
+Enable or disable check-in, valid reading, publication and comments and set their XP, plus reading and comment daily reward limits. Rewards accept integers **0–1,000,000**; daily limits accept **0–1,000**.
 
 - **Reward set to 0:** eligible events are still recorded, preventing repeat claims after a rule change.
 - **Daily limit set to 0:** rewards for that category stop.
 - **Check-in:** once per account per day.
-- **Valid reading:** signed-in users must spend at least 15 seconds on an accessible page. Reading rewards are limited to once per account, page and day, subject to the configured daily limit.
+- **Valid reading:** signed-in users must spend the configured dwell time (15 seconds by default) on an accessible page. Reading rewards are limited to once per account, page and day, subject to the configured daily limit.
 - **Publication:** each public `post` article earns its reward once. Editing or republishing does not award it again.
 - **Comments:** require a signed-in account and an approved comment on a public article or page. The commenter must not be the article’s author or replying to their own comment. Losing eligibility reverses the original reward; becoming eligible again restores the original amount.
 
-Days follow **Asia/Shanghai (UTC+8)**. The settings screen does not change reading dwell time or the daily time zone.
+Dwell time accepts **5–3600 seconds**. Days default to **Asia/Shanghai (UTC+8)**; the time zone can change only while the ledger contains no events.
+
+Content scope accepts article/page IDs and category IDs. Empty lists include all content; otherwise either match is sufficient. Scope applies to reading, publication, comments and author milestones. Pages do not match article categories, and scope never grants access to restricted content. Disabling an activity stops new awards; existing comment reversals/restorations retain the original amount.
 
 ### Author milestones
 
-Views and likes each have three tiers. Edit the count and XP for each tier. Counts within a group must strictly increase from **1 to 1,000,000,000**.
+Views and likes default to three tiers each, with **0–20 configurable tiers per group**. Edit the count and XP for each tier. Counts within a group must strictly increase from **1 to 1,000,000,000**.
 
 View milestones count valid views recorded in the experience ledger: signed-in users reading public articles they did not author, once per user and article per day. They are not equivalent to all page views in analytics tools. Like milestones also count ledger events, rather than directly using the external provider’s total.
 
-Each article claims each tier once. Changing thresholds does not reset claimed tiers, and saving awards nothing. For example, lower tier one from 100 to 50: an article with 80 ledger views that has never claimed that tier qualifies on its next valid view.
+Each article claims each tier once. Removing and saving permanently retires its identifier; adding another creates a new tier rather than restoring the old one. Changing thresholds does not reset claimed tiers, and saving awards nothing. For example, lower tier one from 100 to 50: an article with 80 ledger views that has never claimed that tier qualifies on its next valid view.
 
 Likes require **PageNest Companion** with an available like interface and its likes feature enabled. Otherwise the group is disabled with an explanation. Saving other settings preserves existing like rules.
 
@@ -61,6 +63,31 @@ Click **保存经验规则** (Save experience rules). Invalid input preserves pr
 
 Reward changes apply only to events first recorded afterward. Historical experience is not recalculated or reissued; comment reversals and restorations use the original amount. Level changes affect display immediately. Sites without saved rules use defaults. Invalid saved rules trigger an administrator notice and fall back to defaults. Opening the page does not create or save settings.
 
+## Query and adjust experience
+
+1. Open **事件账本** (Event ledger) from plugin navigation. Filter by user ID, event source and date, or search by username/display name and review the user's balance, level and events.
+2. Enter the user ID, signed XP change and reason. A single adjustment accepts a nonzero integer from -1,000,000 to 1,000,000; deductions cannot exceed the balance. The operation appends an event with its administrator and reason.
+3. To undo a mistake, provide the original manual-adjustment event ID and a reversal reason. Each manual adjustment can be reversed once. Reversal appends an opposite event; it never deletes the original or allows a negative balance.
+
+Exports cover the current filter and page, not the entire ledger automatically. They include user IDs, activity sources, XP changes and dates, without management reasons; handle them as private site data.
+
+**运行诊断** (Diagnostics) compares ledger totals to balances page by page without repairing them. Controlled retry covers only explicitly recorded failures of first article/comment awards. Supply a reason; eligibility and limits are checked again. It does not scan old posts or comments, and an old failure may no longer qualify. Configuration audit history helps review rule changes.
+
+## Configure growth
+
+Open **成长中心** (Growth center) to set level names, character icons, colors and descriptions. Thresholds remain under Experience rules; profiles affect display only. Keep the existing shortcode and page. Each signed-in user sees their progress, the last 35 days of check-ins, consecutive/cumulative counts and filtered, paginated private history. Anonymous visitors cannot access personal records.
+
+Extra check-in stage rewards start disabled. Choose consecutive or cumulative counting, add day thresholds and rewards, then save. Enabling or changing stage rules starts counting with the next new check-in, without historical awards. Each tier can be claimed once per rule generation. Breaking a streak resets its count but does not deduct earned XP. Check-in and any triggered stage awards commit together. Viewing the page or calendar awards nothing.
+
+## Create tasks and achievements
+
+Open **任务与成就** (Tasks and achievements), enter a title, description and character icon, then choose activation and a once-only, daily or weekly period. Periods follow the experience time zone; weeks start Monday. At most **50 tasks including disabled tasks** can be stored.
+
+- **Automatic tasks:** define 1–8 steps using check-ins, reading, comments or publication, each targeting 1–1,000 events. All steps must be satisfied. Progress counts qualifying new ledger activity, not raw page views.
+- **Reviewed tasks:** define no automatic steps. Users submit an explanation on their personal page; administrators approve or return it from the pending queue. Rejection requires feedback. Each user can submit at most five attempts per task/version/period, with only one pending at a time.
+
+Achievements are honors and award no extra XP. Editing a task creates a new version whose progress counts only subsequent events, without carrying old progress forward or backfilling history. Earned badges retain their awarded text and icon; editing or disabling a task does not erase them. Finalize task content and periods before inviting users, since frequent edits restart current progress.
+
 ## Frequently asked questions
 
 ### Why does the panel say the system is under maintenance?
@@ -71,7 +98,7 @@ For an advanced external integration, follow the [integration checklist](CONFIGU
 
 ### Why did reading or commenting award no XP?
 
-Check sign-in, zero rewards, daily limits, prior claims and the eligibility conditions above. Reading also requires at least 15 seconds. Repeated requests do not award XP again; view counts and rewarded visits are different measures.
+Check sign-in, zero rewards, daily limits, prior claims and the eligibility conditions above. Reading also requires the configured dwell time (15 seconds by default). Repeated requests do not award XP again; view counts and rewarded visits are different measures.
 
 ### Why are like settings disabled?
 
@@ -81,9 +108,9 @@ PageNest Companion’s like interface is unavailable, or its likes feature is of
 
 Existing events retain the amount recorded at the time. New rules apply only to events first recorded afterward. Raising a zero reward does not reissue a recorded event.
 
-### Can I manually adjust an individual user’s XP?
+### Can I manually change a user's experience?
 
-Only global rule settings are currently available. There is no individual adjustment screen. Balances project the event ledger and should not be edited directly in user metadata. You can [request an administration feature](https://github.com/wzf2000/wp-xp-core/issues/new/choose).
+Yes. Open the event ledger, find the user and submit a signed adjustment with a reason. Follow the management steps above rather than editing balance metadata directly.
 
 ### How do I update?
 

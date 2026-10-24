@@ -11,6 +11,8 @@ for key, name in [
     ("css", "app.css"),
     ("admin_css", "admin.css"),
     ("admin_js", "admin.js"),
+    ("growth_js", "growth.js"),
+    ("growth_admin_js", "growth-admin.js"),
 ]:
     content = (assets / name).read_bytes()
     path = Path(name)
