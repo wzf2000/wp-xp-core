@@ -41,7 +41,9 @@ def compile_catalog(path):
         for value in strings:
             offsets.extend([len(value), start + len(payload)])
             payload += value + b"\0"
-    header = struct.pack("<7I", 0x950412DE, 0, count, 28, 28 + count * 8, 0, 0)
+    # Even with no hash table, legacy WordPress POMO readers use its offset
+    # to find the end of translation indices and the start of string data.
+    header = struct.pack("<7I", 0x950412DE, 0, count, 28, 28 + count * 8, 0, start)
     output = header + struct.pack("<" + "I" * len(offsets), *offsets) + payload
     target = path.with_suffix(".mo")
     if "--check" in sys.argv:
