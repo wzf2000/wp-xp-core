@@ -43,3 +43,9 @@ See [Releasing](docs/RELEASING.md) for maintainer steps. Contributors need not c
 `feature/xp-growth-rounds-1-4` prepares the unreleased `2.0.0-rc.1` candidate. Keep both READMEs and both GUIDE/CONFIGURATION language versions synchronized. Validate management permissions, append-only corrections, duplicate/rollback behavior, rule and task version boundaries, private response isolation and atomic derived rewards in isolated fixtures. Do not use real accounts to exercise adjustments, retries or review awards. Preparing this branch does not authorize a release or site deployment.
 
 本分支准备尚未发行的 `2.0.0-rc.1` 候选。同步维护中英文 README、使用指南和配置文档；在隔离环境检查管理权限、追加式撤销、重复／回滚行为、规则与任务版本边界、私人响应隔离及派生奖励的原子性。不要用真实账号测试调分、重试或审核授予；准备候选不等于发行或部署授权。
+
+## Optional synthetic scale workload / 可选合成规模检查
+
+`tools/wp-integration.py --scale` adds bounded 10,000/50,000-row read workloads to the normal owned, empty local WordPress lab. It uses ten synthetic users, fifty tasks with eight steps and up to eight prerequisites, and records query counts plus elapsed milliseconds for personal progress, standings, sources, trends and diagnostics in the lab's `results.json`. The script requires the integration runner's temporary ownership marker, dedicated `wp_xp_core_ci` database, local environment and loopback host; an existing site cannot be adopted. Data is seeded directly as synthetic query fixtures, without claiming real reward semantics. Temporary task definitions are restored; the lab retains its generated subjects and ledger for inspection. This is opt-in and never runs as a scheduled job.
+
+在现有合成安装命令后加 `--scale`，才会运行有界的 1 万／5 万行查询规模检查。保护条件包括临时目录所有权标记、专用数据库、local 环境及回环数据库连接；不能对现有站点补标记接管。记录查询数与本机耗时，不将热缓存或共享主机的绝对耗时解释为生产性能。没有测量依据时不新增索引或宣称提速。

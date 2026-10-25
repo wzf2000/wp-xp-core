@@ -89,7 +89,7 @@ Companion 原子保存点赞总数与新用户记录，经验记账另属独立�
 
 ## 管理、成长与成就存储
 
-管理入口要求 `manage_options`，写操作还检查 nonce、操作身份与目标用户权限。`manual_adjust` 和 `manual_reversal` 追加事件，包含原因和操作人；撤销仅针对未撤销的人工调整，不能令余额为负。诊断只读比较账本与投影，不作原地修复。失败列表仅保留明确捕获的首次文章／评论奖励尝试，重试重新校验当前资格，不是历史补发接口。`wp_xp_core_rule_audit` 和 `wp_xp_core_failed_events` 分别有最多 200 项的保留上限，不是永久完整操作日志。
+管理入口要求 `manage_options`，写操作还检查 nonce、操作身份与目标用户权限。`manual_adjust` 和 `manual_reversal` 追加事件，包含原因和操作人；撤销仅针对未撤销的人工调整，不能令余额为负。诊断只读比较账本与投影，不作原地修复。失败列表保留明确捕获的首次文章／评论奖励及全额评论补偿失败，重试重新校验原事件归属与当前资格，不是历史补发接口。`wp_xp_core_rule_audit` 和 `wp_xp_core_failed_events` 分别有最多 200 项的保留上限，不是永久完整操作日志。
 
 `wp_xp_core_growth` 保存等级展示资料与可选签到阶段规则。阶段奖励通过新一代规则及起始事件边界限定，只累计之后的新签到；读取个人页面不写奖励。`wp_xp_core_achievements` 保存版本化任务，最多 50 项（含停用项），自动任务最多八步。任务支持一次性／每日／每周／每月周期，周一开始一周，每月一日开始。展示文字与字符图标修改保留版本及起始事件边界，条件、周期或启用变化建立新版本。自动任务与人工审核默认授予零经验荣誉，可选完成经验。成就记录保存名称和图标快照；修改任务不改写已获得成就。
 
@@ -104,6 +104,18 @@ Companion 原子保存点赞总数与新用户记录，经验记账另属独立�
 自动／审核使用 `task_complete`，人工授予使用 `task_grant`；共享 `task:{id}:{version}:{period}:{user}` 幂等键，成就与奖励在一个事务提交。管理员 `WP_XP_Core_Achievements::manage()` 要求有效管理 nonce、目标用户权限、原因和 UUID 请求编号；授予还要求当前任务版本与周期、日期和前置条件。重复请求绑定规范化输入摘要，不能改目标或金额。所有奖励检查整数溢出；人工授予经验排除活动榜。
 
 撤销使用 `task-revoke:{原事件ID}`，分别追加 `task_revoke`／`task_grant_revoke` 及原 XP 的反向金额；余额不足不写任何事件。`achievement_admin` 是零经验操作回执，不进入活动来源。读取、前置条件、个人徽章与完成率统一排除已撤销荣誉；原键保留，不允许同版本周期重新授予，也不自动级联撤销后续成就。旧无奖励定义与历史零经验荣誉仍可读、可撤销，不做历史写入。
+
+## 上限、榜单参与与评估
+
+`rules.activity_caps` 为 `{day: 0, week: 0}`，整数范围 0–1000000000，0 不限。`WP_XP_Core_Fairness::FIRST_REWARD_KINDS` 独立于榜单来源，仅累计首次活动正向实际 XP：签到、阅读、文章、评论、两种里程碑、签到阶段、`task_complete`。`comment_adjust` 的正向恢复与所有反向补偿、人工、迁移均不计入或受限。`Reader_Experience::record()` 在同一锁与事务内读取当期 gross 总额，按更小的日／周余额截断，再保存 `detail.activity_cap` 请求额、实际额、限额、既发 gross 与截断标识。0 XP 事件仍幂等，后续不补齐；旧事件无元数据也按原实际发放计本期额度。
+
+`record()` 在 INSERT 前拒绝负余额与整数溢出，`set_balance()` 拒绝负值。评论补偿通过 `reconcile_comment()` 在同锁内重新检查原事件、当前评论或删除、原实际 XP 和净额；不足则整笔拒绝并捕获 `comment_adjust` 失败。管理员 retry 先验证 canonical 原事件与失败归属和目标权限，再重算 delta，不能重放保存金额／键；补偿、失败解决与管理回执同事务。恢复批准但原净额仍在时 resolve/noop；永久删除也可受控重试。不建立负余额、部分补偿或自动追债，旧漂移须由只读诊断定位，不自动修复。缺余额 meta 且账本合计为 0 属于隐式零一致，仍返回 `balance_present: false`；非零缺失与重复 meta 继续报错，读取不补投影。
+
+本人榜单偏好位于 `{prefix}wp_xp_core_public_board` 用户元数据，缺省参与；`POST /participation` 读取，`POST /participation-settings` 仅接受当前用户的布尔 `participating` 与准确 `revision`，沿用 nonce、4000 字节与私有缓存要求。管理员 `wp_xp_core_board_exclusions` 保存最多 1000 个排除 ID；保存要求管理 nonce、目标权限和版本校验。公开榜和本人位置统一排除，`/position` 增加 `participation: active|opted_out|excluded`；不改变余额、私人记录或来源统计。
+
+管理员 `trends()` 使用前一等长连续时段及按日净额，不宣称因果／留存；`anomalies()` 最多 50 条，条件为同日首次活动至少 20 次或上限截断，只作线索。`task_history()` 最多 100 个版本，汇总可靠事件授予／撤销和当前有效数量；`participants` 恒为 null，未知旧定义不补分母。新授予 `version_created_at` 是定义创建到获得的墙上时间起点，旧快照缺失时耗时留空。
+
+个人任务在一次调用内批量读取有效／已撤销荣誉与公开目标，前置判断只复用该调用局部事实；提交后处理按同一快照批量计数，授予后更新局部事实，事务外不缓存资格。单任务步骤把 kind/id/date 条件留在 WHERE，使用现有范围索引。待审提交在 LIMIT 前用 JSON 字段有效性谓词过滤，旧不完整行不会隐藏后面的合法待审，也不修改原事件。
 
 ## 私人通知与目标接口
 

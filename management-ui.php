@@ -344,7 +344,7 @@ final class WP_XP_Core_Management_UI
                     '">继续核对</a>';
             }
         }
-        echo '</section><section class="xp-card"><h2>未完成的奖励记录</h2><p>只重试已记录的失败事项，并重新检查资格；不会扫描或补发历史活动。</p>';
+        echo '</section><section class="xp-card"><h2>未完成的奖励记录</h2><p>只处理服务端已记录的首次奖励或评论状态补偿失败，并重新检查原事件和当前状态；不会扫描历史。评论补偿余额不足时不部分扣减，可补足后带原因重试。失败列表最多保留二百项，不是永久日志。</p>';
         $failures = WP_XP_Core_Management::failures();
         if (is_wp_error($failures)) {
             self::message($failures);

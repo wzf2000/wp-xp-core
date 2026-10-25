@@ -21,6 +21,7 @@ require_once __DIR__ . '/growth.php';
 require_once __DIR__ . '/growth-ui.php';
 require_once __DIR__ . '/achievements.php';
 require_once __DIR__ . '/achievements-ui.php';
+require_once __DIR__ . '/fairness.php';
 require_once __DIR__ . '/notifications.php';
 require_once __DIR__ . '/insights.php';
 require_once __DIR__ . '/insights-ui.php';
@@ -178,7 +179,9 @@ final class Reader_Experience
         }
         self::$touched_users[$uid] = $uid;
         wp_cache_delete($uid, 'user_meta');
-        $value = max(0, $value);
+        if ($value < 0) {
+            throw new RuntimeException('Negative experience balance');
+        }
         $existing = metadata_exists('user', $uid, self::balance_meta());
         $previous = get_user_meta($uid, self::balance_meta(), true);
         $saved = update_user_meta($uid, self::balance_meta(), $value);
@@ -245,7 +248,15 @@ final class Reader_Experience
             return false;
         }
         wp_cache_delete($uid, 'user_meta');
+        $xp = WP_XP_Core_Fairness::cap($uid, $kind, $xp, $day, $detail);
         $before = (int) get_user_meta($uid, self::balance_meta(), true);
+        if (
+            $before < 0 ||
+            ($xp > 0 && $before > PHP_INT_MAX - $xp) ||
+            ($xp < 0 && ($xp === PHP_INT_MIN || $before < -$xp))
+        ) {
+            throw new RuntimeException('Experience balance overflow');
+        }
         $detail['rule_revision'] = WP_XP_Core_Settings::policy_revision();
         $detail['notification_schema'] = 1;
         $detail['level_transition'] = [
@@ -622,6 +633,7 @@ final class Reader_Experience
                     in_array($c->comment_type, ['', 'comment'], true) &&
                     $p &&
                     $p->post_status === 'publish' &&
+                    $p->post_password === '' &&
                     in_array($p->post_type, ['post', 'page'], true) &&
                     (int) $p->post_author !== $uid &&
                     (!$parent || (int) $parent->user_id !== $uid);
@@ -662,36 +674,9 @@ final class Reader_Experience
                 if ($first['kind'] === 'comment_block') {
                     return;
                 }
-                $uid = (int) $first['user_id'];
-                $eligible = $eligible && (int) $c->user_id === $uid;
-                $net = (int) $wpdb->get_var(
-                    $wpdb->prepare(
-                        'SELECT COALESCE(SUM(xp),0) FROM ' .
-                            self::table() .
-                            " WHERE object_id=%d AND user_id=%d AND kind IN ('comment','comment_adjust')",
-                        $id,
-                        $uid,
-                    ),
-                );
-                $target = $eligible ? (int) $first['xp'] : 0;
-                if ($net !== $target) {
-                    $seq = (int) $wpdb->get_var(
-                        $wpdb->prepare(
-                            'SELECT COUNT(*) FROM ' .
-                                self::table() .
-                                " WHERE object_id=%d AND kind='comment_adjust'",
-                            $id,
-                        ),
-                    );
-                    self::record(
-                        "comment-adjust:$id:$seq",
-                        $uid,
-                        'comment_adjust',
-                        $id,
-                        $target - $net,
-                        self::day(),
-                        ['original' => $first['id']],
-                    );
+                $result = self::reconcile_comment($id, false, [], $attempt);
+                if (is_wp_error($result)) {
+                    throw new RuntimeException('Comment compensation unavailable');
                 }
             });
         } catch (Throwable $e) {
@@ -701,56 +686,132 @@ final class Reader_Experience
             }
         }
     }
+    /** Recompute an existing comment's full compensation under the ledger lock. */
+    public static function reconcile_comment(
+        int $id,
+        bool $deleted = false,
+        array $evidence = [],
+        ?array &$attempt = null,
+    ) {
+        if (!self::transaction_active()) {
+            throw new RuntimeException('Comment reconciliation requires the ledger lock');
+        }
+        global $wpdb;
+        $first = $wpdb->get_row(
+            $wpdb->prepare(
+                'SELECT * FROM ' . self::table() . ' WHERE event_key=%s',
+                'comment:' . $id,
+            ),
+            ARRAY_A,
+        );
+        if ($wpdb->last_error !== '') {
+            throw new RuntimeException('Original comment event unavailable');
+        }
+        if (!$first || $first['kind'] !== 'comment') {
+            return new WP_Error('missing', '未找到原评论奖励。', ['status' => 404]);
+        }
+        $uid = (int) $first['user_id'];
+        wp_cache_delete($id, 'comment');
+        $c = $deleted ? null : get_comment($id);
+        $p = $c ? get_post($c->comment_post_ID) : null;
+        $parent = $c && $c->comment_parent ? get_comment($c->comment_parent) : null;
+        $eligible =
+            $c &&
+            (int) $c->user_id === $uid &&
+            $c->comment_approved === '1' &&
+            in_array($c->comment_type, ['', 'comment'], true) &&
+            $p &&
+            $p->post_status === 'publish' &&
+            $p->post_password === '' &&
+            in_array($p->post_type, ['post', 'page'], true) &&
+            (int) $p->post_author !== $uid &&
+            (!$parent || (int) $parent->user_id !== $uid);
+        $net = $wpdb->get_var(
+            $wpdb->prepare(
+                'SELECT COALESCE(SUM(xp),0) FROM ' .
+                    self::table() .
+                    " WHERE object_id=%d AND user_id=%d AND kind IN ('comment','comment_adjust')",
+                $id,
+                $uid,
+            ),
+        );
+        if ($wpdb->last_error !== '' || $net === null) {
+            throw new RuntimeException('Comment subtotal unavailable');
+        }
+        $net = (int) $net;
+        if ($net < 0 || $net > (int) $first['xp']) {
+            return new WP_Error('inconsistent', '评论奖励净额异常，请先检查账本。', [
+                'status' => 409,
+            ]);
+        }
+        $delta = ($eligible ? (int) $first['xp'] : 0) - $net;
+        if (!$delta) {
+            return ['event_id' => (int) $first['id'], 'user_id' => $uid, 'delta' => 0];
+        }
+        $seq = $wpdb->get_var(
+            $wpdb->prepare(
+                'SELECT COUNT(*) FROM ' .
+                    self::table() .
+                    " WHERE object_id=%d AND kind='comment_adjust'",
+                $id,
+            ),
+        );
+        if ($wpdb->last_error !== '' || $seq === null) {
+            throw new RuntimeException('Comment adjustment sequence unavailable');
+        }
+        $key = 'comment-adjust:' . $id . ':' . (int) $seq;
+        $attempt = [
+            'event_key' => $key,
+            'kind' => 'comment_adjust',
+            'object_id' => $id,
+            'user_id' => $uid,
+            'xp' => $delta,
+            'local_day' => self::day(),
+        ];
+        $allowed = WP_XP_Core_Management::balance_allows($uid, $delta);
+        if ($allowed !== true) {
+            $attempt['failure_reason'] = $allowed->get_error_code();
+            return $allowed;
+        }
+        if (
+            !self::record(
+                $key,
+                $uid,
+                'comment_adjust',
+                $id,
+                $delta,
+                self::day(),
+                ['original' => (int) $first['id'], 'deleted' => !$c] + $evidence,
+            )
+        ) {
+            throw new RuntimeException('Comment adjustment failed');
+        }
+        $event_id = $wpdb->get_var(
+            $wpdb->prepare('SELECT id FROM ' . self::table() . ' WHERE event_key=%s', $key),
+        );
+        if ($wpdb->last_error !== '' || !$event_id) {
+            throw new RuntimeException('Comment adjustment receipt unavailable');
+        }
+        return ['event_id' => (int) $event_id, 'user_id' => $uid, 'delta' => $delta];
+    }
     public static function deleting_comment(int $id): void
     {
         if (!self::ready()) {
             return;
         }
+        $attempt = null;
         try {
-            self::transaction(function () use ($id) {
-                global $wpdb;
-                $first = $wpdb->get_row(
-                    $wpdb->prepare(
-                        'SELECT * FROM ' . self::table() . ' WHERE event_key=%s',
-                        'comment:' . $id,
-                    ),
-                    ARRAY_A,
-                );
-                if (!$first) {
-                    return;
-                }
-                $uid = (int) $first['user_id'];
-                $net = (int) $wpdb->get_var(
-                    $wpdb->prepare(
-                        'SELECT COALESCE(SUM(xp),0) FROM ' .
-                            self::table() .
-                            " WHERE object_id=%d AND user_id=%d AND kind IN ('comment','comment_adjust')",
-                        $id,
-                        $uid,
-                    ),
-                );
-                if ($net) {
-                    $seq = (int) $wpdb->get_var(
-                        $wpdb->prepare(
-                            'SELECT COUNT(*) FROM ' .
-                                self::table() .
-                                " WHERE object_id=%d AND kind='comment_adjust'",
-                            $id,
-                        ),
-                    );
-                    self::record(
-                        "comment-adjust:$id:$seq",
-                        $uid,
-                        'comment_adjust',
-                        $id,
-                        -$net,
-                        self::day(),
-                        ['deleted' => true],
-                    );
+            self::transaction(function () use ($id, &$attempt) {
+                $result = self::reconcile_comment($id, true, [], $attempt);
+                if (is_wp_error($result) && $result->get_error_code() !== 'missing') {
+                    throw new RuntimeException('Comment removal compensation unavailable');
                 }
             });
         } catch (Throwable $e) {
             error_log('reader_experience comment removal failed');
+            if ($attempt !== null) {
+                WP_XP_Core_Management::capture_failure($attempt);
+            }
         }
     }
     public static function legacy(): void

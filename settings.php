@@ -48,6 +48,7 @@ final class WP_XP_Core_Settings
                 ['checkin', 'visit', 'article', 'comment', 'view', 'like'],
                 true,
             ),
+            'activity_caps' => ['day' => 0, 'week' => 0],
             'dwell_seconds' => 15,
             'timezone' => 'Asia/Shanghai',
             'scope' => ['post_ids' => [], 'category_ids' => []],
@@ -170,6 +171,18 @@ final class WP_XP_Core_Settings
             $activities[$key] = (bool) $value;
         }
         $out['activities'] = array_replace($defaults['activities'], $activities);
+        $caps = $input['activity_caps'] ?? $defaults['activity_caps'];
+        if (
+            !is_array($caps) ||
+            array_diff(array_keys($caps), ['day', 'week']) ||
+            count($caps) !== 2
+        ) {
+            throw new InvalidArgumentException('活动经验上限无效。');
+        }
+        $out['activity_caps'] = [
+            'day' => self::number($caps['day'], 0, 1000000000),
+            'week' => self::number($caps['week'], 0, 1000000000),
+        ];
         $out['dwell_seconds'] = self::number($input['dwell_seconds'] ?? 15, 5, 3600);
         $timezone = $input['timezone'] ?? 'Asia/Shanghai';
         if (
@@ -655,7 +668,11 @@ final class WP_XP_Core_Settings
             }
             echo '</div>';
         }
-        echo '</div><div class="xp-field"><label for="xp-dwell">有效阅读停留时间</label><div class="xp-input-unit"><input type="number" id="xp-dwell" name="rules[dwell_seconds]" min="5" max="3600" required value="' .
+        echo '</div><div class="xp-field"><label>每日活动经验上限<input type="number" min="0" max="1000000000" name="rules[activity_caps][day]" value="' .
+            $rules['activity_caps']['day'] .
+            '"></label><label>每周活动经验上限<input type="number" min="0" max="1000000000" name="rules[activity_caps][week]" value="' .
+            $rules['activity_caps']['week'] .
+            '"></label><p class="xp-help">0 表示不限。仅累计首次活动实际发放的正向经验；扣回不恢复额度，剩余额度不足时只发剩余部分，不补发差额。人工与原金额补偿不受限。</p></div><div class="xp-field"><label for="xp-dwell">有效阅读停留时间</label><div class="xp-input-unit"><input type="number" id="xp-dwell" name="rules[dwell_seconds]" min="5" max="3600" required value="' .
             $rules['dwell_seconds'] .
             '"><span>秒</span></div></div><p class="xp-footnote">签到每日奖励一次；阅读须满足停留时间。关闭活动或将次数设为 0 后停止发放新奖励，已发评论的撤销与恢复继续按原金额处理。</p><details class="xp-scope"><summary>适用内容与每日统计时区</summary><p class="xp-help">以下范围用于阅读、文章、评论与作者里程碑。两项都留空表示全部；填写后，只要内容 ID 或所属分类命中一项即可。不会开放原本无权访问的内容。</p><div class="xp-field"><label for="xp-scope-posts">文章与页面 ID</label><input id="xp-scope-posts" name="rules[scope][post_ids]" value="' .
             esc_attr(implode(', ', $rules['scope']['post_ids'])) .

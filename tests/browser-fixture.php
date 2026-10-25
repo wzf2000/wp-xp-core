@@ -249,6 +249,33 @@ class WP_XP_Core_Insights
             ],
         ];
     }
+    public static function trends($input = [])
+    {
+        return [
+            'current' => [
+                'from' => '2026-10-19',
+                'to' => '2026-10-25',
+                'net_xp' => 2,
+                'events' => 1,
+                'participants' => 1,
+            ],
+            'previous' => [
+                'from' => '2026-10-12',
+                'to' => '2026-10-18',
+                'net_xp' => 1,
+                'events' => 1,
+                'participants' => 1,
+            ],
+        ];
+    }
+    public static function anomalies($input = [])
+    {
+        return ['items' => []];
+    }
+    public static function task_history($input = [])
+    {
+        return ['rows' => [], 'more' => false];
+    }
     public static function task_rates()
     {
         return [
@@ -268,6 +295,17 @@ class WP_XP_Core_Insights
                 ],
             ],
         ];
+    }
+}
+class WP_XP_Core_Fairness
+{
+    public static function excluded()
+    {
+        return [];
+    }
+    public static function exclusion_revision()
+    {
+        return str_repeat('b', 64);
     }
 }
 require $root . '/management-ui.php';

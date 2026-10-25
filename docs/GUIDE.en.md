@@ -41,6 +41,12 @@ Dwell time accepts **5–3600 seconds**. Days default to **Asia/Shanghai (UTC+8)
 
 Content scope accepts article/page IDs and category IDs. Empty lists include all content; otherwise either match is sufficient. Scope applies to reading, publication, comments and author milestones. Pages do not match article categories, and scope never grants access to restricted content. Disabling an activity stops new awards; existing comment reversals/restorations retain the original amount.
 
+### Optional activity XP caps
+
+Daily and weekly activity caps default to **0 (unlimited)** and accept 0–1000000000. They follow the experience time zone; weeks start Monday, and simultaneous caps use the smaller remaining allowance. Check-ins, reads, article publication, first comment rewards, author milestones, check-in stages and automatic/review task rewards share gross positive first-reward XP.
+
+If the remaining allowance is smaller, only that amount is issued; reaching the cap still records a zero-XP event and consumes the original claim, without later backfill. Reversals do not reopen capacity. Restoring a comment's original actual reward is compensation, exempt from the cap and never counted twice. Manual adjustments/grants/reversals and historical imports are excluded. Enabling caps counts earlier first rewards in the same period without reclaiming them. Ledger detail records requested/actual XP, cap limits and truncation facts.
+
 ### Author milestones
 
 Views and likes default to three tiers each, with **0–20 configurable tiers per group**. Edit the count and XP for each tier. Counts within a group must strictly increase from **1 to 1,000,000,000**.
@@ -71,7 +77,7 @@ Reward changes apply only to events first recorded afterward. Historical experie
 
 Exports cover the current filter and page, not the entire ledger automatically. They include user IDs, activity sources, XP changes and dates, without management reasons; handle them as private site data.
 
-**运行诊断** (Diagnostics) compares ledger totals to balances page by page without repairing them. Controlled retry covers only explicitly recorded failures of first article/comment awards. Supply a reason; eligibility and limits are checked again. It does not scan old posts or comments, and an old failure may no longer qualify. Configuration audit history helps review rule changes.
+**运行诊断** (Diagnostics) compares ledger totals to balances page by page without repairing them. Controlled retry covers explicitly captured first article/comment award failures and full comment compensation failures. Supply a reason; eligibility and limits are checked again. It does not scan old posts or comments, and an old failure may no longer qualify. Configuration audit history helps review rule changes.
 
 ## Configure growth
 
@@ -123,6 +129,8 @@ Weeks run from Monday through today and months from the first day through today,
 
 Ties share competition ranks, such as 1, 1, 3. Results are live: new activity between pagination requests may change ranks and which users appear on a page. JavaScript enhances the signed-in growth panel with the current user’s weekly/monthly position. Users without positive qualifying net XP have no position. This lookup is restricted to the current account.
 
+Uncheck **参与公开活动榜** (Participate in public standings) on the personal panel to opt out. Private XP, notifications and tasks are retained. Administrators can exclude test accounts by user ID on the insights page. Personal position explicitly reports nonparticipation; administrator re-inclusion preserves the user's own opt-out choice.
+
 ## Review incentive insights
 
 Open **Settings → 激励效果** (Incentive insights), or use plugin navigation. Access requires `manage_options`.
@@ -134,6 +142,12 @@ Manual adjustments and their reversals have separate source rows and are include
 **Current task completion rates** cover only enabled tasks, their current version and current cycle, independently of the source date filter above. The denominator is the distinct union of users with matching activity (automatic tasks) or review submissions (reviewed tasks), plus users who earned the achievement. The numerator is distinct users who earned that version’s achievement in that cycle. This is neither an impression conversion rate nor the completion share of all registered users. With no participants, the display reads “尚无参与” (No participants), rather than 0%. Editing a task creates a new version; older participation and completion records are excluded from that version.
 
 Boards, personal positions and insights are read-only. Viewing them awards no XP, resets no tasks and triggers no backfill, statistics tables or cron jobs.
+
+Insights compare the selected range with the immediately preceding equal number of days, providing description rather than causal attribution. Activity clues list accounts with at least 20 first-reward events in a day or cap truncations, solely for human review, without automatic penalties.
+
+Task-version history reports grants, revocations in the selected range, and how many of those grants remain effective. Unknown historic definitions never receive an invented participation denominator or retention measure. New grant snapshots record the version definition's creation time as the duration origin; this includes waiting/nonparticipation, not active effort. Old events without that evidence leave duration empty. The display is bounded to 100 recent versions.
+
+Comment compensation always uses the original actual award. Insufficient balance leaves both ledger and projection unchanged and captures the server-observed failure. An administrator's reasoned retry rechecks the canonical original owner, current eligibility or permanent deletion, and the current subtotal, then applies the full delta. If approval has recovered while the original subtotal remains, retry resolves without another credit. No partial deductions, debt or history scans occur. The existing failure list retains at most 200 entries and is not a permanent audit log.
 
 ## Frequently asked questions
 

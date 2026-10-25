@@ -465,18 +465,22 @@ final class WP_XP_Core_Achievements
     {
         global $wpdb;
         $period = self::period($task);
+        $context = self::honor_context($uid);
+        $available = self::unlocked($task, $uid, $context);
         $steps = [];
-        $complete = $task['type'] === 'automatic' && self::unlocked($task, $uid);
+        $complete = $task['type'] === 'automatic' && $available;
         foreach ($task['steps'] as $step) {
             $n = (int) $wpdb->get_var(
                 'SELECT ' .
-                    self::counter($step, self::condition($task, $step)) .
+                    self::counter($step, '1=1') .
                     ' FROM ' .
                     Reader_Experience::table() .
                     ' e ' .
                     self::joins() .
                     ' WHERE ' .
-                    $wpdb->prepare('e.user_id=%d', $uid),
+                    $wpdb->prepare('e.user_id=%d AND (', $uid) .
+                    self::condition($task, $step) .
+                    ')',
             );
             if ($wpdb->last_error !== '') {
                 throw new RuntimeException('Task progress unavailable');
@@ -488,12 +492,12 @@ final class WP_XP_Core_Achievements
         return [
             'steps' => $steps,
             'complete' => $complete,
-            'earned' => self::receipt(self::key($task, $uid)) !== null,
+            'earned' => isset($context['valid'][self::key($task, $uid)]),
             'revoked' =>
-                self::event(self::key($task, $uid)) !== null &&
-                self::receipt(self::key($task, $uid)) === null,
+                isset($context['consumed'][self::key($task, $uid)]) &&
+                !isset($context['valid'][self::key($task, $uid)]),
             'period' => $period['key'],
-            'available' => self::unlocked($task, $uid),
+            'available' => $available,
         ];
     }
     public static function joins(): string
@@ -543,8 +547,42 @@ final class WP_XP_Core_Achievements
         };
         return 'COUNT(DISTINCT CASE WHEN (' . $condition . ') THEN ' . $object . ' END)';
     }
-    public static function unlocked(array $task, int $uid): bool
+    /** Request-local facts only: never retain an eligibility decision after a transaction. */
+    private static function honor_context(int $uid): array
     {
+        global $wpdb;
+        $rows = $wpdb->get_results(
+            $wpdb->prepare(
+                'SELECT e.event_key,(' .
+                    self::valid_receipt() .
+                    ') AS valid FROM ' .
+                    Reader_Experience::table() .
+                    " e WHERE e.user_id=%d AND e.kind IN ('task_complete','task_grant')",
+                $uid,
+            ),
+            ARRAY_A,
+        );
+        if ($wpdb->last_error !== '' || !is_array($rows)) {
+            throw new RuntimeException('Honor facts unavailable');
+        }
+        $context = ['valid' => [], 'consumed' => [], 'lifetime' => []];
+        foreach ($rows as $row) {
+            $context['consumed'][$row['event_key']] = true;
+            if ((int) $row['valid'] === 1) {
+                $context['valid'][$row['event_key']] = true;
+                if (preg_match('/^task:(t_[a-f0-9]{16}):/', $row['event_key'], $match)) {
+                    $context['lifetime'][$match[1]] = true;
+                }
+            }
+        }
+        return $context;
+    }
+    public static function unlocked(
+        array $task,
+        int $uid,
+        ?array $context = null,
+        ?array $definitions = null,
+    ): bool {
         $today = Reader_Experience::day();
         if (
             (!empty($task['starts_on']) && $today < $task['starts_on']) ||
@@ -552,34 +590,21 @@ final class WP_XP_Core_Achievements
         ) {
             return false;
         }
-        $definitions = self::definitions();
-        foreach ($task['prerequisites'] ?? [] as $pre) {
+        if (empty($task['prerequisites'])) {
+            return true;
+        }
+        $context ??= self::honor_context($uid);
+        $definitions ??= self::definitions();
+        foreach ($task['prerequisites'] as $pre) {
             if ($pre['scope'] === 'current') {
                 if (
                     !isset($definitions[$pre['id']]) ||
-                    !self::receipt(self::key($definitions[$pre['id']], $uid))
+                    !isset($context['valid'][self::key($definitions[$pre['id']], $uid)])
                 ) {
                     return false;
                 }
-            } else {
-                global $wpdb;
-                $found = $wpdb->get_var(
-                    $wpdb->prepare(
-                        'SELECT id FROM ' .
-                            Reader_Experience::table() .
-                            " e WHERE e.user_id=%d AND e.kind IN ('task_complete','task_grant') AND e.event_key LIKE %s AND " .
-                            self::valid_receipt() .
-                            ' LIMIT 1',
-                        $uid,
-                        $wpdb->esc_like('task:' . $pre['id'] . ':') . '%',
-                    ),
-                );
-                if ($wpdb->last_error !== '') {
-                    throw new RuntimeException('Prerequisite unavailable');
-                }
-                if (!$found) {
-                    return false;
-                }
+            } elseif (!isset($context['lifetime'][$pre['id']])) {
+                return false;
             }
         }
         return true;
@@ -615,15 +640,13 @@ final class WP_XP_Core_Achievements
             return false;
         }
         $xp = self::integer($task['reward_xp'] ?? 0, 0, 1000000);
-        if (WP_XP_Core_Management::balance_allows($uid, $xp) !== true) {
-            throw new RuntimeException('Task reward exceeds balance range');
-        }
+
         return Reader_Experience::record(
             self::key($task, $uid),
             $uid,
             $kind,
             0,
-            (int) ($task['reward_xp'] ?? 0),
+            $xp,
             Reader_Experience::day(),
             [
                 'task_id' => $task['id'],
@@ -637,6 +660,7 @@ final class WP_XP_Core_Achievements
                 'task_type' => $task['type'],
                 'reward_xp' => (int) ($task['reward_xp'] ?? 0),
                 'period_type' => $task['period'],
+                'version_created_at' => (int) ($task['created_at'] ?? time()),
                 'period' => self::period($task)['key'],
             ] + $evidence,
         );
@@ -680,34 +704,59 @@ final class WP_XP_Core_Achievements
         if (!in_array($event['kind'] ?? '', self::KINDS, true)) {
             return;
         }
-        $uid = (int) $event['user_id'];
-        foreach (self::definitions() as $task) {
-            if (
-                empty($task['enabled']) ||
-                $task['type'] !== 'automatic' ||
-                (int) $event['id'] <= $task['start_event_id']
-            ) {
-                continue;
-            }
-            $matches = array_filter($task['steps'], fn($step) => $step['kind'] === $event['kind']);
-            if (!$matches) {
-                continue;
-            }
-            Reader_Experience::transaction(function () use ($task, $uid) {
-                self::clear_cache();
-                if (!Reader_Experience::ready()) {
-                    return;
-                }
-                $current = self::active($task['id']);
-                if (!$current || $current['version'] !== $task['version']) {
-                    return;
-                }
-                $progress = self::progress($current, $uid);
-                if (!$progress['earned'] && empty($progress['revoked']) && $progress['complete']) {
-                    self::award($current, $uid);
-                }
-            });
+        self::clear_cache();
+        $candidates = array_filter(
+            self::definitions(),
+            fn($task) => !empty($task['enabled']) &&
+                $task['type'] === 'automatic' &&
+                (int) $event['id'] > $task['start_event_id'] &&
+                array_filter($task['steps'], fn($step) => $step['kind'] === $event['kind']),
+        );
+        if (!$candidates) {
+            return;
         }
+        $uid = (int) $event['user_id'];
+        Reader_Experience::transaction(function () use ($event, $uid) {
+            self::clear_cache();
+            if (!Reader_Experience::ready()) {
+                return;
+            }
+            $definitions = self::definitions();
+            $tasks = array_filter(
+                $definitions,
+                fn($task) => !empty($task['enabled']) &&
+                    $task['type'] === 'automatic' &&
+                    (int) $event['id'] > $task['start_event_id'] &&
+                    array_filter($task['steps'], fn($step) => $step['kind'] === $event['kind']),
+            );
+            if (!$tasks) {
+                return;
+            }
+            $context = self::honor_context($uid);
+            $progress = self::personal_progress($tasks, $uid, $context, $definitions);
+            do {
+                $changed = false;
+                foreach ($tasks as $task) {
+                    $key = self::key($task, $uid);
+                    if (
+                        isset($context['consumed'][$key]) ||
+                        !self::unlocked($task, $uid, $context, $definitions)
+                    ) {
+                        continue;
+                    }
+                    $done = !array_filter(
+                        $progress[$task['id']]['steps'],
+                        fn($step) => !$step['complete'],
+                    );
+                    if ($done && self::award($task, $uid)) {
+                        $context['consumed'][$key] = true;
+                        $context['valid'][$key] = true;
+                        $context['lifetime'][$task['id']] = true;
+                        $changed = true;
+                    }
+                }
+            } while ($changed);
+        });
     }
     private static function submission_detail($detail): bool
     {
@@ -719,6 +768,11 @@ final class WP_XP_Core_Achievements
             is_string($detail['period'] ?? null) &&
             is_string($detail['title'] ?? null) &&
             is_string($detail['text'] ?? null);
+    }
+    private static function submission_condition(): string
+    {
+        $d = "IF(JSON_VALID(e.detail),e.detail,'{}')";
+        return "JSON_TYPE(JSON_EXTRACT($d,'$.task_id'))='STRING' AND JSON_UNQUOTE(JSON_EXTRACT($d,'$.task_id')) REGEXP '^t_[a-f0-9]{16}$' AND JSON_TYPE(JSON_EXTRACT($d,'$.version'))='INTEGER' AND CAST(JSON_UNQUOTE(JSON_EXTRACT($d,'$.version')) AS UNSIGNED)>0 AND JSON_TYPE(JSON_EXTRACT($d,'$.period'))='STRING' AND JSON_TYPE(JSON_EXTRACT($d,'$.title'))='STRING' AND JSON_TYPE(JSON_EXTRACT($d,'$.text'))='STRING'";
     }
     private static function submissions(
         int $uid = 0,
@@ -753,6 +807,9 @@ final class WP_XP_Core_Achievements
                 Reader_Experience::table() .
                 " r ON r.event_key=CONCAT('task-review:',e.id) WHERE e.kind='achievement_submit'" .
                 $where .
+                ' AND (' .
+                self::submission_condition() .
+                ')' .
                 ' ORDER BY e.id DESC LIMIT ' .
                 (int) $limit,
             ARRAY_A,
@@ -1229,12 +1286,18 @@ final class WP_XP_Core_Achievements
         }
     }
     /** One ledger scan for the whole personal task list, independent of step count. */
-    private static function personal_progress(array $tasks, int $uid): array
-    {
+    private static function personal_progress(
+        array $tasks,
+        int $uid,
+        ?array $context = null,
+        ?array $definitions = null,
+    ): array {
         global $wpdb;
         if (!$tasks) {
             return [];
         }
+        $context ??= self::honor_context($uid);
+        $definitions ??= self::definitions();
         $select = [];
         $aliases = [];
         $keys = [];
@@ -1275,30 +1338,6 @@ final class WP_XP_Core_Achievements
                 throw new RuntimeException('Task counters unavailable');
             }
         }
-        $receipts = $wpdb->get_results(
-            $wpdb->prepare(
-                'SELECT e.event_key,(' .
-                    self::valid_receipt() .
-                    ') AS valid FROM ' .
-                    Reader_Experience::table() .
-                    ' e WHERE e.event_key IN (' .
-                    implode(',', array_fill(0, count($keys), '%s')) .
-                    ')',
-                ...$keys,
-            ),
-            ARRAY_A,
-        );
-        if ($wpdb->last_error !== '' || !is_array($receipts)) {
-            throw new RuntimeException('Task receipts unavailable');
-        }
-        $earned = array_column(
-            array_filter($receipts, fn($r) => (int) $r['valid'] === 1),
-            'event_key',
-        );
-        $consumed = array_column($receipts, 'event_key');
-        if ($wpdb->last_error !== '') {
-            throw new RuntimeException('Task receipts unavailable');
-        }
         $pending_numbers = [];
         if ($pending) {
             $pending_numbers = $wpdb->get_col(
@@ -1307,6 +1346,8 @@ final class WP_XP_Core_Achievements
                     ' e WHERE ' .
                     $wpdb->prepare("e.user_id=%d AND e.kind='achievement_submit'", $uid) .
                     ' AND (' .
+                    self::submission_condition() .
+                    ') AND (' .
                     implode(' OR ', $pending) .
                     ') AND NOT EXISTS (SELECT 1 FROM ' .
                     Reader_Experience::table() .
@@ -1319,7 +1360,8 @@ final class WP_XP_Core_Achievements
         $out = [];
         foreach ($tasks as $task) {
             $steps = [];
-            $complete = $task['type'] === 'automatic' && self::unlocked($task, $uid);
+            $available = self::unlocked($task, $uid, $context, $definitions);
+            $complete = $task['type'] === 'automatic' && $available;
             foreach ($task['steps'] as $i => $step) {
                 $n = (int) ($counts[$aliases[$task['id']][$i]] ?? 0);
                 $done = $n >= $step['count'];
@@ -1329,12 +1371,12 @@ final class WP_XP_Core_Achievements
             $out[$task['id']] = [
                 'steps' => $steps,
                 'complete' => $complete,
-                'earned' => in_array(self::key($task, $uid), $earned, true),
+                'earned' => isset($context['valid'][self::key($task, $uid)]),
                 'revoked' =>
-                    in_array(self::key($task, $uid), $consumed, true) &&
-                    !in_array(self::key($task, $uid), $earned, true),
+                    isset($context['consumed'][self::key($task, $uid)]) &&
+                    !isset($context['valid'][self::key($task, $uid)]),
                 'period' => self::period($task)['key'],
-                'available' => self::unlocked($task, $uid),
+                'available' => $available,
                 'pending_submission' => in_array(
                     (string) $task['number'],
                     array_map('strval', $pending_numbers),
@@ -1344,16 +1386,17 @@ final class WP_XP_Core_Achievements
         }
         return $out;
     }
-    private static function scope_links(array $step): array
+    private static function scope_links(array $step, array $posts, array $terms): array
     {
         $links = [];
         foreach ($step['post_ids'] ?? [] as $id) {
-            $post = get_post($id);
+            $post = $posts[$id] ?? null;
             if (
                 $post &&
                 in_array($post->post_type, ['post', 'page'], true) &&
                 $post->post_status === 'publish' &&
-                $post->post_password === ''
+                $post->post_password === '' &&
+                current_user_can('read_post', (int) $id)
             ) {
                 $links[] = ['title' => get_the_title($post), 'url' => get_permalink($post)];
                 if (count($links) >= 8) {
@@ -1362,17 +1405,20 @@ final class WP_XP_Core_Achievements
             }
         }
         foreach (array_slice($step['category_ids'] ?? [], 0, 8) as $id) {
-            $term = get_term($id, 'category');
-            $url = get_category_link($id);
+            $term = $terms[$id] ?? null;
+            $url = $term ? get_category_link($id) : null;
             if ($term && !is_wp_error($term) && !is_wp_error($url)) {
                 $links[] = ['title' => $term->name . '（分类）', 'url' => $url];
             }
         }
         return $links;
     }
-    private static function prerequisite_hints(array $task, int $uid): array
-    {
-        $definitions = self::definitions();
+    private static function prerequisite_hints(
+        array $task,
+        int $uid,
+        array $context,
+        array $definitions,
+    ): array {
         $hints = [];
         foreach ($task['prerequisites'] ?? [] as $pre) {
             $definition = $definitions[$pre['id']] ?? null;
@@ -1386,7 +1432,7 @@ final class WP_XP_Core_Achievements
                         ? $definition['title']
                         : '前置任务当前未开放',
                 'scope' => $pre['scope'],
-                'complete' => self::unlocked($probe, $uid),
+                'complete' => self::unlocked($probe, $uid, $context, $definitions),
             ];
         }
         return $hints;
@@ -1399,13 +1445,44 @@ final class WP_XP_Core_Achievements
         $uid = get_current_user_id();
         $tasks = [];
         $definitions = array_filter(self::definitions(), fn($task) => !empty($task['enabled']));
-        $progress = self::personal_progress($definitions, $uid);
+        $context = self::honor_context($uid);
+        $progress = self::personal_progress($definitions, $uid, $context, $definitions);
+        $post_ids = [];
+        $term_ids = [];
+        foreach ($definitions as $task) {
+            foreach ($task['steps'] as $step) {
+                $post_ids = array_merge($post_ids, $step['post_ids'] ?? []);
+                $term_ids = array_merge($term_ids, $step['category_ids'] ?? []);
+            }
+        }
+        $posts = $post_ids
+            ? array_column(
+                get_posts([
+                    'post__in' => array_values(array_unique($post_ids)),
+                    'post_type' => ['post', 'page'],
+                    'post_status' => 'publish',
+                    'has_password' => false,
+                    'numberposts' => -1,
+                    'update_post_term_cache' => true,
+                ]),
+                null,
+                'ID',
+            )
+            : [];
+        $terms = $term_ids
+            ? get_terms([
+                'taxonomy' => 'category',
+                'include' => array_values(array_unique($term_ids)),
+                'hide_empty' => false,
+            ])
+            : [];
+        $terms = is_wp_error($terms) ? [] : array_column($terms, null, 'term_id');
         foreach ($definitions as $task) {
             if (!$task['enabled']) {
                 continue;
             }
             foreach ($progress[$task['id']]['steps'] as &$step) {
-                $step['scope_links'] = self::scope_links($step);
+                $step['scope_links'] = self::scope_links($step, $posts, $terms);
                 $step['scoped'] = !empty($step['post_ids']) || !empty($step['category_ids']);
                 unset($step['post_ids'], $step['category_ids']);
             }
@@ -1427,7 +1504,12 @@ final class WP_XP_Core_Achievements
                     'series' => $task['series'] ?? '',
                     'image_url' => self::image_url((int) ($task['image_id'] ?? 0)),
                     'condition_text' => self::condition_text($task),
-                    'prerequisites' => self::prerequisite_hints($task, $uid),
+                    'prerequisites' => self::prerequisite_hints(
+                        $task,
+                        $uid,
+                        $context,
+                        $definitions,
+                    ),
                 ] + $progress[$task['id']];
         }
         global $wpdb;

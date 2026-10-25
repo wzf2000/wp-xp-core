@@ -245,7 +245,7 @@ final class WP_XP_Core_Management
                 'event_count' => (int) $row['event_count'],
                 'consistent' =>
                     ((bool) $valid && $balance === (int) $row['ledger_total']) ||
-                    ((int) $row['balance_rows'] === 0 && (int) $row['event_count'] === 0),
+                    ((int) $row['balance_rows'] === 0 && (int) $row['ledger_total'] === 0),
             ];
         }
         return $items;
@@ -373,7 +373,7 @@ final class WP_XP_Core_Management
     /** Best effort after the original rollback; recording cannot replace the original error. */
     public static function capture_failure(array $attempt): void
     {
-        if (!in_array($attempt['kind'] ?? '', ['article', 'comment'], true)) {
+        if (!in_array($attempt['kind'] ?? '', ['article', 'comment', 'comment_adjust'], true)) {
             return;
         }
         try {
@@ -385,7 +385,10 @@ final class WP_XP_Core_Management
                 $rows[$id] = ($old ?? $attempt) + ['id' => $id, 'created_at' => time()];
                 $rows[$id]['attempts'] = (int) ($old['attempts'] ?? 0) + 1;
                 $rows[$id]['status'] = 'pending';
-                $rows[$id]['last_error'] = '记录未完成';
+                $rows[$id]['last_error'] =
+                    ($attempt['failure_reason'] ?? '') === 'insufficient_balance'
+                        ? '当前经验不足，原评论奖励尚未扣回。'
+                        : '记录未完成';
                 while (count($rows) > self::MAX_FAILURES) {
                     $remove = null;
                     foreach ($rows as $key => $row) {
@@ -649,7 +652,10 @@ final class WP_XP_Core_Management
             self::require_options_transaction();
             $rows = self::option_rows(self::FAILURE_OPTION);
             $failure = $rows[$input['failure_id']] ?? null;
-            if (!$failure || !in_array($failure['kind'], ['article', 'comment'], true)) {
+            if (
+                !$failure ||
+                !in_array($failure['kind'], ['article', 'comment', 'comment_adjust'], true)
+            ) {
                 return self::error('missing', '未找到可重试的记录。', 404);
             }
             $uid = (int) $failure['user_id'];
@@ -660,14 +666,66 @@ final class WP_XP_Core_Management
             if (!get_userdata($uid)) {
                 return self::error('missing', '用户不存在。', 404);
             }
+            if ($failure['kind'] === 'comment_adjust') {
+                $original = self::event('comment:' . (int) $failure['object_id']);
+                if (
+                    !$original ||
+                    $original['kind'] !== 'comment' ||
+                    (int) $original['object_id'] !== (int) $failure['object_id'] ||
+                    (int) $original['user_id'] !== $uid
+                ) {
+                    return self::error('conflict', '失败记录与原评论奖励归属不符。', 409);
+                }
+                $permission = self::permission((int) $original['user_id']);
+                if ($permission !== true) {
+                    return $permission;
+                }
+                $result =
+                    $failure['status'] === 'pending'
+                        ? Reader_Experience::reconcile_comment((int) $failure['object_id'], false, [
+                            'retry_actor' => get_current_user_id(),
+                            'failure_id' => $failure['id'],
+                            'reason' => $input['reason'],
+                        ])
+                        : [
+                            'event_id' => (int) ($failure['result_event_id'] ?? 0),
+                            'user_id' => $uid,
+                        ];
+                if (is_wp_error($result)) {
+                    return $result;
+                }
+                if ((int) $result['user_id'] !== $uid) {
+                    throw new RuntimeException('Comment reward owner changed after reconciliation');
+                }
+                $rows[$input['failure_id']]['status'] = 'resolved';
+                $rows[$input['failure_id']]['resolved_at'] = time();
+                $rows[$input['failure_id']]['result_event_id'] = (int) $result['event_id'];
+                self::store_rows(self::FAILURE_OPTION, $rows);
+                $detail['failure_id'] = $failure['id'];
+                $detail['result_event_id'] = (int) $result['event_id'];
+                if (
+                    !Reader_Experience::record(
+                        $key,
+                        $uid,
+                        'management_retry',
+                        (int) $failure['object_id'],
+                        0,
+                        Reader_Experience::day(),
+                        $detail,
+                    )
+                ) {
+                    throw new RuntimeException('Comment retry receipt failed');
+                }
+                return [
+                    'event_id' => (int) $result['event_id'],
+                    'user_id' => $uid,
+                    'duplicate' => false,
+                ];
+            }
             $existing = self::event($failure['event_key']);
             if (!$existing) {
                 if ($failure['status'] !== 'pending' || !self::retry_eligible($failure)) {
                     return self::error('ineligible', '该文章或评论目前不符合奖励条件。', 409);
-                }
-                $allowed = self::balance_allows($uid, (int) $failure['xp']);
-                if ($allowed !== true) {
-                    return $allowed;
                 }
                 if (
                     !Reader_Experience::record(

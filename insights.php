@@ -125,6 +125,17 @@ final class WP_XP_Core_Insights
             self::quoted(self::ACTIVITY_KINDS) .
             ') AND e.xp<>0' .
             self::membership() .
+            ' AND NOT EXISTS (SELECT 1 FROM ' .
+            $wpdb->usermeta .
+            ' privacy WHERE privacy.user_id=e.user_id AND ' .
+            $wpdb->prepare(
+                "privacy.meta_key=%s AND privacy.meta_value='0'",
+                WP_XP_Core_Fairness::meta_key(),
+            ) .
+            ')' .
+            (WP_XP_Core_Fairness::excluded()
+                ? ' AND e.user_id NOT IN (' . implode(',', WP_XP_Core_Fairness::excluded()) . ')'
+                : '') .
             ($uid ? $wpdb->prepare(' AND e.user_id=%d', $uid) : '') .
             ' GROUP BY e.user_id HAVING SUM(e.xp)>0';
     }
@@ -193,7 +204,7 @@ final class WP_XP_Core_Insights
         }
         try {
             $range = self::range(['period' => $period]);
-            if ($uid < 1) {
+            if ($uid < 1 || WP_XP_Core_Fairness::status($uid) !== 'active') {
                 return null;
             }
             global $wpdb;
@@ -226,7 +237,12 @@ final class WP_XP_Core_Insights
             self::fields($input, ['period']);
             $range = self::range($input);
             $position = self::rank(get_current_user_id(), $range['period']);
-            return is_wp_error($position) ? $position : $range + ['position' => $position];
+            return is_wp_error($position)
+                ? $position
+                : $range + [
+                        'position' => $position,
+                        'participation' => WP_XP_Core_Fairness::status(get_current_user_id()),
+                    ];
         } catch (InvalidArgumentException $e) {
             return self::error('input', $e->getMessage());
         } catch (Throwable $e) {
@@ -290,6 +306,182 @@ final class WP_XP_Core_Insights
         }
     }
     /** Denominator is participating users plus earned users, never page impressions. */
+    /** Equal consecutive windows: descriptive activity trends, never a causal attribution. */
+    public static function trends(array $input = [])
+    {
+        $allowed = self::available(true);
+        if ($allowed !== true) {
+            return $allowed;
+        }
+        try {
+            self::fields($input, ['period', 'from', 'to']);
+            $range = self::range($input, true);
+            $from = new DateTimeImmutable($range['from'], new DateTimeZone('UTC'));
+            $to = new DateTimeImmutable($range['to'], new DateTimeZone('UTC'));
+            $days = (int) $from->diff($to)->days + 1;
+            $previous = [
+                'from' => $from->modify('-' . $days . ' days')->format('Y-m-d'),
+                'to' => $from->modify('-1 day')->format('Y-m-d'),
+            ];
+            global $wpdb;
+            $where =
+                $wpdb->prepare('local_day BETWEEN %s AND %s', $previous['from'], $range['to']) .
+                ' AND kind IN (' .
+                self::quoted(self::ACTIVITY_KINDS) .
+                ')';
+            $split = $wpdb->prepare('CASE WHEN local_day>=%s THEN 1 ELSE 0 END', $range['from']);
+            $rows = self::rows(
+                'SELECT ' .
+                    $split .
+                    ' AS current_window,COALESCE(SUM(xp),0) AS net_xp,COUNT(*) AS events,COUNT(DISTINCT user_id) AS participants FROM ' .
+                    Reader_Experience::table() .
+                    ' WHERE ' .
+                    $where .
+                    ' GROUP BY current_window',
+            );
+            $windows = [
+                0 => ['net_xp' => 0, 'events' => 0, 'participants' => 0],
+                1 => ['net_xp' => 0, 'events' => 0, 'participants' => 0],
+            ];
+            foreach ($rows as $row) {
+                $windows[(int) $row['current_window']] = array_map(
+                    'intval',
+                    array_intersect_key($row, $windows[0]),
+                );
+            }
+            $daily = self::rows(
+                'SELECT local_day,COALESCE(SUM(xp),0) AS net_xp,COUNT(*) AS events FROM ' .
+                    Reader_Experience::table() .
+                    ' WHERE ' .
+                    $where .
+                    ' GROUP BY local_day ORDER BY local_day',
+            );
+            foreach ($daily as &$row) {
+                $row['net_xp'] = (int) $row['net_xp'];
+                $row['events'] = (int) $row['events'];
+            }
+            unset($row);
+            return [
+                'current' => $range + $windows[1],
+                'previous' => $previous + $windows[0],
+                'days' => $days,
+                'delta_net_xp' => $windows[1]['net_xp'] - $windows[0]['net_xp'],
+                'daily' => $daily,
+            ];
+        } catch (InvalidArgumentException $e) {
+            return self::error('input', $e->getMessage());
+        } catch (Throwable $e) {
+            return self::error('storage', '暂时无法读取期间趋势。', 503);
+        }
+    }
+    public static function anomalies(array $input = [])
+    {
+        $allowed = self::available(true);
+        if ($allowed !== true) {
+            return $allowed;
+        }
+        try {
+            self::fields($input, ['period', 'from', 'to', 'limit']);
+            $limit = self::integer($input['limit'] ?? 20, 1, 50);
+            unset($input['limit']);
+            $range = self::range($input, true);
+            global $wpdb;
+            $d = "IF(JSON_VALID(detail),detail,'{}')";
+            $rows = self::rows(
+                'SELECT user_id,local_day,COUNT(*) AS events,SUM(CASE WHEN xp>0 THEN xp ELSE 0 END) AS positive_xp,SUM(CASE WHEN JSON_UNQUOTE(JSON_EXTRACT(' .
+                    $d .
+                    ",'$.activity_cap.truncated'))='true' THEN 1 ELSE 0 END) AS capped_events FROM " .
+                    Reader_Experience::table() .
+                    ' WHERE kind IN (' .
+                    self::quoted(WP_XP_Core_Fairness::FIRST_REWARD_KINDS) .
+                    ') AND ' .
+                    $wpdb->prepare('local_day BETWEEN %s AND %s', $range['from'], $range['to']) .
+                    ' GROUP BY user_id,local_day HAVING events>=20 OR capped_events>0 ORDER BY events DESC,user_id ASC,local_day DESC LIMIT ' .
+                    $limit,
+            );
+            $out = [];
+            foreach ($rows as $row) {
+                $uid = (int) $row['user_id'];
+                if (
+                    WP_XP_Core_Management::permission($uid) !== true ||
+                    !($user = get_userdata($uid))
+                ) {
+                    continue;
+                }
+                $out[] = [
+                    'user_id' => $uid,
+                    'display_name' => $user->display_name,
+                    'day' => $row['local_day'],
+                    'events' => (int) $row['events'],
+                    'positive_xp' => (int) $row['positive_xp'],
+                    'capped_events' => (int) $row['capped_events'],
+                    'reason' =>
+                        (int) $row['events'] >= 20 ? '同日首次活动至少二十次' : '出现活动上限截断',
+                ];
+            }
+            return $range + ['items' => $out];
+        } catch (InvalidArgumentException $e) {
+            return self::error('input', $e->getMessage());
+        } catch (Throwable $e) {
+            return self::error('storage', '暂时无法读取活动线索。', 503);
+        }
+    }
+    /** Old versions expose observed completions only; no invented participation denominator. */
+    public static function task_history(array $input = [])
+    {
+        $allowed = self::available(true);
+        if ($allowed !== true) {
+            return $allowed;
+        }
+        try {
+            self::fields($input, ['period', 'from', 'to']);
+            $range = self::range($input, true);
+            global $wpdb;
+            $d = "IF(JSON_VALID(e.detail),e.detail,'{}')";
+            $grant = "e.kind IN ('task_complete','task_grant')";
+            $timed =
+                $grant .
+                " AND JSON_TYPE(JSON_EXTRACT($d,'$.version_created_at'))='INTEGER' AND CAST(JSON_UNQUOTE(JSON_EXTRACT($d,'$.version_created_at')) AS UNSIGNED) BETWEEN 0 AND e.created_at";
+            $rows = self::rows(
+                "SELECT JSON_UNQUOTE(JSON_EXTRACT($d,'$.task_id')) AS task_id,CAST(JSON_UNQUOTE(JSON_EXTRACT($d,'$.version')) AS UNSIGNED) AS version,MIN(JSON_UNQUOTE(JSON_EXTRACT($d,'$.title'))) AS title,SUM($grant) AS completions,SUM(e.kind IN ('task_revoke','task_grant_revoke')) AS revocations,SUM(($grant) AND (" .
+                    WP_XP_Core_Achievements::valid_receipt() .
+                    ")) AS active_completions,SUM($timed) AS timed_completions,AVG(CASE WHEN $timed THEN e.created_at-CAST(JSON_UNQUOTE(JSON_EXTRACT($d,'$.version_created_at')) AS UNSIGNED) END) AS mean_seconds FROM " .
+                    Reader_Experience::table() .
+                    " e WHERE e.kind IN ('task_complete','task_grant','task_revoke','task_grant_revoke') AND JSON_TYPE(JSON_EXTRACT($d,'$.task_id'))='STRING' AND JSON_TYPE(JSON_EXTRACT($d,'$.version'))='INTEGER' AND " .
+                    $wpdb->prepare('e.local_day BETWEEN %s AND %s', $range['from'], $range['to']) .
+                    ' GROUP BY task_id,version ORDER BY MAX(e.id) DESC LIMIT 101',
+            );
+            $more = count($rows) > 100;
+            $rows = array_slice($rows, 0, 100);
+            foreach ($rows as &$row) {
+                foreach (
+                    [
+                        'version',
+                        'completions',
+                        'revocations',
+                        'active_completions',
+                        'timed_completions',
+                    ]
+                    as $key
+                ) {
+                    $row[$key] = (int) $row[$key];
+                }
+                $row['mean_seconds'] =
+                    $row['mean_seconds'] === null ? null : (float) $row['mean_seconds'];
+                $row['participants'] = null;
+            }
+            unset($row);
+            return $range + [
+                'rows' => $rows,
+                'more' => $more,
+                'duration_origin' => 'version_definition_created_at',
+            ];
+        } catch (InvalidArgumentException $e) {
+            return self::error('input', $e->getMessage());
+        } catch (Throwable $e) {
+            return self::error('storage', '暂时无法读取任务版本统计。', 503);
+        }
+    }
     public static function task_rates()
     {
         $allowed = self::available(true);

@@ -44,6 +44,13 @@ final class WP_XP_Core_Insights_UI
         if (!current_user_can('manage_options')) {
             wp_die('没有查看激励效果的权限。');
         }
+        $operation_result = null;
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $operation_result = WP_XP_Core_Fairness::exclude(
+                is_array($_POST['exclusion'] ?? null) ? wp_unslash($_POST['exclusion']) : [],
+                $_POST['_wpnonce'] ?? '',
+            );
+        }
         $period = self::value('period', 'week');
         $input = ['period' => $period];
         if ($period === 'custom') {
@@ -53,6 +60,7 @@ final class WP_XP_Core_Insights_UI
         $tasks = WP_XP_Core_Insights::task_rates();
         echo '<div class="wrap wp-xp-core-admin"><header class="xp-header"><span class="xp-mark" aria-hidden="true">XP</span><div><h1>激励效果</h1><p>了解参与来源，观察当前任务的完成情况。</p></div></header>';
         WP_XP_Core_Management_UI::nav('insights');
+        WP_XP_Core_Growth_UI::notice($operation_result);
         echo '<section class="xp-card"><h2>经验来源</h2><form method="get" class="xp-filter-form"><input type="hidden" name="page" value="wp-xp-insights"><label>统计时段<select name="period">';
         foreach (['week' => '本周', 'month' => '本月', 'custom' => '自选日期'] as $key => $label) {
             echo '<option value="' .
@@ -148,7 +156,9 @@ final class WP_XP_Core_Insights_UI
             }
             echo '</tbody></table></div>';
         }
-        echo '</section><section class="xp-card"><h2>放置周榜与月榜</h2><p>在普通页面添加短代码区块，分别填入 <code>[xp_leaderboard period="week"]</code> 或 <code>[xp_leaderboard period="month"]</code>，发布后即可公开展示。可用 <code>limit="10"</code> 设置每页人数，最多 50 人。</p><p class="xp-help">插件不会自动创建或公开榜单页面。榜单按本期活动净经验排序，扣回会影响本期结果；不使用历史余额，不包含人工调分，同分并列。</p></section></div>';
+        echo '</section>';
+        self::extended($input);
+        echo '<section class="xp-card"><h2>放置周榜与月榜</h2><p>在普通页面添加短代码区块，分别填入 <code>[xp_leaderboard period="week"]</code> 或 <code>[xp_leaderboard period="month"]</code>，发布后即可公开展示。可用 <code>limit="10"</code> 设置每页人数，最多 50 人。</p><p class="xp-help">插件不会自动创建或公开榜单页面。榜单按本期活动净经验排序，扣回会影响本期结果；不使用历史余额，不包含人工调分，同分并列。</p></section></div>';
     }
     public static function board($attributes = []): string
     {
@@ -227,6 +237,87 @@ final class WP_XP_Core_Insights_UI
         }
         return $html .
             '</nav><p class="xp-board-note">按活动净经验统计，同分并列，不含人工调分与历史初始化。结果实时更新，翻页时名次可能变化。</p></section>';
+    }
+    private static function extended(array $input): void
+    {
+        $trends = WP_XP_Core_Insights::trends($input);
+        $anomalies = WP_XP_Core_Insights::anomalies($input);
+        $history = WP_XP_Core_Insights::task_history($input);
+        echo '<section class="xp-card"><h2>前一等长时段对比</h2><p>比较当前日期范围与紧邻的前一等长时段；这是活动观察，不能证明任务带来了变化。</p>';
+        if (is_wp_error($trends)) {
+            WP_XP_Core_Growth_UI::notice($trends);
+        } else {
+            foreach (['current' => '当前时段', 'previous' => '前一时段'] as $key => $label) {
+                $row = $trends[$key];
+                echo '<p><strong>' .
+                    $label .
+                    '</strong> ' .
+                    esc_html($row['from'] . ' 至 ' . $row['to']) .
+                    ' · 净经验 ' .
+                    self::signed($row['net_xp']) .
+                    ' · 活动 ' .
+                    (int) $row['events'] .
+                    ' 次 · 参与 ' .
+                    (int) $row['participants'] .
+                    ' 人</p>';
+            }
+        }
+        echo '</section><section class="xp-card"><h2>任务版本完成记录</h2><p>只汇总有可靠事件快照的授予与撤销，不补造旧版本参与分母。耗时从任务版本定义创建开始，包含等待和未参与的时间；旧记录没有此证据时留空。</p>';
+        if (is_wp_error($history)) {
+            WP_XP_Core_Growth_UI::notice($history);
+        } else {
+            echo '<div class="xp-table-scroll"><table class="widefat striped"><thead><tr><th>任务版本</th><th>授予次数</th><th>本期撤销次数</th><th>授予中仍有效</th><th>有起点的样本／平均秒</th></tr></thead><tbody>';
+            foreach ($history['rows'] as $row) {
+                echo '<tr><td>' .
+                    esc_html(($row['title'] ?: $row['task_id']) . ' v' . $row['version']) .
+                    '</td><td>' .
+                    (int) $row['completions'] .
+                    '</td><td>' .
+                    (int) $row['revocations'] .
+                    '</td><td>' .
+                    (int) $row['active_completions'] .
+                    '</td><td>' .
+                    (int) $row['timed_completions'] .
+                    ' / ' .
+                    ($row['mean_seconds'] === null
+                        ? '无起点证据'
+                        : esc_html(number_format_i18n($row['mean_seconds'], 1))) .
+                    '</td></tr>';
+            }
+            if (!$history['rows']) {
+                echo '<tr><td colspan="5">此时段没有任务授予或撤销记录。</td></tr>';
+            }
+            echo '</tbody></table></div>';
+            if ($history['more']) {
+                echo '<p>仅显示最近一百个任务版本，可缩短日期范围。</p>';
+            }
+        }
+        echo '</section><section class="xp-card"><h2>待核对的活动线索</h2><p>列出同日首次活动至少二十次或发生上限截断的账号，供人工核对；不自动处罚或排除。</p>';
+        if (is_wp_error($anomalies)) {
+            WP_XP_Core_Growth_UI::notice($anomalies);
+        } else {
+            foreach ($anomalies['items'] as $row) {
+                echo '<p>' .
+                    esc_html($row['display_name']) .
+                    ' (#' .
+                    (int) $row['user_id'] .
+                    ') · ' .
+                    esc_html($row['day'] . ' · ' . $row['reason']) .
+                    ' · ' .
+                    (int) $row['events'] .
+                    ' 次</p>';
+            }
+            if (!$anomalies['items']) {
+                echo '<p>本期没有符合上述条件的线索。</p>';
+            }
+        }
+        echo '</section><section class="xp-card"><h2>榜单账号排除</h2><p>管理员可以排除测试账号等不应进入公开榜的用户。不会删除经验、活动或私人任务。</p><p>当前排除编号：' .
+            esc_html(implode(', ', WP_XP_Core_Fairness::excluded()) ?: '无') .
+            '</p><form method="post" class="xp-filter-form">';
+        wp_nonce_field('wp_xp_core_insights');
+        echo '<input type="hidden" name="exclusion[revision]" value="' .
+            esc_attr(WP_XP_Core_Fairness::exclusion_revision()) .
+            '"><label>用户编号<input type="number" min="1" name="exclusion[user_id]" required></label><label>处理方式<select name="exclusion[excluded]"><option value="1">排除公开榜单</option><option value="0">恢复榜单资格</option></select></label><button class="button">保存榜单排除</button></form></section>';
     }
     public static function routes(): void
     {

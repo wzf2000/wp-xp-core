@@ -214,7 +214,11 @@ test('review tasks keep rewards editable while automatic and checkin controls fo
   const steps = page.locator('[data-xp-auto-steps]');
   const scope = page.locator('[data-xp-step-scope]');
   await expect(scope).toBeHidden();
-  await expect(page.locator('[data-xp-step-mode] option[value="objects"]')).toBeDisabled();
+  expect(
+    await page
+      .locator('[data-xp-step-mode] option[value="objects"]')
+      .evaluate((option) => option.disabled),
+  ).toBe(true);
   await page.locator('[data-xp-step-kind]').selectOption('visit');
   await expect(scope).toBeVisible();
   await scope.locator('summary').click();
@@ -236,4 +240,71 @@ test('review tasks keep rewards editable while automatic and checkin controls fo
   expect(submitted).toContain('task[reward_xp]');
   await type.selectOption('automatic');
   await expect(steps).toBeVisible();
+});
+
+test('loading an older inbox page preserves the first observed mark-all boundary', async ({
+  page,
+}) => {
+  let through;
+  await api(page, (action, data) => {
+    if (action === 'growth') return state;
+    if (action === 'tasks') return emptyTasks;
+    if (action === 'history') return { items: [], next_cursor: null };
+    if (action === 'notifications')
+      return {
+        items: [
+          {
+            id: data.cursor ? '80:task' : '100:task',
+            type: 'task',
+            title: '合成通知',
+            message: '先前通知',
+            day: '2026-10-25',
+            read: false,
+          },
+        ],
+        next_cursor: data.cursor ? null : '90:task',
+        through: data.cursor ? 101 : 100,
+        revision: 'a'.repeat(64),
+        preferences: { task: true, review: true, level: true },
+      };
+    if (action === 'notification-settings') {
+      through = data.through;
+      return { saved: true, revision: 'b'.repeat(64) };
+    }
+  });
+  await page.goto('/growth.html');
+  await expect(page.locator('.xp-inbox-list li')).toHaveCount(1);
+  await page.getByRole('button', { name: '更早的通知' }).click();
+  await expect(page.locator('.xp-inbox-list li')).toHaveCount(2);
+  await page.getByRole('button', { name: '全部标为已读' }).click();
+  await expect.poll(() => through).toBe(100);
+});
+
+test('public-board opt-out reports nonparticipation while private XP remains visible', async ({
+  page,
+}) => {
+  let participating = true;
+  const revision = 'a'.repeat(64);
+  await api(page, (action, data) => {
+    if (action === 'growth') return state;
+    if (action === 'tasks') return emptyTasks;
+    if (action === 'history') return { items: [], next_cursor: null };
+    if (action === 'notifications') return { items: [], next_cursor: null };
+    if (action === 'participation')
+      return { participating, status: participating ? 'active' : 'opted_out', revision };
+    if (action === 'participation-settings') {
+      expect(Object.keys(data).sort()).toEqual(['participating', 'revision']);
+      participating = data.participating;
+      return { participating, status: 'opted_out', revision };
+    }
+    if (action === 'position')
+      return { position: null, participation: participating ? 'active' : 'opted_out' };
+  });
+  await page.goto('/growth.html');
+  await expect(page.locator('.xp-board-participation input')).toBeEnabled();
+  await page.locator('.xp-board-participation input').uncheck();
+  await page.getByRole('button', { name: '保存榜单偏好' }).click();
+  await expect(page.locator('.xp-personal-position')).toContainText('当前未参与公开榜单');
+  await expect(page.locator('.xp-level-name')).toBeVisible();
+  expect(participating).toBe(false);
 });

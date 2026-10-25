@@ -9,6 +9,7 @@ import shutil
 import stat
 import subprocess
 import time
+import uuid
 
 ROOT = Path(__file__).resolve().parent.parent
 DATABASE = "wp_xp_core_ci"
@@ -43,6 +44,9 @@ def main():
     parser.add_argument(
         "--core-source", type=Path, help="Copy only core code for an offline local run"
     )
+    parser.add_argument(
+        "--scale", action="store_true", help="Opt in to owned 10k/50k synthetic read benchmarks"
+    )
     args = parser.parse_args()
     lab = args.lab.resolve()
     if lab.parent != Path("/tmp") or args.lab.is_symlink() or lab.exists():
@@ -68,6 +72,11 @@ def main():
     lab.mkdir()
     site = lab / "site"
     site.mkdir()
+    owner_token = uuid.uuid4().hex
+    owner_file = lab / ".wp-xp-core-test-owner"
+    owner_file.write_text(
+        json.dumps({"database": DATABASE, "site": str(site.resolve()), "token": owner_token}) + "\n"
+    )
     env = dict(os.environ)
     env.setdefault("WP_XP_TEST_DB_USER", "root")
     env.setdefault("WP_XP_TEST_DB_PASSWORD", "")
@@ -167,6 +176,7 @@ try {
         "--admin_email=author@example.invalid",
         "--skip-email",
     )
+    wp("option", "add", "wp_xp_core_test_owner", owner_token, "--autoload=no")
     for username in ["fixture-reader", "fixture-concurrent"]:
         wp(
             "user",
@@ -260,6 +270,48 @@ try {
                 process.wait(timeout=10)
     results["achievement-concurrency"] = json.loads(wp("eval-file", reward_fixture, mode="verify"))
     results["achievement-concurrency"]["clients"] = clients
+    (lab / "results.json").write_text(json.dumps(results, indent=2) + "\n")
+    parallel_env = dict(env, WP_XP_TEST_BARRIER=str(time.time() + 1.0))
+    retry_fixture = str(ROOT / "tests/wordpress-comment-retry-concurrent.php")
+    processes = [
+        subprocess.Popen(
+            command + ["eval-file", retry_fixture],
+            env=parallel_env,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        for _ in range(2)
+    ]
+    clients = []
+    try:
+        for process in processes:
+            output, errors = process.communicate(timeout=60)
+            if process.returncode:
+                failure(
+                    "Concurrent comment compensation",
+                    subprocess.CompletedProcess([], process.returncode, output, errors),
+                )
+            clients.append(json.loads(output))
+    finally:
+        for process in processes:
+            if process.poll() is None:
+                process.terminate()
+                process.wait(timeout=10)
+    results["comment-retry-concurrency"] = json.loads(wp("eval-file", retry_fixture, mode="verify"))
+    results["comment-retry-concurrency"]["clients"] = clients
+    if args.scale:
+        scale_env = dict(env, WP_XP_SCALE_TEST="1", WP_XP_TEST_OWNER_FILE=str(owner_file))
+        scale = subprocess.run(
+            command + ["eval-file", str(ROOT / "tests/wordpress-scale.php")],
+            env=scale_env,
+            text=True,
+            capture_output=True,
+            timeout=600,
+        )
+        if scale.returncode:
+            failure("Owned scale workload", scale)
+        results["scale"] = json.loads(scale.stdout)
     (lab / "results.json").write_text(json.dumps(results, indent=2) + "\n")
     print(
         json.dumps({key: len(value.get("checks", [])) for key, value in results.items()}, indent=2)

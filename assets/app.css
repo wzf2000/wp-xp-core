@@ -354,11 +354,13 @@
   gap: 0.7em;
   margin-block: 1em;
 }
-.xp-inbox-preferences label {
+.xp-inbox-preferences label,
+.xp-board-participation label {
   display: flex;
   gap: 0.5em;
   align-items: center;
 }
-.xp-inbox-preferences input[type='checkbox'] {
+.xp-inbox-preferences input[type='checkbox'],
+.xp-board-participation input[type='checkbox'] {
   width: auto;
 }

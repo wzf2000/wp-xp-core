@@ -328,7 +328,7 @@
       if (!list.children.length) list.append(el('li', '暂无这类站内通知。'));
       state.revision = data.revision;
       state.cursor = data.next_cursor;
-      state.through = data.through;
+      if (!append) state.through = data.through;
       panel.querySelector('.xp-inbox-more').hidden = !state.cursor;
       for (const type of ['task', 'review', 'level'])
         panel.querySelector(`.xp-inbox-preferences [name="${type}"]`).checked =
@@ -361,6 +361,26 @@
       inboxBusy(panel, false);
     }
   }
+  const participationStates = new WeakMap();
+  async function participation(panel) {
+    const form = panel.querySelector('.xp-board-participation');
+    if (!form) return;
+    const previous = participationStates.get(panel);
+    if (previous?.saving) return;
+    const state = { sequence: (previous?.sequence || 0) + 1 };
+    participationStates.set(panel, state);
+    try {
+      const value = await api('participation');
+      if (participationStates.get(panel) !== state) return;
+      state.revision = value.revision;
+      form.querySelector('input').checked = value.participating !== false;
+      form.querySelector('.xp-board-preference-message').textContent =
+        value.status === 'excluded' ? '此账号由管理员排除榜单；个人经验仍照常记录。' : '';
+    } catch (error) {
+      if (participationStates.get(panel) === state)
+        form.querySelector('.xp-board-preference-message').textContent = error.message;
+    }
+  }
   const positions = new WeakMap();
   async function position(panel, period) {
     const previous = positions.get(panel) || { sequence: 0 };
@@ -375,9 +395,12 @@
     try {
       const data = await api('position', { period });
       if (positions.get(panel) !== current) return;
-      output.textContent = data.position
-        ? `${period === 'month' ? '本月' : '本周'}第 ${data.position.rank} 名 · 活动净经验 +${data.position.xp}`
-        : '本期还没有计入榜单的活动净经验。';
+      output.textContent =
+        data.participation && data.participation !== 'active'
+          ? '当前未参与公开榜单；经验和私人任务照常保留。'
+          : data.position
+            ? `${period === 'month' ? '本月' : '本周'}第 ${data.position.rank} 名 · 活动净经验 +${data.position.xp}`
+            : '本期还没有计入榜单的活动净经验。';
     } catch (error) {
       if (positions.get(panel) === current)
         output.textContent = error.message + ' 点击周期可重试。';
@@ -393,6 +416,7 @@
         renderTasks(panel, tasks);
         position(panel, positions.get(panel)?.period || 'week');
         loadInbox(panel);
+        participation(panel);
         if (previousLevel !== null && previousLevel < value.level)
           message(panel, `已升至 ${value.level_profile.name}！`);
       }
@@ -402,6 +426,30 @@
     }
   }
   for (const panel of panels) {
+    panel.querySelector('.xp-board-participation')?.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const form = event.currentTarget;
+      const state = participationStates.get(panel);
+      if (!state?.revision || state.saving) return;
+      state.saving = true;
+      form.querySelector('button').disabled = true;
+      try {
+        const result = await api('participation-settings', {
+          revision: state.revision,
+          participating: form.querySelector('input').checked,
+        });
+        state.revision = result.revision;
+        form.querySelector('.xp-board-preference-message').textContent =
+          result.status === 'active' ? '已参与公开榜单。' : '当前未参与公开榜单。';
+        position(panel, positions.get(panel)?.period || 'week');
+      } catch (error) {
+        form.querySelector('.xp-board-preference-message').textContent = error.message;
+      } finally {
+        state.saving = false;
+        form.querySelector('button').disabled = false;
+      }
+    });
+    panel.querySelector('.xp-inbox-refresh')?.addEventListener('click', () => loadInbox(panel));
     panel
       .querySelector('.xp-inbox-read-all')
       ?.addEventListener('click', () =>
