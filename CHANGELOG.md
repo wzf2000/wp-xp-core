@@ -2,7 +2,7 @@
 
 ## 2.0.0-rc.3
 
-Unreleased development candidate; the published rc.2 ZIP does not include these changes. / 尚未发行的开发候选，已公开 rc.2 安装包不包含以下改动。
+Prerelease expanding configurable tasks, private growth feedback and plugin administration. / 扩展可配置任务、私人成长反馈与插件管理的预发布版。
 
 - Add scoped/versioned tasks, monthly periods, prerequisites, optional XP/image badges and atomic reasoned grant/revocation. / 范围任务、月度周期、前置、可选经验和图片徽章、原子人工授予与撤销。
 - Add private durable notifications, next goals, gross daily/weekly activity caps, standings privacy and bounded comparative/version diagnostics. Protect insufficient comment compensation with captured, revalidated administrator retry. / 私人通知、目标指引、活动上限、榜单隐私与统计；不足余额评论补偿整笔拒绝并可受控重试。

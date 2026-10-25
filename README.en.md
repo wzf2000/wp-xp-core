@@ -24,7 +24,7 @@ The plugin manages experience and levels independently of myCRED. Likes are an o
 
 ## Get started
 
-**This branch is the unreleased 2.0.0-rc.3 development candidate.** The latest published Release remains rc.2. The new capabilities below are not available from that existing installation ZIP; they require candidate validation and publication.
+**2.0.0-rc.3 is a prerelease** with expanded task conditions, achievement rewards, private notifications and configuration tools. Download its installation ZIP from the [Release](https://github.com/wzf2000/wp-xp-core/releases/tag/v2.0.0-rc.3) and verify it in an isolated environment first.
 
 Back up existing sites and verify updates in an isolated environment first; use the documentation at your Release tag for version-specific behavior. On a new site, installing and activating creates the experience ledger and uses default rules. No server JSON profile or other experience plugin is required. Existing users start at zero XP; old articles and historical comments do not trigger automatic backfill.
 
@@ -78,7 +78,7 @@ See the [user guide](docs/GUIDE.en.md) for steps and change effects. These featu
 | Contribute improvements                                        | [Contributing](CONTRIBUTING.md)                                           |
 | Maintain GitHub releases                                       | [Releasing](docs/RELEASING.md)                                            |
 
-Documentation on this branch describes the unreleased 2.0.0-rc.3 development candidate. For an installed release, use the documentation at its Release tag.
+Documentation on this branch describes 2.0.0-rc.3. For another version, use the documentation at its Release tag.
 
 [Open an Issue](https://github.com/wzf2000/wp-xp-core/issues/new/choose) with your version, observed behavior and reproduction steps. Report security issues privately under the [security policy](SECURITY.md).
 

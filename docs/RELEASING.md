@@ -24,6 +24,6 @@ Failure may leave an unpublished draft or reserved tag. Reruns never overwrite t
 本地验证可在已提交工作副本执行 `npm run package` 和 `npm run package:check`。无远程仓库也能构建；`REPOSITORY` 可选。部署需单独执行站点自身的备份、变更与验收流程。
 For local verification, run `npm run package` and `npm run package:check` from a committed checkout. A remote is optional, as is `REPOSITORY`. Site deployment follows its own backup, change and validation process.
 
-The unreleased rc.3 candidate includes `languages/` PO/MO/POT/JSON and `modules/` PHP in the installation allowlist and independent publication verifier. Run the catalog compiler/check and inspect the actual ZIP; a source-only language directory is insufficient. The first changelog heading remains the exact release version, with its unreleased status in the section body until publication.
+The installation allowlist and independent publication verifier include `languages/` PO/MO/POT/JSON and `modules/` PHP. Run the catalog compiler/check and inspect the actual ZIP; a source-only language directory is insufficient. The first changelog heading must match the exact release version. Update candidate notices in both READMEs and the changelog when preparing publication.
 
-rc.3 候选新增语言文件与区块模块须实际进入 ZIP；发行检查包括 catalog 与载荷白名单。候选未发行状态写在版本说明正文，首个版本标题保留准确版本以兼容发行工具。
+语言文件与区块模块须实际进入 ZIP；发行检查包括 catalog 与载荷白名单。首个版本标题保留准确版本以兼容发行工具；准备公开发行时，同步更新双语 README 和变更日志中的候选状态说明。
