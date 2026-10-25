@@ -115,6 +115,9 @@ final class WP_XP_Core_Configuration
     }
     private static function signature(string $json, string $mode, array $revision): string
     {
+        // Native textarea submissions normalize line endings to CRLF. These are
+        // JSON whitespace bytes; escaped newlines inside JSON strings stay intact.
+        $json = str_replace(["\r\n", "\r"], "\n", $json);
         return hash_hmac(
             'sha256',
             wp_json_encode([

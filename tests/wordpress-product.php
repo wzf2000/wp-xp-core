@@ -665,6 +665,64 @@ $verify(
 restore_previous_locale();
 WP_XP_Core_I18n::load();
 $verify('Switching back to Chinese restores fixed labels', wp_xp_core_t('我的成长') === '我的成长');
+// Templates are previewed before their first native textarea round-trip.
+$template_lf = WP_XP_Core_Configuration::template_document('reading');
+$verify(
+    'Template regression uses a pretty LF document',
+    str_contains($template_lf, "\n") && !str_contains($template_lf, "\r"),
+);
+$template_plan = WP_XP_Core_Configuration::preview($template_lf, 'template', $nonce);
+$verify('Template LF preview succeeds', !is_wp_error($template_plan));
+$template_changed = json_decode($template_lf, true, 32, JSON_THROW_ON_ERROR);
+$template_changed['tasks'][0]['title'] .= ' edited';
+$template_changed_crlf = str_replace(
+    "\n",
+    "\r\n",
+    wp_json_encode($template_changed, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE),
+);
+$verify(
+    'Changing actual template content still invalidates the signed preview',
+    $error(
+        WP_XP_Core_Configuration::apply(
+            $template_changed_crlf,
+            'template',
+            $template_plan['revision'],
+            $template_plan['proof'],
+            $nonce,
+        ),
+        'preview',
+    ),
+);
+$template_crlf = str_replace("\n", "\r\n", $template_lf);
+$verify(
+    'Browser CRLF submission can apply a server LF template preview',
+    !is_wp_error(
+        WP_XP_Core_Configuration::apply(
+            $template_crlf,
+            'template',
+            $template_plan['revision'],
+            $template_plan['proof'],
+            $nonce,
+        ),
+    ),
+);
+$template_definitions = WP_XP_Core_Achievements::definitions();
+$template_again = WP_XP_Core_Configuration::preview($template_lf, 'template', $nonce);
+$verify(
+    'CR-only transport also preserves the existing template version and boundaries',
+    !is_wp_error($template_again) &&
+        $template_again['changes'][0]['status'] === 'unchanged' &&
+        !is_wp_error(
+            WP_XP_Core_Configuration::apply(
+                str_replace("\n", "\r", $template_lf),
+                'template',
+                $template_again['revision'],
+                $template_again['proof'],
+                $nonce,
+            ),
+        ) &&
+        WP_XP_Core_Achievements::definitions() === $template_definitions,
+);
 $restore_doc = WP_XP_Core_Configuration::export(wp_create_nonce('wp_xp_core_configuration'));
 $restore_doc['rules'] = $export['rules'];
 $restore_doc['tasks'] = [];
