@@ -1,8 +1,10 @@
+<!-- wp-xp-core-version: 2.0.0 -->
+
 # Server configuration and integration
 
 [简体中文](CONFIGURATION.md) · English · [Back to overview](../README.en.md) · [User guide](GUIDE.en.md)
 
-This document describes the **2.0.0-rc.2 prerelease**. Installed releases follow their tagged documentation.
+This document describes **2.0.0**. Installed releases follow their tagged documentation.
 
 This page is for integrators. **Ordinary first-time installation needs no external configuration: upload and activate a 1.4.0+ installation ZIP.** For page setup, see the [user guide](GUIDE.en.md). External JSON is only for advanced deployments with custom storage or existing integrations.
 
@@ -184,3 +186,9 @@ WordPress exporter `wp-xp-core` returns site-local facts for the email recipient
 The optional updater is unavailable on multisite networks. Network administrators update the plugin manually; subsite preferences cannot affect network-shared update results.
 
 After an update-channel change, cached candidates are immediately checked against the current channel, version and official asset URL; other plugins remain untouched. Initial and duplicate provider deliveries return the same ledger `event_id`, never a balance projection metadata ID.
+
+## Database requirements and read failures
+
+Use InnoDB for transactional storage and a database providing `JSON_VALID`, `JSON_EXTRACT`, `JSON_UNQUOTE` and `JSON_TYPE`. Activation checks those functions before installation writes. If a check fails, ask the server administrator to provide a compatible database and retry activation; no tables are converted or adopted.
+
+When a claim, daily quota, milestone, original comment receipt or response history cannot be read, the reward operation stops and rolls back. Restore database access before retrying the original action; do not edit the balance or replay initialization. Personal-data exports include review decisions, feedback and the associated submission ID, without internal administrator identities or reasons.

@@ -75,6 +75,14 @@ final class Installation_Storage
     public int $ledgerRows = 0;
     public int $releases = 0;
     public bool $busy = false;
+    public bool $jsonSupported = true;
+    public bool $suppress = false;
+    public function suppress_errors($value)
+    {
+        $previous = $this->suppress;
+        $this->suppress = $value;
+        return $previous;
+    }
     public bool $failCreate = false;
     public bool $badColumns = false;
     public bool $badIndexes = false;
@@ -98,6 +106,13 @@ final class Installation_Storage
     public function get_var($sql)
     {
         $this->last_error = '';
+        if (str_contains($sql, 'SELECT JSON_VALID(')) {
+            if (!$this->jsonSupported) {
+                $this->last_error = 'Unsupported JSON functions';
+                return null;
+            }
+            return '1';
+        }
         if (str_contains($sql, 'GET_LOCK')) {
             return $this->busy ? 0 : 1;
         }
@@ -298,6 +313,17 @@ verify('permission failure is read-only', $db->writes === []);
 $GLOBALS['authorized'] = true;
 rejected('network activation rejected before writes', fn() => activate(true), 'network activation');
 verify('network rejection does not mutate', $db->writes === []);
+$db->jsonSupported = false;
+rejected(
+    'unsupported JSON storage is rejected before writes',
+    fn() => activate(),
+    'must support JSON',
+);
+verify(
+    'capability failure preserves storage and error reporting',
+    $db->writes === [] && !$db->suppress,
+);
+$db->jsonSupported = true;
 $db->busy = true;
 rejected('concurrent installer fails before mutations', fn() => activate(), 'busy');
 verify(

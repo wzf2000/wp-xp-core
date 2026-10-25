@@ -618,7 +618,7 @@ try {
             $probe_rows[$scope_task['id']]['completed'] === 1,
     );
     $verify(
-        'Warm per-task UNION report retains constant query count and remains read only',
+        'Warm grouped task report retains constant query count and remains read only',
         $probe_queries <= 3 && $probe_before === $snapshot(),
     );
     $verify('Cold and warm task-rate results agree', $probe_cold_rates === $probe_rates);
@@ -627,18 +627,45 @@ try {
         $task = $auto;
         $task['id'] = 't_' . sprintf('%016x', $index + 100);
         $task['number'] = $index + 100;
-        $task['steps'] = array_fill(0, 8, ['kind' => 'checkin', 'count' => 2]);
+        $task['steps'] = [];
+        for ($step = 0; $step < 8; $step++) {
+            $task['steps'][] = [
+                'kind' => 'checkin',
+                'count' => $index + $step + 1,
+                'mode' => $step % 2 ? 'days' : 'events',
+            ];
+        }
+        if ($index % 2) {
+            $task['steps'] = array_reverse($task['steps']);
+        }
         $maximum[$task['id']] = $task;
     }
     update_option(WP_XP_Core_Achievements::OPTION, $maximum, false);
     $before_maximum = $snapshot();
     $query_count = $wpdb->num_queries;
-    $maximum_rates = WP_XP_Core_Insights::task_rates();
+    $ledger_reads = [];
+    add_filter('query', $observe_queries);
+    try {
+        $maximum_rates = WP_XP_Core_Insights::task_rates();
+    } finally {
+        remove_filter('query', $observe_queries);
+    }
     $verify(
         'Fifty eight-step tasks still use a fixed small number of queries',
         !is_wp_error($maximum_rates) &&
             count($maximum_rates['rows']) === 50 &&
             $wpdb->num_queries - $query_count <= 3,
+    );
+    $verify(
+        'Equivalent task eligibility shares one distinct-user ledger scan despite thresholds modes and step order',
+        count($ledger_reads) === 1 &&
+            substr_count($ledger_reads[0], 'SELECT DISTINCT e.user_id FROM ') === 1 &&
+            substr_count(
+                $ledger_reads[0],
+                "WHERE e.kind IN ('task_complete','task_grant','achievement_submit')",
+            ) === 1 &&
+            array_unique(array_column($maximum_rates['rows'], 'participants')) === [2] &&
+            array_unique(array_column($maximum_rates['rows'], 'completed')) === [0],
     );
     $verify('Maximum-size task aggregation is also read only', $before_maximum === $snapshot());
     $fail_query = static fn($sql) => str_contains($sql, 'GROUP BY kind WITH ROLLUP')
@@ -653,6 +680,20 @@ try {
         );
     } finally {
         remove_filter('query', $fail_query);
+        $wpdb->suppress_errors($previous_suppression);
+    }
+    $fail_activity = static fn($sql) => str_contains($sql, 'SELECT DISTINCT e.user_id FROM ')
+        ? 'SELECT xp_insights_missing_column FROM ' . $table
+        : $sql;
+    $previous_suppression = $wpdb->suppress_errors(true);
+    add_filter('query', $fail_activity);
+    try {
+        $verify(
+            'A failed grouped participation query returns storage instead of fabricated task counts',
+            $error(WP_XP_Core_Insights::task_rates(), 'storage'),
+        );
+    } finally {
+        remove_filter('query', $fail_activity);
         $wpdb->suppress_errors($previous_suppression);
     }
     $definition_failures = 0;

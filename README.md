@@ -1,3 +1,5 @@
+<!-- wp-xp-core-version: 2.0.0 -->
+
 <p align="center"><img src="docs/assets/hero.svg" alt="WP XP Core — 为参与积累经验，让成长有迹可循" width="100%"></p>
 
 <p align="center">
@@ -24,7 +26,7 @@
 
 ## 开始使用
 
-**2.0.0-rc.3 为预发布版本**，包含任务条件、成就奖励、私人通知和配置工具等扩展。请从 [Release](https://github.com/wzf2000/wp-xp-core/releases/tag/v2.0.0-rc.3) 下载对应安装包，先在隔离环境验证。
+本分支文档对应 **2.0.0**，包含任务条件、成就奖励、私人通知和配置工具。下载安装包时，请以 [Release](https://github.com/wzf2000/wp-xp-core/releases) 中实际发布的版本为准。
 
 更新已有站点前请备份，并先在隔离环境验证；不同版本的功能以对应 Release 标签内的文档为准。新站上传安装包并启用后，插件会建立经验账本并使用默认规则，无需配置服务器 JSON，也无需安装其他经验插件。既有用户从 0 经验开始，不会根据旧文章或历史评论自动补发奖励。
 
@@ -78,7 +80,7 @@
 | 参与开发或提交改进                 | [贡献指南](CONTRIBUTING.md)         |
 | 维护 GitHub 发行                   | [发布流程](docs/RELEASING.md)       |
 
-本分支文档对应 2.0.0-rc.3。使用其他版本时，请以对应 Release 标签内的文档为准。
+本分支文档对应 2.0.0。使用其他版本时，请以对应 Release 标签内的文档为准。
 
 遇到问题可[提交 Issue](https://github.com/wzf2000/wp-xp-core/issues/new/choose)，附上版本、现象与复现步骤。安全问题请按[安全政策](SECURITY.md)私下报告。
 
@@ -87,3 +89,5 @@
 由 [wzf2000](https://github.com/wzf2000) 维护，采用 **[GPL-2.0-or-later](LICENSE)**。欢迎通过 Issue 和 Pull Request 参与改进。
 
 最低要求为 WordPress 6.0、PHP 8.0；实际 CI 验证组合见[贡献指南](CONTRIBUTING.md)。配置工具支持预览导入和显式任务模板，编辑器区块保留短代码兼容。[使用指南](docs/GUIDE.md)说明紧凑任务列表、语言、个人数据导出与保留；[集成说明](docs/CONFIGURATION.md)介绍可信活动接口及可选更新检查。
+
+数据库须支持 InnoDB 事务，以及 `JSON_VALID`、`JSON_EXTRACT`、`JSON_UNQUOTE`、`JSON_TYPE`。激活会在安装写入前检查；不支持时明确提示错误并保留原存储。

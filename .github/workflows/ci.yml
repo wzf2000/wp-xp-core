@@ -90,6 +90,8 @@ jobs:
       matrix:
         include:
           - php: '8.0'
+            wordpress: '6.0'
+          - php: '8.0'
             wordpress: '6.8.3'
           - php: '8.2'
             wordpress: '6.8.3'
@@ -132,18 +134,75 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: wp-xp-core-wordpress-${{ matrix.php }}-${{ inputs.source_sha || github.sha }}
+          name: wp-xp-core-wordpress-${{ matrix.wordpress }}-${{ matrix.php }}-${{ inputs.source_sha || github.sha }}
           path: /tmp/wp-xp-core-ci/results.json
+          if-no-files-found: ignore
+
+  upgrade:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - version: '1.4.1'
+            sha256: '602202444c8a87bc5e02463c21cbd8fc35e9fc9e8d66c18a82f7eb9ce891ac94'
+          - version: '2.0.0-rc.3'
+            sha256: 'd0992608def9587e43a04fe3f11c5c4a102cf755a2f10f0ebecfbed17778ad23'
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: synthetic-ci-password
+          MYSQL_ROOT_HOST: '%'
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost -psynthetic-ci-password"
+          --health-interval=10s --health-timeout=5s --health-retries=10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.source_sha || github.sha }}
+          persist-credentials: false
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mysqli, mbstring, dom
+          coverage: none
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Download pinned CLI and immutable official old release
+        env:
+          OLD_VERSION: ${{ matrix.version }}
+        run: |
+          curl --fail --location --output /tmp/wp-cli.phar https://github.com/wp-cli/wp-cli/releases/download/v2.12.0/wp-cli-2.12.0.phar
+          curl --fail --location --output /tmp/wp-xp-core-old.zip "https://github.com/wzf2000/wp-xp-core/releases/download/v${OLD_VERSION}/wp-xp-core-${OLD_VERSION}.zip"
+      - name: Verify old release and run isolated code-only upgrade
+        env:
+          WP_XP_TEST_DATABASE: wp_xp_core_ci
+          WP_XP_TEST_DB_HOST: 127.0.0.1:3306
+          WP_XP_TEST_DB_USER: root
+          WP_XP_TEST_DB_PASSWORD: synthetic-ci-password
+          OLD_SHA256: ${{ matrix.sha256 }}
+        run: python3 tools/wp-integration.py --wp-cli /tmp/wp-cli.phar --lab /tmp/wp-xp-core-upgrade-ci --core-version 6.8.3 --upgrade-from /tmp/wp-xp-core-old.zip --upgrade-sha256 "$OLD_SHA256"
+      - name: Preserve isolated upgrade evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wp-xp-core-upgrade-${{ matrix.version }}-${{ inputs.source_sha || github.sha }}
+          path: /tmp/wp-xp-core-upgrade-ci/results.json
           if-no-files-found: ignore
 
   required:
     name: Required checks
     if: always()
-    needs: [verify, wordpress]
+    needs: [verify, wordpress, upgrade]
     runs-on: ubuntu-latest
     steps:
       - name: Require every verification job to succeed
         env:
           VERIFY_RESULT: ${{ needs.verify.result }}
           WORDPRESS_RESULT: ${{ needs.wordpress.result }}
-        run: test "$VERIFY_RESULT" = success && test "$WORDPRESS_RESULT" = success
+          UPGRADE_RESULT: ${{ needs.upgrade.result }}
+        run: test "$VERIFY_RESULT" = success && test "$WORDPRESS_RESULT" = success && test "$UPGRADE_RESULT" = success

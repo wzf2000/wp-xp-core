@@ -28,9 +28,10 @@ class ReleasePipeline(unittest.TestCase):
         self.assertIn("persist-credentials: false", workflow)
         self.assertIn("name: Required checks", workflow)
         self.assertIn("if: always()", workflow)
-        self.assertIn("needs: [verify, wordpress]", workflow)
+        self.assertIn("needs: [verify, wordpress, upgrade]", workflow)
         self.assertIn(
-            'run: test "$VERIFY_RESULT" = success && test "$WORDPRESS_RESULT" = success', workflow
+            'run: test "$VERIFY_RESULT" = success && test "$WORDPRESS_RESULT" = success && test "$UPGRADE_RESULT" = success',
+            workflow,
         )
 
     def test_publishing_has_no_untrusted_execution(self):

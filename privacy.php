@@ -84,6 +84,8 @@ final class WP_XP_Core_Privacy
                         'condition_text',
                         'reward_xp',
                         'decision',
+                        'feedback',
+                        'submission_id',
                         'level_transition',
                         'activity_cap',
                         'provider',

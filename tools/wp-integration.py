@@ -1,6 +1,8 @@
 """Exercise native installation against fresh synthetic WordPress and dedicated MySQL storage."""
 
 import argparse
+import ctypes
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -10,6 +12,7 @@ import stat
 import subprocess
 import time
 import uuid
+import zipfile
 
 ROOT = Path(__file__).resolve().parent.parent
 DATABASE = "wp_xp_core_ci"
@@ -36,6 +39,75 @@ def copy_directory(source, target):
     shutil.copytree(source, target)
 
 
+def upgrade_payload(path, checksum):
+    """Validate the complete immutable public bundle before executing any old code."""
+    if path.is_symlink() or not path.is_file():
+        raise ValueError("Upgrade archive must be a regular file")
+    if not re.fullmatch(r"[0-9a-fA-F]{64}", checksum or ""):
+        raise ValueError("Upgrade archive requires an explicit SHA-256")
+    if hashlib.sha256(path.read_bytes()).hexdigest() != checksum.lower():
+        raise ValueError("Upgrade archive checksum mismatch")
+    payload = {}
+    with zipfile.ZipFile(path) as archive:
+        entries = archive.infolist()
+        if len(entries) > 1000 or sum(entry.file_size for entry in entries) > 128 * 1024 * 1024:
+            raise ValueError("Upgrade archive exceeds bounded installation size")
+        for entry in entries:
+            name = entry.filename
+            parts = name.split("/")
+            mode = entry.external_attr >> 16
+            if (
+                len(parts) < 2
+                or parts[0] != "wp-xp-core"
+                or any(part in {"", ".", ".."} for part in parts)
+                or "\\" in name
+                or "\x00" in name
+                or entry.is_dir()
+                or stat.S_ISLNK(mode)
+                or stat.S_IFMT(mode) not in {0, stat.S_IFREG}
+                or entry.flag_bits & 1
+            ):
+                raise ValueError("Unsafe upgrade archive entry")
+            relative = "/".join(parts[1:])
+            if relative in payload:
+                raise ValueError("Duplicate upgrade archive entry")
+            payload[relative] = archive.read(entry)
+    manifest = json.loads(payload.pop("release-manifest.json"))
+    import release
+
+    if (
+        manifest.get("schema") != 1
+        or manifest.get("slug") != "wp-xp-core"
+        or not re.fullmatch(release.VERSION_RE, manifest.get("version", ""))
+        or not re.fullmatch(r"[0-9a-f]{40}", manifest.get("source_commit", ""))
+        or not isinstance(manifest.get("files"), dict)
+        or set(manifest["files"]) != set(payload)
+        or "wp-xp-core.php" not in payload
+    ):
+        raise ValueError("Invalid upgrade release manifest")
+    for name, content in payload.items():
+        if (
+            not release.installation_name(name)
+            or manifest["files"][name] != hashlib.sha256(content).hexdigest()
+        ):
+            raise ValueError("Upgrade manifest payload mismatch")
+    header = payload["wp-xp-core.php"].decode("utf-8")
+    if not re.search(r"Version:\s*" + re.escape(manifest["version"]) + r"\s*(?:\n|$)", header):
+        raise ValueError("Upgrade header version differs from manifest")
+    return payload, manifest
+
+
+def exchange_directories(first, second):
+    # Both directories are on the same owned /tmp filesystem. Linux's exchange
+    # keeps the plugin path continuously present and never runs activation hooks.
+    library = ctypes.CDLL(None, use_errno=True)
+    rename = library.renameat2
+    rename.argtypes = [ctypes.c_int, ctypes.c_char_p, ctypes.c_int, ctypes.c_char_p, ctypes.c_uint]
+    rename.restype = ctypes.c_int
+    if rename(-100, os.fsencode(first), -100, os.fsencode(second), 2) != 0:
+        raise OSError(ctypes.get_errno(), "Atomic upgrade directory exchange failed")
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--wp-cli", type=Path, required=True)
@@ -47,7 +119,18 @@ def main():
     parser.add_argument(
         "--scale", action="store_true", help="Opt in to owned 10k/50k synthetic read benchmarks"
     )
+    parser.add_argument("--upgrade-from", type=Path, help="Run only an isolated old-ZIP upgrade")
+    parser.add_argument("--upgrade-sha256", help="Required immutable old-ZIP SHA-256")
     args = parser.parse_args()
+    if bool(args.upgrade_from) != bool(args.upgrade_sha256) or (args.upgrade_from and args.scale):
+        raise ValueError(
+            "Upgrade requires both ZIP and checksum, and cannot be combined with scale"
+        )
+    old_payload, old_manifest = (
+        upgrade_payload(args.upgrade_from, args.upgrade_sha256)
+        if args.upgrade_from
+        else (None, None)
+    )
     lab = args.lab.resolve()
     if lab.parent != Path("/tmp") or args.lab.is_symlink() or lab.exists():
         raise ValueError("Use a new direct /tmp lab directory")
@@ -81,6 +164,7 @@ def main():
     env.setdefault("WP_XP_TEST_DB_USER", "root")
     env.setdefault("WP_XP_TEST_DB_PASSWORD", "")
     env["WP_XP_TEST_DB_HOST"] = host
+    env["WP_XP_TEST_OWNER_FILE"] = str(owner_file)
     env["WP_CLI_DISABLE_AUTO_CHECK_UPDATE"] = "1"
     command = [
         "php",
@@ -190,13 +274,19 @@ try {
     plugin.mkdir(parents=True)
     import release
 
-    for name in release.source_files():
-        path = ROOT / name
-        if path.is_symlink():
-            raise ValueError("Installation source must contain no symlinks")
-        target = plugin / name
-        target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(path, target)
+    if old_payload is not None:
+        for name, content in old_payload.items():
+            target = plugin / name
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(content)
+    else:
+        for name in release.source_files():
+            path = ROOT / name
+            if path.is_symlink():
+                raise ValueError("Installation source must contain no symlinks")
+            target = plugin / name
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(path, target)
     # No core language pack is implied. The lab's low-priority locale can still be
     # overridden by WordPress's real locale switcher for English-catalog tests.
     mu_plugins = site / "wp-content/mu-plugins"
@@ -223,6 +313,32 @@ try {
     finally:
         locale_probe.unlink()
     results = {"wordpress": {"version": wp("core", "version").strip()}}
+    if old_payload is not None:
+        upgrade_fixture = str(ROOT / "tests/wordpress-upgrade.php")
+        wp("plugin", "activate", "wp-xp-core", "--user=fixture-author")
+        results["upgrade_seed"] = json.loads(wp("eval-file", upgrade_fixture, mode="seed"))
+        (lab / "results.json").write_text(json.dumps(results, indent=2) + "\n")
+        staged = plugin.with_name("wp-xp-core-upgrade-staged")
+        staged.mkdir()
+        for name in release.source_files():
+            path = ROOT / name
+            if path.is_symlink() or any(parent.is_symlink() for parent in path.parents):
+                raise ValueError("Upgrade source must contain no symlinks")
+            target = staged / name
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(path, target)
+        exchange_directories(plugin, staged)
+        results["upgrade_verify"] = json.loads(wp("eval-file", upgrade_fixture, mode="verify"))
+        wp("plugin", "deactivate", "wp-xp-core", "--user=fixture-author")
+        wp("plugin", "activate", "wp-xp-core", "--user=fixture-author")
+        results["upgrade_restart"] = json.loads(wp("eval-file", upgrade_fixture, mode="restart"))
+        results["upgrade_from"] = old_manifest
+        # Preserve the verified old manifest, rather than duplicate every file in evidence.
+        results["upgrade_from"].pop("files")
+        (lab / "results.json").write_text(json.dumps(results, indent=2) + "\n")
+        shutil.rmtree(staged)
+        print(json.dumps({"upgrade": results}, indent=2))
+        return
     fixture = str(ROOT / "tests/wordpress-install.php")
     for mode in ["install", "verify"]:
         results[mode] = json.loads(wp("eval-file", fixture, mode=mode))
@@ -266,6 +382,7 @@ try {
         "fairness",
         "product",
         "insights",
+        "storage",
     ):
         results[stage] = json.loads(
             wp("eval-file", str(ROOT / ("tests/wordpress-" + stage + ".php")))
