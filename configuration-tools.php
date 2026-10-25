@@ -276,6 +276,7 @@ final class WP_XP_Core_Configuration
                 }
             }
             unset($pre);
+            $task = WP_XP_Core_Achievements::validate($task, false);
             $existing = $old[$task['id']] ?? null;
             $base = $existing
                 ? WP_XP_Core_Achievements::validate(

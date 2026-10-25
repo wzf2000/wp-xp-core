@@ -104,7 +104,26 @@ final class WP_XP_Core_Providers
                 ) {
                     throw new RuntimeException('Provider reward failed');
                 }
-                return ['event_id' => (int) $wpdb->insert_id, 'duplicate' => false];
+                $recorded = $wpdb->get_row(
+                    $wpdb->prepare(
+                        'SELECT id,user_id,object_id,kind FROM ' .
+                            Reader_Experience::table() .
+                            ' WHERE event_key=%s',
+                        $key,
+                    ),
+                    ARRAY_A,
+                );
+                if (
+                    $wpdb->last_error !== '' ||
+                    !is_array($recorded) ||
+                    (int) $recorded['id'] < 1 ||
+                    (int) $recorded['user_id'] !== $uid ||
+                    (int) $recorded['object_id'] !== $object_id ||
+                    $recorded['kind'] !== 'provider_reward'
+                ) {
+                    throw new RuntimeException('Provider receipt unavailable');
+                }
+                return ['event_id' => (int) $recorded['id'], 'duplicate' => false];
             });
         } catch (Throwable $e) {
             return new WP_Error('storage', wp_xp_core_t('活动未能记录，请重试。'), [

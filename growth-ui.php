@@ -328,13 +328,16 @@ final class WP_XP_Core_Growth_UI
             esc_html($p['icon'] ?: 'XP') .
             '</span><div><strong class="xp-level-name">' .
             esc_html($p['name']) .
-            '</strong><p class="reader-experience-state">经验 ' .
-            $s['experience'] .
-            ' · Level ' .
-            $s['level'] .
-            ($s['next'] !== null
-                ? wp_xp_core_t(' · 距下一级 ') . ($s['next'] - $s['experience'])
-                : wp_xp_core_t(' · 已达最高等级')) .
+            '</strong><p class="reader-experience-state">' .
+            esc_html(
+                sprintf(wp_xp_core_t('经验 %1$s · Level %2$s'), $s['experience'], $s['level']) .
+                    ($s['next'] !== null
+                        ? sprintf(
+                            wp_xp_core_t(' · 距下一级 %1$s'),
+                            max(0, $s['next'] - $s['experience']),
+                        )
+                        : wp_xp_core_t(' · 已达最高等级')),
+            ) .
             '</p><p class="xp-level-description">' .
             esc_html($p['description']) .
             '</p></div></div><progress aria-label="' .
@@ -352,12 +355,15 @@ final class WP_XP_Core_Growth_UI
                 ? wp_xp_core_t('签到奖励已关闭')
                 : ($s['checked_in']
                     ? wp_xp_core_t('今日已签到')
-                    : wp_xp_core_t('每日签到 +') . $s['checkin_xp'])) .
-            '</button><p class="xp-checkin-streak">连续 ' .
-            $s['checkins']['consecutive'] .
-            wp_xp_core_t(' 天 · 累计 ') .
-            $s['checkins']['cumulative'] .
-            wp_xp_core_t(' 天') .
+                    : sprintf(wp_xp_core_t('每日签到 +%1$s'), $s['checkin_xp']))) .
+            '</button><p class="xp-checkin-streak">' .
+            esc_html(
+                sprintf(
+                    wp_xp_core_t('连续 %1$s 天 · 累计 %2$s 天'),
+                    $s['checkins']['consecutive'],
+                    $s['checkins']['cumulative'],
+                ),
+            ) .
             '</p></div></div><p class="reader-experience-message" role="status" aria-live="polite"></p><details><summary>' .
             esc_html(wp_xp_core_t('签到日历')) .
             '</summary><ol class="xp-checkin-calendar" aria-label="' .

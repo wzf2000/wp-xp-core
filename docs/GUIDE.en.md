@@ -206,3 +206,5 @@ Administrators use **Tools → Export Personal Data**, with WordPress’s email 
 Deactivation, updates and deleting plugin files retain the ledger, balances, tasks, settings and notification state. Reinstallation does not clear accounts. There is no automatic expiry or one-click personal-ledger eraser. Site operators must document purpose and retention and respond to erasure requests through their own reviewed policy. Direct deletion or promised anonymization would require an accounting and identity design first. Export support does not claim comprehensive privacy compliance certification.
 
 The optional updater is unavailable on multisite networks. Network administrators update the plugin manually; subsite preferences cannot affect network-shared update results.
+
+After an update-channel change, cached candidates are immediately checked against the current channel, version and official asset URL; other plugins remain untouched. Initial and duplicate provider deliveries return the same ledger `event_id`, never a balance projection metadata ID.

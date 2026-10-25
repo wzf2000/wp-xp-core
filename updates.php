@@ -127,6 +127,8 @@ final class WP_XP_Core_Updates
                 ) {
                     $best = [
                         'version' => $version,
+                        'prerelease' =>
+                            !empty($release['prerelease']) || str_contains($version, '-'),
                         'package' => $expected,
                         'url' => 'https://github.com/wzf2000/wp-xp-core/releases/tag/v' . $version,
                     ];
@@ -159,6 +161,52 @@ final class WP_XP_Core_Updates
         set_transient(self::CACHE, $rows, $rows ? 21600 : 900);
         return $rows;
     }
+    /** Read shared update state without fetching, recursion or changing other plugin entries. */
+    public static function cached($transient)
+    {
+        if (!is_object($transient)) {
+            return $transient;
+        }
+        $file = plugin_basename(__DIR__ . '/wp-xp-core.php');
+        $settings = self::settings();
+        if (!$settings['enabled']) {
+            unset($transient->response[$file], $transient->no_update[$file]);
+            return $transient;
+        }
+        $entry = $transient->response[$file] ?? null;
+        if (!$entry) {
+            return $transient;
+        }
+        $valid =
+            is_object($entry) &&
+            is_string($entry->new_version ?? null) &&
+            is_bool($entry->wp_xp_prerelease ?? null) &&
+            is_string($entry->package ?? null);
+        $candidate = $valid
+            ? self::candidate(
+                [
+                    [
+                        'tag_name' => 'v' . $entry->new_version,
+                        'draft' => false,
+                        'prerelease' => $entry->wp_xp_prerelease,
+                        'assets' => [
+                            [
+                                'name' => 'wp-xp-core-' . $entry->new_version . '.zip',
+                                'size' => 1,
+                                'browser_download_url' => $entry->package,
+                            ],
+                        ],
+                    ],
+                ],
+                $settings['channel'],
+                Reader_Experience::VERSION,
+            )
+            : null;
+        if (!$candidate || ($entry->url ?? null) !== $candidate['url']) {
+            unset($transient->response[$file]);
+        }
+        return $transient;
+    }
     public static function filter($transient)
     {
         if (!is_object($transient)) {
@@ -184,16 +232,11 @@ final class WP_XP_Core_Updates
                 'package' => $candidate['package'],
                 'requires' => '6.0',
                 'requires_php' => '8.0',
+                'wp_xp_prerelease' => $candidate['prerelease'],
             ];
         }
         return $transient;
     }
 }
 add_filter('pre_set_site_transient_update_plugins', [WP_XP_Core_Updates::class, 'filter']);
-add_filter('site_transient_update_plugins', function ($value) {
-    if (!WP_XP_Core_Updates::settings()['enabled'] && is_object($value)) {
-        $file = plugin_basename(__DIR__ . '/wp-xp-core.php');
-        unset($value->response[$file], $value->no_update[$file]);
-    }
-    return $value;
-});
+add_filter('site_transient_update_plugins', [WP_XP_Core_Updates::class, 'cached']);

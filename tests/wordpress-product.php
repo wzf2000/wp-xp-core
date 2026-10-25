@@ -190,10 +190,28 @@ $verify(
         is_wp_error($timezone_preview) &&
         WP_XP_Core_Settings::rules()['timezone'] !== $timezone_rules['timezone'],
 );
+// Find an actual source-ID / HMAC target-ID ordering inversion for this lab's salt.
+$inverse = [];
+$last = null;
+for ($i = 0; $i < 256; $i++) {
+    $source = 't_' . str_pad(dechex(0x123400 + $i), 16, '0', STR_PAD_LEFT);
+    $target = 't_' . substr(hash_hmac('sha256', 'template:' . $source, wp_salt('auth')), 0, 16);
+    if ($last && strcmp($last['target'], $target) > 0) {
+        $inverse = [$last, ['source' => $source, 'target' => $target]];
+        break;
+    }
+    $last = ['source' => $source, 'target' => $target];
+}
+$verify(
+    'Template fixture uses two prerequisites whose mapped ordering is actually reversed',
+    count($inverse) === 2 &&
+        strcmp($inverse[0]['source'], $inverse[1]['source']) < 0 &&
+        strcmp($inverse[0]['target'], $inverse[1]['target']) > 0,
+);
 $doc = $export;
 $doc['tasks'] = [
     [
-        'id' => 't_7676767676767676',
+        'id' => $inverse[0]['source'],
         'title' => 'Synthetic imported target',
         'description' => 'User text stays literal: 经验规则',
         'icon' => '◇',
@@ -211,14 +229,21 @@ $doc['tasks'] = [
         'period' => 'once',
         'enabled' => true,
         'steps' => [],
-        'prerequisites' => [['id' => 't_7676767676767676', 'scope' => 'lifetime']],
+        'prerequisites' => [
+            ['id' => $inverse[0]['source'], 'scope' => 'lifetime'],
+            ['id' => $inverse[1]['source'], 'scope' => 'lifetime'],
+        ],
     ],
 ];
+$peer = $doc['tasks'][0];
+$peer['id'] = $inverse[1]['source'];
+$peer['title'] = 'Synthetic imported prerequisite peer';
+$doc['tasks'][] = $peer;
 $plan = $preview($doc, 'template');
 $verify(
     'Foreign template previews new tasks',
     !is_wp_error($plan) &&
-        count(array_filter($plan['changes'], static fn($c) => $c['status'] === 'new')) === 2,
+        count(array_filter($plan['changes'], static fn($c) => $c['status'] === 'new')) === 3,
 );
 $verify(
     'Preview alone never writes definitions',
@@ -235,10 +260,36 @@ $first = $plan['changes'][0]['id'];
 $second = $plan['changes'][1]['id'];
 $verify(
     'Unknown task IDs are remapped and prerequisite references reconnect',
-    $first !== 't_7676767676767676' &&
+    $first !== $inverse[0]['source'] &&
         $second !== 't_7878787878787878' &&
-        $imported[$second]['prerequisites'][0]['id'] === $first,
+        array_column($imported[$second]['prerequisites'], 'id') === [
+            $inverse[1]['target'],
+            $inverse[0]['target'],
+        ],
 );
+$import_recipient = wp_insert_user([
+    'user_login' => 'fixture-import-identity',
+    'user_email' => 'fixture-import-identity@example.invalid',
+    'user_pass' => wp_generate_password(32),
+    'role' => 'subscriber',
+]);
+$verify('Imported prerequisite regression subject exists', !is_wp_error($import_recipient));
+foreach ([$first, $plan['changes'][2]['id'], $second] as $grant_id) {
+    $task = $imported[$grant_id];
+    $grant = WP_XP_Core_Achievements::manage(
+        [
+            'operation' => 'grant',
+            'request_id' => wp_generate_uuid4(),
+            'reason' => 'Synthetic verified prerequisite completion',
+            'user_id' => $import_recipient,
+            'task_id' => $grant_id,
+            'version' => $task['version'],
+            'period' => WP_XP_Core_Achievements::period($task)['key'],
+        ],
+        wp_create_nonce('wp_xp_core_achievements'),
+    );
+    $verify('Imported prerequisite chain can be granted once', !is_wp_error($grant));
+}
 $again = $preview($doc, 'template');
 $verify(
     'Repeated template preserves versions and boundaries',
@@ -249,6 +300,13 @@ $verify(
         ) &&
         !is_wp_error($apply($doc, $again, 'template')) &&
         WP_XP_Core_Achievements::definitions() === $imported,
+);
+$verify(
+    'Repeated inverse-order prerequisite import preserves the already-earned dependent honor',
+    WP_XP_Core_Achievements::progress(
+        WP_XP_Core_Achievements::definitions()[$second],
+        (int) $import_recipient,
+    )['earned'],
 );
 $changed = $doc;
 $changed['tasks'][0]['steps'][0]['count'] = 2;
@@ -343,6 +401,9 @@ $verify(
     'Unverified server evidence is refused',
     $error(wp_xp_core_record_activity('synthetic', 'bad', $uid, 0, []), 'ineligible'),
 );
+Reader_Experience::transaction(function () use ($uid) {
+    delete_user_meta($uid, Reader_Experience::balance_meta());
+});
 $one = wp_xp_core_record_activity('synthetic', 'first', $uid, 0, ['verified' => true]);
 $two = wp_xp_core_record_activity('synthetic', 'first', $uid, 0, ['verified' => true]);
 $event = $wpdb->get_row(
@@ -354,7 +415,10 @@ $event = $wpdb->get_row(
 );
 $verify(
     'Provider obeys saved XP, gross cap and stable idempotency',
-    !is_wp_error($one) &&
+    $one['event_id'] === $two['event_id'] &&
+        (int) $event['user_id'] === $uid &&
+        (int) $event['id'] === $one['event_id'] &&
+        !is_wp_error($one) &&
         !$one['duplicate'] &&
         $two['duplicate'] &&
         (int) $event['xp'] === 1 &&
@@ -503,6 +567,52 @@ $verify(
         'input',
     ),
 );
+$original_updates = get_site_transient('update_plugins');
+set_transient(WP_XP_Core_Updates::CACHE, [$release('2.1.0-rc.1', true), $release('2.0.1')], 600);
+$save_updates = static fn($enabled, $channel) => WP_XP_Core_Updates::save(
+    ['enabled' => $enabled, 'channel' => $channel, 'revision' => WP_XP_Core_Updates::revision()],
+    wp_create_nonce('wp_xp_core_configuration'),
+);
+$verify(
+    'Administrator can enable prerelease updates',
+    !is_wp_error($save_updates(true, 'prerelease')),
+);
+set_site_transient(
+    'update_plugins',
+    (object) ['response' => ['synthetic-other/plugin.php' => (object) ['new_version' => '7.0.0']]],
+    600,
+);
+$cached_updates = get_site_transient('update_plugins');
+$update_file = plugin_basename(WP_PLUGIN_DIR . '/wp-xp-core/wp-xp-core.php');
+$verify(
+    'Actual shared transient holds the prerelease candidate',
+    $cached_updates->response[$update_file]->new_version === '2.1.0-rc.1',
+);
+$verify('Administrator can change to stable channel', !is_wp_error($save_updates(true, 'stable')));
+$stable_updates = get_site_transient('update_plugins');
+$verify(
+    'Stable channel immediately rejects stale prerelease while preserving other plugins',
+    !isset($stable_updates->response[$update_file]) &&
+        $stable_updates->response['synthetic-other/plugin.php']->new_version === '7.0.0',
+);
+set_site_transient('update_plugins', $stable_updates, 600);
+$stable_updates = get_site_transient('update_plugins');
+$verify(
+    'A normal update check repopulates the allowed stable candidate',
+    $stable_updates->response[$update_file]->new_version === '2.0.1',
+);
+$verify(
+    'Disabling updates strips own shared cached entry without touching other plugins',
+    !is_wp_error($save_updates(false, 'stable')) &&
+        !isset(get_site_transient('update_plugins')->response[$update_file]) &&
+        isset(get_site_transient('update_plugins')->response['synthetic-other/plugin.php']),
+);
+delete_transient(WP_XP_Core_Updates::CACHE);
+if ($original_updates === false) {
+    delete_site_transient('update_plugins');
+} else {
+    set_site_transient('update_plugins', $original_updates);
+}
 $verify(
     'Dynamic editor blocks register alongside existing shortcodes',
     WP_Block_Type_Registry::get_instance()->is_registered('wp-xp-core/growth') &&
@@ -522,16 +632,35 @@ $verify(
     $error(WP_XP_Core_Configuration::export('bad'), 'nonce'),
 );
 $old_locale = determine_locale();
-switch_to_locale('en_US');
+$verify(
+    'Owned Chinese lab supports a real switch to English',
+    determine_locale() === 'zh_CN' && switch_to_locale('en_US') && determine_locale() === 'en_US',
+);
 WP_XP_Core_I18n::load();
 $verify(
     'Packaged English gettext catalog changes fixed interface labels',
     wp_xp_core_t('我的成长') === 'My growth' && wp_xp_core_t('配置工具') === 'Configuration tools',
 );
-$english = WP_XP_Core_Growth_UI::panel();
+$english = do_shortcode('[reader_experience]');
+$english_summary = WP_XP_Core_Growth::summary(get_current_user_id());
 $verify(
     'English panel translates fixed HTML nodes without translating user task text',
-    str_contains($english, 'My growth') && str_contains($english, 'Site notifications'),
+    str_contains($english, 'My growth') &&
+        str_contains($english, 'Site notifications') &&
+        str_contains(
+            $english,
+            sprintf('XP %s · Level %s', $english_summary['experience'], $english_summary['level']),
+        ) &&
+        str_contains(
+            $english,
+            sprintf(
+                'Consecutive %s days · Total %s days',
+                $english_summary['checkins']['consecutive'],
+                $english_summary['checkins']['cumulative'],
+            ),
+        ) &&
+        !str_contains($english, '>经验 ') &&
+        !str_contains($english, '>连续 '),
 );
 restore_previous_locale();
 WP_XP_Core_I18n::load();

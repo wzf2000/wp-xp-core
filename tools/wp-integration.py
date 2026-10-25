@@ -197,7 +197,19 @@ try {
         target = plugin / name
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(path, target)
-    wp("option", "update", "WPLANG", "zh_CN")
+    # No core language pack is implied. The lab's low-priority locale can still be
+    # overridden by WordPress's real locale switcher for English-catalog tests.
+    mu_plugins = site / "wp-content/mu-plugins"
+    mu_plugins.mkdir(exist_ok=True)
+    (mu_plugins / "xp-owned-test-locale.php").write_text(
+        "<?php\n"
+        "if (DB_NAME !== 'wp_xp_core_ci' || wp_get_environment_type() !== 'local' || "
+        "get_option('wp_xp_core_test_owner') !== " + json.dumps(owner_token) + ") return;\n"
+        "add_filter('locale', static fn($locale) => 'zh_CN', 0);\n"
+        "add_filter('determine_locale', static fn($locale) => 'zh_CN', 0);\n"
+    )
+    if wp("eval", "echo determine_locale();").strip() != "zh_CN":
+        raise RuntimeError("Owned synthetic locale fixture did not initialize")
     results = {"wordpress": {"version": wp("core", "version").strip()}}
     fixture = str(ROOT / "tests/wordpress-install.php")
     for mode in ["install", "verify"]:
