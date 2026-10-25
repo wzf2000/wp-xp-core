@@ -71,6 +71,14 @@ function wp_verify_nonce($nonce, $action)
 class WP_Error
 {
     public function __construct(public $code, public $message, public $data) {}
+    public function get_error_code()
+    {
+        return $this->code;
+    }
+}
+function is_wp_error($value)
+{
+    return $value instanceof WP_Error;
 }
 final class FixtureStorage
 {
@@ -314,16 +322,26 @@ verify(
     'zero balance actually created',
     metadata_exists('user', 8, Reader_Experience::BALANCE_META),
 );
-Reader_Experience::transaction(fn() => Reader_Experience::set_balance(7, -2));
+fails(
+    'negative balance setter rejects',
+    fn() => Reader_Experience::transaction(fn() => Reader_Experience::set_balance(7, -2)),
+);
+fails(
+    'negative event rejects before insert',
+    fn() => Reader_Experience::transaction(
+        fn() => Reader_Experience::record('underflow:7', 7, 'comment_adjust', 0, -3, '2026-01-01'),
+    ),
+);
+verify('underflow event is absent', !Reader_Experience::exists('underflow:7'));
 verify(
-    'negative balance clamps to zero',
-    get_user_meta(7, Reader_Experience::BALANCE_META, true) === '0',
+    'rejected negative balance keeps prior projection',
+    get_user_meta(7, Reader_Experience::BALANCE_META, true) === '2',
 );
 verify(
     'guard restored after transactions',
     Reader_Experience::guard(null, 7, Reader_Experience::BALANCE_META) === false,
 );
-verify('locks released on success and failure', $wpdb->releases === 7);
+verify('locks released on success and failure', $wpdb->releases === 8);
 $wpdb->lockBusy = true;
 fails(
     'busy ledger refuses write',
@@ -484,13 +502,14 @@ update_option(WP_XP_Core_Settings::OPTION, $custom);
 function get_post($id)
 {
     if (array_key_exists($id, $GLOBALS['posts'] ?? [])) {
-        return $GLOBALS['posts'][$id];
+        return (object) ((array) $GLOBALS['posts'][$id] + ['post_password' => '']);
     }
     return $id
         ? (object) [
             'ID' => $id,
             'post_author' => 8,
             'post_status' => 'publish',
+            'post_password' => '',
             'post_type' => 'post',
         ]
         : null;

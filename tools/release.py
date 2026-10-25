@@ -67,7 +67,7 @@ def source_files():
         names.add("CONTRIBUTING.md")
     names |= {
         p.relative_to(ROOT).as_posix()
-        for directory in ["docs", "assets", "modules"]
+        for directory in ["docs", "assets", "modules", "languages"]
         for p in (ROOT / directory).rglob("*")
         if p.is_file() and installation_name(p.relative_to(ROOT).as_posix())
     }
@@ -95,6 +95,7 @@ def installation_name(name):
         )
     return (
         (path.parts[0] == "modules" and path.suffix == ".php")
+        or (path.parts[0] == "languages" and path.suffix in {".po", ".mo", ".pot", ".json"})
         or (path.parts[0] == "assets" and path.suffix in {".php", ".js", ".css", ".json", ".svg"})
         or (path.parts[0] == "docs" and path.suffix in {".md", ".svg"})
     )

@@ -24,7 +24,7 @@ The plugin manages experience and levels independently of myCRED. Likes are an o
 
 ## Get started
 
-**The current prerelease is 2.0.0-rc.2**, adding weekly/monthly activity boards and incentive insights.
+**This branch is the unreleased 2.0.0-rc.3 development candidate.** The latest published Release remains rc.2. The new capabilities below are not available from that existing installation ZIP; they require candidate validation and publication.
 
 Back up existing sites and verify updates in an isolated environment first; use the documentation at your Release tag for version-specific behavior. On a new site, installing and activating creates the experience ledger and uses default rules. No server JSON profile or other experience plugin is required. Existing users start at zero XP; old articles and historical comments do not trigger automatic backfill.
 
@@ -36,7 +36,7 @@ Back up existing sites and verify updates in an isolated environment first; use 
 
 “My experience” is an ordinary WordPress page; no account plugin is required. Experience content belongs to the currently signed-in user. Activation does not create or publish a page.
 
-Existing sites can update with a new Release ZIP. Deactivating and reactivating preserves experience and settings. No automatic updater is included. External server configuration is an optional [advanced integration](docs/CONFIGURATION.en.md); ordinary first-time installation needs no old-plugin migration work.
+Existing sites can update with a new Release ZIP. Deactivating and reactivating preserves experience and settings. Optional official GitHub update checks default to off; enable them explicitly in Configuration tools. External server configuration is an optional [advanced integration](docs/CONFIGURATION.en.md); ordinary first-time installation needs no old-plugin migration work.
 
 ## Configure your experience rules
 
@@ -60,7 +60,9 @@ For value ranges, comment eligibility, counting and examples, see [Rule settings
 
 - **Ledger and diagnostics:** filter events by user, source and date; adjust individual XP with a reason or reverse a manual adjustment; compare balances to the ledger without writes and handle explicitly recorded failed rewards.
 - **Growth center:** customize level names, character icons, colors and descriptions. Personal pages show check-in calendars, consecutive and cumulative counts, progress and private history. Optional check-in stage rewards start disabled and count new check-ins only.
-- **Tasks and achievements:** create once-only, daily or weekly tasks. Automatic tasks combine activity steps; reviewed tasks accept a user's explanation. Achievements are honors with no extra XP, and earned badges retain their original name and icon.
+- **Tasks and achievements:** create once-only, daily, weekly or monthly tasks. Automatic tasks combine activity steps; reviewed tasks accept a user's explanation. Achievements default to honors, with optional XP rewards and image badges. Reasoned administrative grants/revocations are supported, and earned badges retain their awarded snapshots.
+- **Control rewards and public participation:** optional daily/weekly XP caps default off, users can leave standings, and administrators can exclude test accounts and inspect activity clues/equal-period trends.
+- **Private notifications and next goals:** review achievement, review and level messages with read/type preferences; task goals explain remaining counts, available content links and prerequisites.
 - **Weekly/monthly boards and insights:** manually place `[xp_leaderboard period="week" limit="10"]` or its monthly variant to rank net activity XP. Personal panels show the current user’s position; administrators can review source aggregates and current task completion rates. New weeks and months do not reset XP balances.
 
 See the [user guide](docs/GUIDE.en.md) for steps and change effects. These features do not backfill all historical activity, schedule cron jobs or provide a shop or spendable currency.
@@ -76,10 +78,12 @@ See the [user guide](docs/GUIDE.en.md) for steps and change effects. These featu
 | Contribute improvements                                        | [Contributing](CONTRIBUTING.md)                                           |
 | Maintain GitHub releases                                       | [Releasing](docs/RELEASING.md)                                            |
 
-Documentation on this branch describes the 2.0.0-rc.2 prerelease. For an installed release, use the documentation at its Release tag.
+Documentation on this branch describes the unreleased 2.0.0-rc.3 development candidate. For an installed release, use the documentation at its Release tag.
 
 [Open an Issue](https://github.com/wzf2000/wp-xp-core/issues/new/choose) with your version, observed behavior and reproduction steps. Report security issues privately under the [security policy](SECURITY.md).
 
 ## Author and license
 
 Maintained by [wzf2000](https://github.com/wzf2000), under **[GPL-2.0-or-later](LICENSE)**. Issues and Pull Requests are welcome.
+
+Minimum requirements: WordPress 6.0 and PHP 8.0. See [Contributing](CONTRIBUTING.md) for the combinations actually tested in CI. Configuration tools provide previewed imports and explicit templates; editor blocks retain shortcode compatibility. [The guide](docs/GUIDE.en.md) covers compact task lists, language, personal-data export and retention. [Integration](docs/CONFIGURATION.en.md) documents the trusted provider API and optional updates.

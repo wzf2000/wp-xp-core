@@ -14,8 +14,8 @@ final class WP_XP_Core_Management_UI
     {
         add_submenu_page(
             'options-general.php',
-            '经验账本',
-            '经验账本',
+            wp_xp_core_t('经验账本'),
+            wp_xp_core_t('经验账本'),
             'manage_options',
             'wp-xp-ledger',
             [self::class, 'page'],
@@ -29,19 +29,20 @@ final class WP_XP_Core_Management_UI
     }
     public static function nav(string $active): void
     {
-        echo '<nav class="xp-navigation" aria-label="经验系统">';
+        echo '<nav class="xp-navigation" aria-label="' . esc_attr(wp_xp_core_t('经验系统')) . '">';
         $links = [
-            'rules' => ['wp-xp-core', '经验规则', ''],
-            'ledger' => ['wp-xp-ledger', '事件账本', ''],
-            'diagnostics' => ['wp-xp-ledger', '运行诊断', 'diagnostics'],
+            'rules' => ['wp-xp-core', wp_xp_core_t('经验规则'), ''],
+            'ledger' => ['wp-xp-ledger', wp_xp_core_t('事件账本'), ''],
+            'diagnostics' => ['wp-xp-ledger', wp_xp_core_t('运行诊断'), 'diagnostics'],
         ];
-        $links['growth'] = ['wp-xp-growth', '成长中心', ''];
+        $links['growth'] = ['wp-xp-growth', wp_xp_core_t('成长中心'), ''];
         if (class_exists('WP_XP_Core_Achievements_UI')) {
-            $links['tasks'] = ['wp-xp-achievements', '任务与成就', ''];
+            $links['tasks'] = ['wp-xp-achievements', wp_xp_core_t('任务与成就'), ''];
         }
         if (class_exists('WP_XP_Core_Insights_UI')) {
-            $links['insights'] = ['wp-xp-insights', '激励效果', ''];
+            $links['insights'] = ['wp-xp-insights', wp_xp_core_t('激励效果'), ''];
         }
+        $links['configuration'] = ['wp-xp-configuration', wp_xp_core_t('配置工具'), ''];
         foreach ($links as $key => [$slug, $label, $view]) {
             $url = admin_url('options-general.php?page=' . $slug . ($view ? '&view=' . $view : ''));
             echo '<a href="' .
@@ -80,8 +81,8 @@ final class WP_XP_Core_Management_UI
                 $error
                     ? $result->get_error_message()
                     : (!empty($result['duplicate'])
-                        ? '这项操作已经记录，没有再次发放。'
-                        : '操作已记录。'),
+                        ? wp_xp_core_t('这项操作已经记录，没有再次发放。')
+                        : wp_xp_core_t('操作已记录。')),
             ) .
             '</p></div>';
     }
@@ -103,9 +104,23 @@ final class WP_XP_Core_Management_UI
     }
     private static function table(array $items): void
     {
-        echo '<div class="xp-table-scroll" tabindex="0" aria-label="经验事件表"><table class="widefat striped"><thead><tr><th>事件</th><th>用户</th><th>来源</th><th>经验变化</th><th>日期与依据</th></tr></thead><tbody>';
+        echo '<div class="xp-table-scroll" tabindex="0" aria-label="' .
+            esc_attr(wp_xp_core_t('经验事件表')) .
+            '"><table class="widefat striped"><thead><tr><th>' .
+            esc_html(wp_xp_core_t('事件')) .
+            '</th><th>' .
+            esc_html(wp_xp_core_t('用户')) .
+            '</th><th>' .
+            esc_html(wp_xp_core_t('来源')) .
+            '</th><th>' .
+            esc_html(wp_xp_core_t('经验变化')) .
+            '</th><th>' .
+            esc_html(wp_xp_core_t('日期与依据')) .
+            '</th></tr></thead><tbody>';
         if (!$items) {
-            echo '<tr><td colspan="5">没有符合条件的事件。</td></tr>';
+            echo '<tr><td colspan="5">' .
+                esc_html(wp_xp_core_t('没有符合条件的事件。')) .
+                '</td></tr>';
         }
         foreach ($items as $item) {
             echo '<tr><td>#' .
@@ -127,7 +142,9 @@ final class WP_XP_Core_Management_UI
                 echo '<br><small>关联对象 #' . (int) $item['object_id'] . '</small>';
             }
             if (!empty($item['detail'])) {
-                echo '<details><summary>查看依据</summary><pre class="xp-event-detail">' .
+                echo '<details><summary>' .
+                    esc_html(wp_xp_core_t('查看依据')) .
+                    '</summary><pre class="xp-event-detail">' .
                     esc_html(
                         wp_json_encode($item['detail'], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT),
                     ) .
@@ -140,30 +157,35 @@ final class WP_XP_Core_Management_UI
     public static function label(string $kind): string
     {
         return [
-            'checkin' => '每日签到',
-            'visit' => '有效阅读',
-            'view' => '作者浏览计数',
-            'like' => '点赞计数',
-            'article' => '发表文章',
-            'comment' => '有效评论',
-            'comment_adjust' => '评论状态调整',
-            'milestone_view' => '浏览里程碑',
-            'milestone_like' => '点赞里程碑',
-            'manual_adjust' => '人工调整',
-            'manual_reversal' => '撤销人工调整',
-            'migration' => '历史初始化',
-            'reconciliation' => '历史校准',
-            'streak_reward' => '签到阶段奖励',
-            'management_retry' => '失败事件重试',
-            'task_complete' => '完成任务',
-            'achievement_submit' => '成就申请',
-            'achievement_review' => '成就审核',
+            'checkin' => wp_xp_core_t('每日签到'),
+            'visit' => wp_xp_core_t('有效阅读'),
+            'view' => wp_xp_core_t('作者浏览计数'),
+            'like' => wp_xp_core_t('点赞计数'),
+            'article' => wp_xp_core_t('发表文章'),
+            'comment' => wp_xp_core_t('有效评论'),
+            'comment_adjust' => wp_xp_core_t('评论状态调整'),
+            'milestone_view' => wp_xp_core_t('浏览里程碑'),
+            'milestone_like' => wp_xp_core_t('点赞里程碑'),
+            'manual_adjust' => wp_xp_core_t('人工调整'),
+            'manual_reversal' => wp_xp_core_t('撤销人工调整'),
+            'migration' => wp_xp_core_t('历史初始化'),
+            'reconciliation' => wp_xp_core_t('历史校准'),
+            'streak_reward' => wp_xp_core_t('签到阶段奖励'),
+            'management_retry' => wp_xp_core_t('失败事件重试'),
+            'provider_reward' => wp_xp_core_t('外部活动奖励'),
+            'task_complete' => wp_xp_core_t('完成任务'),
+            'task_revoke' => wp_xp_core_t('任务奖励撤销'),
+            'task_grant' => wp_xp_core_t('人工授予成就'),
+            'task_grant_revoke' => wp_xp_core_t('撤销人工成就'),
+            'achievement_admin' => wp_xp_core_t('成就管理操作'),
+            'achievement_submit' => wp_xp_core_t('成就申请'),
+            'achievement_review' => wp_xp_core_t('成就审核'),
         ][$kind] ?? $kind;
     }
     public static function page(): void
     {
         if (!current_user_can('manage_options')) {
-            wp_die('没有查看经验管理的权限。');
+            wp_die(wp_xp_core_t('没有查看经验管理的权限。'));
         }
         $result = null;
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -186,18 +208,22 @@ final class WP_XP_Core_Management_UI
                     array_intersect_key($input, array_flip(['request_id', 'failure_id', 'reason'])),
                     $nonce,
                 ),
-                default => new WP_Error('operation', '请选择有效操作。'),
+                default => new WP_Error('operation', wp_xp_core_t('请选择有效操作。')),
             };
             self::$retain_request = is_wp_error($result);
         }
         $view = self::value('view') === 'diagnostics' ? 'diagnostics' : 'ledger';
         echo '<div class="wrap wp-xp-core-admin"><header class="xp-header"><span class="xp-mark" aria-hidden="true">XP</span><div><h1>' .
-            ($view === 'diagnostics' ? '运行诊断' : '经验账本') .
-            '</h1><p>查清奖励来源，保留每一次调整的依据。</p></div></header>';
+            ($view === 'diagnostics' ? wp_xp_core_t('运行诊断') : wp_xp_core_t('经验账本')) .
+            '</h1><p>' .
+            esc_html(wp_xp_core_t('查清奖励来源，保留每一次调整的依据。')) .
+            '</p></div></header>';
         self::nav($view);
         self::message($result);
         if (!Reader_Experience::ready()) {
-            echo '<div class="notice notice-warning"><p>经验系统尚未就绪，请先检查插件安装与配置。</p></div></div>';
+            echo '<div class="notice notice-warning"><p>' .
+                esc_html(wp_xp_core_t('经验系统尚未就绪，请先检查插件安装与配置。')) .
+                '</p></div></div>';
             return;
         }
         if ($view === 'diagnostics') {
@@ -217,17 +243,31 @@ final class WP_XP_Core_Management_UI
             'cursor' => (int) self::value('cursor', 0),
             'limit' => 25,
         ];
-        echo '<section class="xp-card"><form method="get" class="xp-filter-form"><input type="hidden" name="page" value="wp-xp-ledger"><label>用户编号<input type="number" min="1" name="user_id" value="' .
+        echo '<section class="xp-card"><form method="get" class="xp-filter-form"><input type="hidden" name="page" value="wp-xp-ledger"><label>' .
+            esc_html(wp_xp_core_t('用户编号')) .
+            '<input type="number" min="1" name="user_id" value="' .
             ($filters['user_id'] ?? 0 ?: '') .
-            '"></label><label>来源<input name="kind" value="' .
+            '"></label><label>' .
+            esc_html(wp_xp_core_t('来源')) .
+            '<input name="kind" value="' .
             esc_attr($filters['kind']) .
-            '" placeholder="例如 checkin"></label><label>开始日期<input type="date" name="from" value="' .
+            '" placeholder="' .
+            esc_attr(wp_xp_core_t('例如 checkin')) .
+            '"></label><label>' .
+            esc_html(wp_xp_core_t('开始日期')) .
+            '<input type="date" name="from" value="' .
             esc_attr($filters['from']) .
-            '"></label><label>结束日期<input type="date" name="to" value="' .
+            '"></label><label>' .
+            esc_html(wp_xp_core_t('结束日期')) .
+            '<input type="date" name="to" value="' .
             esc_attr($filters['to']) .
-            '"></label><button class="button button-primary">查询事件</button><a class="button" href="' .
+            '"></label><button class="button button-primary">' .
+            esc_html(wp_xp_core_t('查询事件')) .
+            '</button><a class="button" href="' .
             esc_url(self::url([])) .
-            '">清除筛选</a></form>';
+            '">' .
+            esc_html(wp_xp_core_t('清除筛选')) .
+            '</a></form>';
         if (!($filters['user_id'] ?? 0)) {
             unset($filters['user_id']);
         }
@@ -247,16 +287,28 @@ final class WP_XP_Core_Management_UI
         );
         echo '<div class="xp-actions"><a class="button" href="' .
             esc_url($export) .
-            '">导出当前页 CSV</a>';
+            '">' .
+            esc_html(wp_xp_core_t('导出当前页 CSV')) .
+            '</a>';
         if ($events['next_cursor']) {
             echo '<a class="button" href="' .
                 esc_url(self::url(array_merge($filters, ['cursor' => $events['next_cursor']]))) .
-                '">下一页</a>';
+                '">' .
+                esc_html(wp_xp_core_t('下一页')) .
+                '</a>';
         }
         echo '</div></section>';
-        echo '<div class="xp-management-grid"><section class="xp-card"><h2>用户经验与人工调整</h2><p>输入用户编号查看详情，或按用户名查找。</p><form method="get" class="xp-search-form"><input type="hidden" name="page" value="wp-xp-ledger"><label for="xp-user-search">用户名／显示名称</label><input id="xp-user-search" name="user_search" value="' .
+        echo '<div class="xp-management-grid"><section class="xp-card"><h2>' .
+            esc_html(wp_xp_core_t('用户经验与人工调整')) .
+            '</h2><p>' .
+            esc_html(wp_xp_core_t('输入用户编号查看详情，或按用户名查找。')) .
+            '</p><form method="get" class="xp-search-form"><input type="hidden" name="page" value="wp-xp-ledger"><label for="xp-user-search">' .
+            esc_html(wp_xp_core_t('用户名／显示名称')) .
+            '</label><input id="xp-user-search" name="user_search" value="' .
             esc_attr(self::value('user_search')) .
-            '"><button class="button">查找用户</button></form>';
+            '"><button class="button">' .
+            esc_html(wp_xp_core_t('查找用户')) .
+            '</button></form>';
         if (self::value('user_search') !== '') {
             $users = get_users([
                 'search' => '*' . self::value('user_search') . '*',
@@ -275,7 +327,7 @@ final class WP_XP_Core_Management_UI
                     '</a></li>';
             }
             if (!$users) {
-                echo '<li>未找到用户。</li>';
+                echo '<li>' . esc_html(wp_xp_core_t('未找到用户。')) . '</li>';
             }
             echo '</ul>';
         }
@@ -284,52 +336,96 @@ final class WP_XP_Core_Management_UI
             if (is_wp_error($user)) {
                 self::message($user);
             } else {
-                echo '<dl class="xp-summary"><div><dt>用户</dt><dd>' .
+                echo '<dl class="xp-summary"><div><dt>' .
+                    esc_html(wp_xp_core_t('用户')) .
+                    '</dt><dd>' .
                     esc_html($user['display_name']) .
                     ' · #' .
                     (int) $user['user_id'] .
-                    '</dd></div><div><dt>经验／等级</dt><dd>' .
+                    '</dd></div><div><dt>' .
+                    esc_html(wp_xp_core_t('经验／等级')) .
+                    '</dt><dd>' .
                     (int) $user['balance'] .
                     ' / Level ' .
                     (int) $user['level'] .
-                    '</dd></div><div><dt>账本合计</dt><dd>' .
+                    '</dd></div><div><dt>' .
+                    esc_html(wp_xp_core_t('账本合计')) .
+                    '</dt><dd>' .
                     (int) $user['ledger_total'] .
                     ' · ' .
-                    ($user['consistent'] ? '一致' : '存在差异') .
+                    ($user['consistent'] ? wp_xp_core_t('一致') : wp_xp_core_t('存在差异')) .
                     '</dd></div></dl>';
             }
         }
         echo '<form method="post" class="xp-management-form">';
         self::hidden('adjust');
-        echo '<label>用户编号<input name="user_id" type="number" min="1" required value="' .
+        echo '<label>' .
+            esc_html(wp_xp_core_t('用户编号')) .
+            '<input name="user_id" type="number" min="1" required value="' .
             ($filters['user_id'] ?? 0 ?: '') .
-            '"></label><label>增减经验<input name="xp" type="number" min="-1000000" max="1000000" step="1" required placeholder="例如 10 或 -5"></label><label>调整原因<textarea name="reason" maxlength="300" required rows="3"></textarea></label><p class="xp-help">正数增加，负数扣减。不会覆盖旧记录；扣减不能超过当前经验。</p><button class="button button-primary">记录经验调整</button></form></section>';
-        echo '<section class="xp-card"><h2>撤销人工调整</h2><p>填写人工调整的事件编号，追加一条反向记录。每条调整只能撤销一次。</p><form method="post" class="xp-management-form">';
+            '"></label><label>' .
+            esc_html(wp_xp_core_t('增减经验')) .
+            '<input name="xp" type="number" min="-1000000" max="1000000" step="1" required placeholder="' .
+            esc_attr(wp_xp_core_t('例如 10 或 -5')) .
+            '"></label><label>' .
+            esc_html(wp_xp_core_t('调整原因')) .
+            '<textarea name="reason" maxlength="300" required rows="3"></textarea></label><p class="xp-help">' .
+            esc_html(wp_xp_core_t('正数增加，负数扣减。不会覆盖旧记录；扣减不能超过当前经验。')) .
+            '</p><button class="button button-primary">' .
+            esc_html(wp_xp_core_t('记录经验调整')) .
+            '</button></form></section>';
+        echo '<section class="xp-card"><h2>' .
+            esc_html(wp_xp_core_t('撤销人工调整')) .
+            '</h2><p>' .
+            esc_html(
+                wp_xp_core_t('填写人工调整的事件编号，追加一条反向记录。每条调整只能撤销一次。'),
+            ) .
+            '</p><form method="post" class="xp-management-form">';
         self::hidden('reverse');
-        echo '<label>原事件编号<input name="event_id" type="number" min="1" required></label><label>撤销原因<textarea name="reason" maxlength="300" required rows="3"></textarea></label><button class="button">记录撤销</button></form></section></div>';
+        echo '<label>' .
+            esc_html(wp_xp_core_t('原事件编号')) .
+            '<input name="event_id" type="number" min="1" required></label><label>' .
+            esc_html(wp_xp_core_t('撤销原因')) .
+            '<textarea name="reason" maxlength="300" required rows="3"></textarea></label><button class="button">' .
+            esc_html(wp_xp_core_t('记录撤销')) .
+            '</button></form></section></div>';
     }
     private static function diagnostics(): void
     {
-        echo '<section class="xp-card"><h2>账本与余额核对</h2><p>逐页读取现有记录并比较，不修改经验。差异需要先查清原因。</p>';
+        echo '<section class="xp-card"><h2>' .
+            esc_html(wp_xp_core_t('账本与余额核对')) .
+            '</h2><p>' .
+            esc_html(wp_xp_core_t('逐页读取现有记录并比较，不修改经验。差异需要先查清原因。')) .
+            '</p>';
         $data = WP_XP_Core_Management::diagnostics((int) self::value('cursor', 0), 50);
         if (is_wp_error($data)) {
             self::message($data);
         } else {
-            echo '<div class="xp-table-scroll" tabindex="0"><table class="widefat striped"><thead><tr><th>用户</th><th>余额</th><th>账本合计</th><th>状态</th></tr></thead><tbody>';
+            echo '<div class="xp-table-scroll" tabindex="0"><table class="widefat striped"><thead><tr><th>' .
+                esc_html(wp_xp_core_t('用户')) .
+                '</th><th>' .
+                esc_html(wp_xp_core_t('余额')) .
+                '</th><th>' .
+                esc_html(wp_xp_core_t('账本合计')) .
+                '</th><th>' .
+                esc_html(wp_xp_core_t('状态')) .
+                '</th></tr></thead><tbody>';
             foreach ($data['items'] as $row) {
                 echo '<tr><td>#' .
                     (int) $row['user_id'] .
-                    (!$row['user_exists'] ? '（账号已删除）' : '') .
+                    (!$row['user_exists'] ? wp_xp_core_t('（账号已删除）') : '') .
                     '</td><td>' .
                     (int) $row['balance'] .
                     '</td><td>' .
                     (int) $row['ledger_total'] .
                     '</td><td>' .
-                    ($row['consistent'] ? '一致' : '需要核对') .
+                    ($row['consistent'] ? wp_xp_core_t('一致') : wp_xp_core_t('需要核对')) .
                     '</td></tr>';
             }
             if (!$data['items']) {
-                echo '<tr><td colspan="4">尚无经验记录。</td></tr>';
+                echo '<tr><td colspan="4">' .
+                    esc_html(wp_xp_core_t('尚无经验记录。')) .
+                    '</td></tr>';
             }
             echo '</tbody></table></div>';
             if ($data['next_cursor']) {
@@ -337,17 +433,27 @@ final class WP_XP_Core_Management_UI
                     esc_url(
                         self::url(['view' => 'diagnostics', 'cursor' => $data['next_cursor']]),
                     ) .
-                    '">继续核对</a>';
+                    '">' .
+                    esc_html(wp_xp_core_t('继续核对')) .
+                    '</a>';
             }
         }
-        echo '</section><section class="xp-card"><h2>未完成的奖励记录</h2><p>只重试已记录的失败事项，并重新检查资格；不会扫描或补发历史活动。</p>';
+        echo '</section><section class="xp-card"><h2>' .
+            esc_html(wp_xp_core_t('未完成的奖励记录')) .
+            '</h2><p>' .
+            esc_html(
+                wp_xp_core_t(
+                    '只处理服务端已记录的首次奖励或评论状态补偿失败，并重新检查原事件和当前状态；不会扫描历史。评论补偿余额不足时不部分扣减，可补足后带原因重试。失败列表最多保留二百项，不是永久日志。',
+                ),
+            ) .
+            '</p>';
         $failures = WP_XP_Core_Management::failures();
         if (is_wp_error($failures)) {
             self::message($failures);
         } else {
             $pending = array_filter($failures, fn($failure) => $failure['status'] === 'pending');
             if (!$pending) {
-                echo '<p>没有等待处理的失败记录。</p>';
+                echo '<p>' . esc_html(wp_xp_core_t('没有等待处理的失败记录。')) . '</p>';
             }
             foreach ($pending as $failure) {
                 echo '<form method="post" class="xp-retry-form">';
@@ -356,25 +462,31 @@ final class WP_XP_Core_Management_UI
                     esc_attr($failure['id']) .
                     '"><p>' .
                     esc_html(self::label($failure['kind'])) .
-                    ' · 对象 #' .
+                    wp_xp_core_t(' · 对象 #') .
                     (int) $failure['object_id'] .
                     ' · ' .
                     esc_html($failure['last_error']) .
-                    '</p><label>处理原因<input name="reason" maxlength="300" required></label><button class="button">重新检查并重试</button></form>';
+                    '</p><label>' .
+                    esc_html(wp_xp_core_t('处理原因')) .
+                    '<input name="reason" maxlength="300" required></label><button class="button">' .
+                    esc_html(wp_xp_core_t('重新检查并重试')) .
+                    '</button></form>';
             }
         }
-        echo '</section><section class="xp-card"><h2>规则修改记录</h2>';
+        echo '</section><section class="xp-card"><h2>' .
+            esc_html(wp_xp_core_t('规则修改记录')) .
+            '</h2>';
         $history = WP_XP_Core_Management::audit_history();
         if (is_wp_error($history)) {
             self::message($history);
         } else {
             if (!$history) {
-                echo '<p>尚无规则修改记录。</p>';
+                echo '<p>' . esc_html(wp_xp_core_t('尚无规则修改记录。')) . '</p>';
             }
             foreach ($history as $item) {
                 echo '<details class="xp-rule-audit"><summary>' .
                     esc_html(wp_date('Y-m-d H:i', (int) $item['created_at'])) .
-                    ' · 操作者 #' .
+                    wp_xp_core_t(' · 操作者 #') .
                     (int) $item['actor'] .
                     '</summary><pre class="xp-event-detail">' .
                     esc_html(
@@ -394,7 +506,7 @@ final class WP_XP_Core_Management_UI
             !current_user_can('manage_options') ||
             !wp_verify_nonce($_GET['_wpnonce'] ?? '', 'wp_xp_core_export')
         ) {
-            wp_die('没有导出经验记录的权限。');
+            wp_die(wp_xp_core_t('没有导出经验记录的权限。'));
         }
         $filters = [];
         foreach (['user_id', 'kind', 'from', 'to', 'cursor', 'limit'] as $key) {

@@ -1,0 +1,2237 @@
+{
+  "domain": "wp-xp-core",
+  "locale_data": {
+    "messages": {
+      " · +%1$s 经验": [
+        " · +%1$s XP"
+      ],
+      " · 净经验 ": [
+        " · Net XP "
+      ],
+      " · 对象 #": [
+        " · Object #"
+      ],
+      " · 已读": [
+        " · Read"
+      ],
+      " · 已达最高等级": [
+        " · Maximum level reached"
+      ],
+      " · 操作者 #": [
+        " · Actor #"
+      ],
+      " · 活动 ": [
+        " · Activity "
+      ],
+      " · 版本 ": [
+        " · Version "
+      ],
+      " · 用户 #": [
+        " · User #"
+      ],
+      " · 管理员授予": [
+        " · Administrator grant"
+      ],
+      " · 距下一级 ": [
+        " · To next level "
+      ],
+      " · 距下一级 %1$s": [
+        " · To next level %1$s"
+      ],
+      " · 还需 %1$s %2$s": [
+        " · Remaining: %1$s %2$s"
+      ],
+      " 区块，填入 ": [
+        " block, enter "
+      ],
+      " 可稍后重新打开面板。": [
+        " Reopen the panel later to retry."
+      ],
+      " 天": [
+        " days"
+      ],
+      " 天 · 累计 ": [
+        " days · Total "
+      ],
+      " 或 ": [
+        " or "
+      ],
+      " 次 · 参与 ": [
+        " events · Participants "
+      ],
+      " 点击周期可重试。": [
+        " Choose a period to retry."
+      ],
+      " 级。": [
+        " levels."
+      ],
+      " 经验": [
+        " XP"
+      ],
+      " 至 ": [
+        " to "
+      ],
+      " 设置每页人数，最多 50 人。": [
+        " sets the page size, up to 50."
+      ],
+      " 页 · ": [
+        " page · "
+      ],
+      "%1$s第 %2$s 名 · 活动净经验 +%3$s": [
+        "%1$sRank %2$s · Net activity XP +%3$s"
+      ],
+      "0 表示不限。仅累计首次活动实际发放的正向经验；扣回不恢复额度，剩余额度不足时只发剩余部分，不补发差额。人工与原金额补偿不受限。": [
+        "0 means unlimited. Only actual positive first rewards consume capacity. Reversals do not restore it; a partial allowance issues only the remainder, without later top-ups. Manual awards and original-amount compensation are exempt."
+      ],
+      "0 表示只授予荣誉。修改奖励会建立新版本，已有成就不补发奖励。": [
+        "0 grants an honor only. Changing XP creates a new version and never tops up existing achievements."
+      ],
+      "<p>WP XP Core records account-linked activity, XP, task submissions and achievement snapshots, plus private notification preferences/read state. Public standings show participating accounts. Administrators can export personal experience data through WordPress privacy tools. Deactivation, updates and deletion of plugin files retain the ledger, balances and settings. No automatic expiry or personal-data eraser is provided: deleting append-only records without a reviewed accounting and identity policy could break balances and audit evidence. Site administrators determine legal retention and respond to erasure requests using their site policy.</p>": [
+        "<p>WP XP Core records account-linked activity, XP, task submissions and achievement snapshots, plus private notification preferences/read state. Public standings show participating accounts. Administrators can export personal experience data through WordPress privacy tools. Deactivation, updates and deletion of plugin files retain the ledger, balances and settings. No automatic expiry or personal-data eraser is provided: deleting append-only records without a reviewed accounting and identity policy could break balances and audit evidence. Site administrators determine legal retention and respond to erasure requests using their site policy.</p>"
+      ],
+      "Balance": [
+        "Balance"
+      ],
+      "Content ID": [
+        "Content ID"
+      ],
+      "Date": [
+        "Date"
+      ],
+      "Event": [
+        "Event"
+      ],
+      "Experience and growth": [
+        "Experience and growth"
+      ],
+      "GitHub 更新检查": [
+        "GitHub update checks"
+      ],
+      "Independent experience and levels with configurable activity rewards, private growth and achievements.": [
+        "Independent experience and levels with configurable activity rewards, private growth and achievements."
+      ],
+      "Notification preferences and read state": [
+        "Notification preferences and read state"
+      ],
+      "Public standings": [
+        "Public standings"
+      ],
+      "Recorded at (UTC timestamp)": [
+        "Recorded at (UTC timestamp)"
+      ],
+      "Snapshot": [
+        "Snapshot"
+      ],
+      "Source": [
+        "Source"
+      ],
+      "WP XP Core experience": [
+        "WP XP Core experience"
+      ],
+      "XP": [
+        "XP"
+      ],
+      "一次性": [
+        "Once"
+      ],
+      "一致": [
+        "Consistent"
+      ],
+      "一项成就已撤销，详情可查看个人经验记录。": [
+        "An achievement was revoked. See your private XP history for details."
+      ],
+      "上一页": [
+        "Previous"
+      ],
+      "下一步：%1$s": [
+        "Next: %1$s"
+      ],
+      "下一页": [
+        "Next"
+      ],
+      "不同内容": [
+        "Different content"
+      ],
+      "不同自然日": [
+        "Different calendar days"
+      ],
+      "不能导入内部状态。": [
+        "Internal state cannot be imported."
+      ],
+      "不重算或补发历史经验。0 经验仍记录事件，避免日后重复领取；评论撤销与恢复使用首次奖励数值。": [
+        "No historical recalculation or backfill. Zero-XP events remain recorded to prevent duplicate claims. Comment reversals and restorations use the original actual amount."
+      ],
+      "与内容 ID 任意命中": [
+        "Matches either a content ID or a category"
+      ],
+      "个不同自然日": [
+        "different calendar days"
+      ],
+      "个自然日": [
+        "calendar days"
+      ],
+      "为等级赋予名称，让签到进度清楚可见。": [
+        "Give levels names and show check-in progress clearly."
+      ],
+      "了解参与来源，观察当前任务的完成情况。": [
+        "Understand participation sources and current task completion."
+      ],
+      "事件": [
+        "Events"
+      ],
+      "事件类型无效。": [
+        "Invalid event type."
+      ],
+      "事件账本": [
+        "Event ledger"
+      ],
+      "人工授予与撤销": [
+        "Manual grants and revocations"
+      ],
+      "人工授予成就": [
+        "Manual achievement grant"
+      ],
+      "人工调整": [
+        "Manual adjustment"
+      ],
+      "仅使用可公开展示的图片。图片删除或不再公开时回退图标字符；修改展示资料不改变旧成就快照。": [
+        "Only publicly accessible images are used. Missing or private images fall back to the character icon. Display edits never alter earned snapshots."
+      ],
+      "仅展示本次接口返回的最近成就，不代表全部历史。": [
+        "Only the recent achievements returned by this request are shown, not the complete history."
+      ],
+      "仅显示最近一百个任务版本，可缩短日期范围。": [
+        "Only the most recent 100 task versions are shown. Narrow the date range to see more."
+      ],
+      "仅自选时段可指定日期。": [
+        "Dates can only be specified for a custom range."
+      ],
+      "今日参与": [
+        "Today’s participation"
+      ],
+      "今日已签到": [
+        "Checked in today"
+      ],
+      "今日签到已记录。": [
+        "Today’s check-in is recorded."
+      ],
+      "从媒体库选择图片": [
+        "Choose an image from the media library"
+      ],
+      "从本版创建起": [
+        "Since this version was created"
+      ],
+      "以下范围用于阅读、文章、评论与作者里程碑。两项都留空表示全部；填写后，只要内容 ID 或所属分类命中一项即可。不会开放原本无权访问的内容。": [
+        "These scopes apply to reading, posts, comments and author milestones. Leave both empty for all eligible content; otherwise either content or category may match. Permissions remain required."
+      ],
+      "任务": [
+        "Task"
+      ],
+      "任务不存在。": [
+        "Task not found."
+      ],
+      "任务与成就": [
+        "Tasks and achievements"
+      ],
+      "任务信息无效。": [
+        "Invalid task information."
+      ],
+      "任务列表": [
+        "Task list"
+      ],
+      "任务列表已更新，请刷新后再修改。": [
+        "Tasks have changed. Refresh before editing."
+      ],
+      "任务名称": [
+        "Task title"
+      ],
+      "任务奖励撤销": [
+        "Task reward revocation"
+      ],
+      "任务字段无效。": [
+        "Invalid task fields."
+      ],
+      "任务完成奖励": [
+        "Task completion reward"
+      ],
+      "任务尚未开放、已结束或前置任务尚未完成。": [
+        "This task is not open, has ended or has unmet prerequisites."
+      ],
+      "任务已修改、停用或本期已结束，可退回说明并告知用户。": [
+        "The task changed, was disabled or its period ended. Return the submission with an explanation."
+      ],
+      "任务当前不可领取。": [
+        "This task cannot currently be claimed."
+      ],
+      "任务文字无效或过长。": [
+        "Task text is invalid or too long."
+      ],
+      "任务日期或前置条件尚未满足。": [
+        "Task dates or prerequisites are not satisfied."
+      ],
+      "任务未能保存，请重试。": [
+        "Could not save the task. Please retry."
+      ],
+      "任务模板": [
+        "Task templates"
+      ],
+      "任务步骤尚未完成。": [
+        "Task steps are not complete."
+      ],
+      "任务版本": [
+        "Task version"
+      ],
+      "任务版本、周期或启用状态已改变，请刷新页面。": [
+        "The task version, period or activation changed. Refresh the page."
+      ],
+      "任务版本完成记录": [
+        "Task version completion records"
+      ],
+      "任务编号无效。": [
+        "Invalid task ID."
+      ],
+      "任务说明": [
+        "Task description"
+      ],
+      "余额": [
+        "Balance"
+      ],
+      "作者": [
+        "Author"
+      ],
+      "作者浏览计数": [
+        "Author view count"
+      ],
+      "作者里程碑": [
+        "Author milestones"
+      ],
+      "使用图标字符": [
+        "Use character icon"
+      ],
+      "例如 10 或 -5": [
+        "For example, 10 or -5"
+      ],
+      "例如 12, 35": [
+        "For example, 12, 35"
+      ],
+      "例如 3, 8": [
+        "For example, 3, 8"
+      ],
+      "例如 checkin": [
+        "For example, checkin"
+      ],
+      "例如 ★": [
+        "For example, ★"
+      ],
+      "保存任务": [
+        "Save task"
+      ],
+      "保存全站规则前，可先了解生效范围。": [
+        "Review the scope before saving site-wide rules."
+      ],
+      "保存后在前台查看；编辑器不读取私人经验。": [
+        "Save and view on the site. The editor does not read private XP."
+      ],
+      "保存成长设置": [
+        "Save growth settings"
+      ],
+      "保存更新偏好": [
+        "Save update preferences"
+      ],
+      "保存榜单偏好": [
+        "Save standings preferences"
+      ],
+      "保存榜单排除": [
+        "Save standings exclusion"
+      ],
+      "保存经验规则": [
+        "Save XP rules"
+      ],
+      "保存通知偏好": [
+        "Save notification preferences"
+      ],
+      "保存面板页面": [
+        "Save panel page"
+      ],
+      "保留": [
+        "Preserved"
+      ],
+      "修改名称、说明、徽章图片、分类或系列会保留进度；修改条件、周期、开放日期、前置任务或启用状态会建立新版本，从之后的新活动累计。旧成就保留。每周从周一开始，每月从一日开始。": [
+        "Title, description, image, category and series edits preserve progress. Conditions, periods, dates, prerequisites, rewards or activation changes create a new version starting with subsequent activity. Earned snapshots stay unchanged. Weeks start Monday; months start on the first."
+      ],
+      "修改展示": [
+        "Display changed"
+      ],
+      "停用里程碑标识无效。": [
+        "Invalid retired milestone identity."
+      ],
+      "全部完成以下步骤": [
+        "Complete all steps below"
+      ],
+      "全部来源": [
+        "All sources"
+      ],
+      "全部标为已读": [
+        "Mark all read"
+      ],
+      "关于插件": [
+        "About the plugin"
+      ],
+      "内容范围最多一百个编号。": [
+        "A content scope allows at most 100 IDs."
+      ],
+      "净经验": [
+        "Net XP"
+      ],
+      "出现活动上限截断": [
+        "Reward cap truncation"
+      ],
+      "分类": [
+        "Category"
+      ],
+      "分类 ID": [
+        "Category IDs"
+      ],
+      "分页参数无效。": [
+        "Invalid pagination parameters."
+      ],
+      "列出同日首次活动至少二十次或发生上限截断的账号，供人工核对；不自动处罚或排除。": [
+        "Accounts with at least 20 first-reward events in one day or cap truncations are listed for human review. No automatic penalties or exclusions."
+      ],
+      "刷新通知": [
+        "Refresh notifications"
+      ],
+      "前一时段": [
+        "Previous range"
+      ],
+      "前一等长时段对比": [
+        "Compare the previous equal-length range"
+      ],
+      "前置任务不存在。": [
+        "Prerequisite task not found."
+      ],
+      "前置任务不能形成循环。": [
+        "Prerequisites cannot form a cycle."
+      ],
+      "前置任务当前未开放": [
+        "Prerequisite task is not currently open"
+      ],
+      "前置任务或完成范围无效。": [
+        "Invalid prerequisite task or scope."
+      ],
+      "前置任务（可选）": [
+        "Prerequisites (optional)"
+      ],
+      "加载更早记录": [
+        "Load older records"
+      ],
+      "历史初始化": [
+        "Historical initialization"
+      ],
+      "历史校准": [
+        "Historical reconciliation"
+      ],
+      "历史经验重算": [
+        "Historical XP recalculation"
+      ],
+      "历史账本校准": [
+        "Historical ledger reconciliation"
+      ],
+      "原事件编号": [
+        "Original event ID"
+      ],
+      "原值": [
+        "Previous value"
+      ],
+      "原成就记录无效，未执行撤销。": [
+        "Invalid original achievement. Nothing was revoked."
+      ],
+      "原授予事件编号": [
+        "Original grant event ID"
+      ],
+      "参与人数": [
+        "Participants"
+      ],
+      "参与公开活动榜": [
+        "Participate in public standings"
+      ],
+      "参与活动": [
+        "Participating activity"
+      ],
+      "参与者": [
+        "Participants"
+      ],
+      "发布页面，登录后即可查看经验与签到。": [
+        "Publish the page and sign in to view XP and check-in."
+      ],
+      "发放": [
+        "Granted"
+      ],
+      "发放经验": [
+        "XP granted"
+      ],
+      "发表文章": [
+        "Publish a post"
+      ],
+      "只包含规则、成长与任务。不会导出账号、通知、审计、余额、账本或存储配置。导入保留未列出的任务，不删除历史；先预览，再显式应用。跨站内容 ID 和图片 ID 需要先核对。": [
+        "Only rules, growth settings and tasks are included. Accounts, notifications, audits, balances, ledger and storage configuration are excluded. Import preserves unlisted tasks and history. Preview before applying; review content and image IDs when moving across sites."
+      ],
+      "只处理服务端已记录的首次奖励或评论状态补偿失败，并重新检查原事件和当前状态；不会扫描历史。评论补偿余额不足时不部分扣减，可补足后带原因重试。失败列表最多保留二百项，不是永久日志。": [
+        "Only captured first-reward and comment-compensation failures can be retried. The original owner and current state are checked again, without history scans. Insufficient comment compensation is never partial; fund the balance before a reasoned retry. At most 200 failures are retained, not a permanent log."
+      ],
+      "只汇总有可靠事件快照的授予与撤销，不补造旧版本参与分母。耗时从任务版本定义创建开始，包含等待和未参与的时间；旧记录没有此证据时留空。": [
+        "Only reliable grant and revocation snapshots are counted; old participant denominators are not invented. Duration starts at task-version creation and includes waiting and inactivity. Old records without this evidence have no duration."
+      ],
+      "只能撤销人工调整记录。": [
+        "Only manual adjustments can be reversed here."
+      ],
+      "只能查看自己的经验记录。": [
+        "You can only view your own XP history."
+      ],
+      "可前往：": [
+        "Go to: "
+      ],
+      "可在任务与成就中查看审核结果。": [
+        "View the review result under Tasks and achievements."
+      ],
+      "可在每日签到之外设置阶段奖励。默认关闭；启用或修改规则后，从下一次新签到开始累计，不补发旧签到。": [
+        "Optional rewards supplement daily check-in. Disabled by default; activation or rule edits start counting subsequent check-ins, with no historical backfill."
+      ],
+      "同日首次活动至少二十次": [
+        "At least 20 first-reward events in one day"
+      ],
+      "同站更新（匹配已保存 ID）": [
+        "Same-site update (match saved IDs)"
+      ],
+      "名次": [
+        "Rank"
+      ],
+      "名称": [
+        "Name"
+      ],
+      "名称或说明包含无效内容。": [
+        "Invalid name or description."
+      ],
+      "否": [
+        "No"
+      ],
+      "启用": [
+        "Enabled"
+      ],
+      "启用 JavaScript 后可添加或移除等级；现有门槛仍可编辑保存。": [
+        "Enable JavaScript to add or remove levels. Existing thresholds can still be edited and saved."
+      ],
+      "启用任务": [
+        "Enable task"
+      ],
+      "启用官方更新检查": [
+        "Enable official update checks"
+      ],
+      "启用阶段奖励": [
+        "Enable stage rewards"
+      ],
+      "周期": [
+        "Period"
+      ],
+      "图标字符": [
+        "Character icon"
+      ],
+      "在事件账本中查找“完成任务”或“人工授予成就”的事件编号。撤销会扣回原经验，余额不足时整项拒绝；同一版本与周期不能再次授予。": [
+        "Find the task completion or manual achievement event ID in the ledger. Revocation deducts the original actual XP; insufficient balance rejects the whole operation. A revoked version and period cannot be granted again."
+      ],
+      "在普通页面添加短代码区块，分别填入 ": [
+        "Add a Shortcode block to a regular page and enter "
+      ],
+      "填写人工调整的事件编号，追加一条反向记录。每条调整只能撤销一次。": [
+        "Enter a manual adjustment event ID to append its reversal. Each adjustment can only be reversed once."
+      ],
+      "增减经验": [
+        "XP change"
+      ],
+      "处理原因": [
+        "Reason"
+      ],
+      "处理方式": [
+        "Action"
+      ],
+      "外站模板（重新映射 ID）": [
+        "External template (remap IDs)"
+      ],
+      "外部活动奖励": [
+        "External activity reward"
+      ],
+      "多站点网络请由网络管理员手动更新；本站不提供共享更新器设置。": [
+        "Multisite plugins must be updated manually by a network administrator; shared updater settings are unavailable here."
+      ],
+      "失败事件重试": [
+        "Retry failed events"
+      ],
+      "失败记录与原评论奖励归属不符。": [
+        "Failure ownership does not match the original comment reward."
+      ],
+      "奖励": [
+        "Reward"
+      ],
+      "奖励为 0 的有效活动也计入事件和参与人数。总参与人数已跨来源去重，不能把每行人数相加；任务完成及其撤销计入活动来源；人工授予及其撤销单列，不进入活动榜。历史初始化、校准和管理操作回执不计入这里。": [
+        "Eligible zero-XP activity still counts as events and participation. Total participants are deduplicated across sources, so row counts cannot be added. Task rewards and revocations count as activity; manual grants and their reversals are separate and excluded from public standings. Imports, reconciliation and management receipts are excluded here."
+      ],
+      "奖励为 0–1000000 的整数，每日次数为 0–1000。等级门槛最高为 1000000000。": [
+        "Rewards are integers from 0 to 1000000; daily counts from 0 to 1000. Level thresholds allow up to 1000000000."
+      ],
+      "奖励如何生效？": [
+        "When do rewards apply?"
+      ],
+      "奖励经验": [
+        "Reward XP"
+      ],
+      "奖励调整仅影响之后首次记账的事件。": [
+        "Reward edits affect only events first recorded afterward."
+      ],
+      "媒体库徽章图片 ID": [
+        "Media library badge image ID"
+      ],
+      "存在差异": [
+        "Mismatch"
+      ],
+      "完成人数": [
+        "Completions"
+      ],
+      "完成任务": [
+        "Task completion"
+      ],
+      "完成全部前置任务": [
+        "Complete all prerequisites"
+      ],
+      "完成奖励 +%1$s 经验": [
+        "Completion reward +%1$s XP"
+      ],
+      "完成方式": [
+        "Completion method"
+      ],
+      "完成率": [
+        "Completion rate"
+      ],
+      "完成经验": [
+        "Completion XP"
+      ],
+      "完成范围": [
+        "Completion scope"
+      ],
+      "完成说明": [
+        "Completion note"
+      ],
+      "完成说明已退回": [
+        "Submission returned"
+      ],
+      "审核任务不使用自动步骤。用户可填写完成说明，管理员通过后按本版奖励授予成就；退回时需要说明原因。": [
+        "Reviewed tasks have no automatic steps. Users submit a completion note; approval grants this version’s XP and achievement. Returns require an explanation."
+      ],
+      "审核任务当前不可用。": [
+        "This reviewed task is currently unavailable."
+      ],
+      "审核任务通过提交说明完成，无需自动步骤。": [
+        "Reviewed tasks require an approved completion note, without automatic steps."
+      ],
+      "审核内容无效。": [
+        "Invalid review content."
+      ],
+      "审核分页无效。": [
+        "Invalid review pagination."
+      ],
+      "审核已通过": [
+        "Review approved"
+      ],
+      "审核意见": [
+        "Review note"
+      ],
+      "审核未能保存，请重试。": [
+        "Could not save the review. Please retry."
+      ],
+      "审核结果": [
+        "Review result"
+      ],
+      "审核记录暂不可读。": [
+        "Review records are temporarily unavailable."
+      ],
+      "导入任务必须有唯一编号。": [
+        "Imported tasks require unique IDs."
+      ],
+      "导入任务编号冲突。": [
+        "Imported task identity conflict."
+      ],
+      "导入方式 ": [
+        "Import mode "
+      ],
+      "导入配置缺少前置任务。": [
+        "A prerequisite task is missing from the import."
+      ],
+      "导出当前页 CSV": [
+        "Export current page as CSV"
+      ],
+      "尚无参与": [
+        "No participants yet"
+      ],
+      "尚无经验记录。": [
+        "No XP records yet."
+      ],
+      "尚无规则修改记录。": [
+        "No rule change records yet."
+      ],
+      "尚未开放、已结束或前置任务尚未完成。": [
+        "Not open, ended or prerequisites not completed."
+      ],
+      "展开其余任务（%1$s）": [
+        "Show remaining tasks (%1$s)"
+      ],
+      "展开其余最近记录（%1$s）": [
+        "Show remaining recent records (%1$s)"
+      ],
+      "已保存。": [
+        "Saved."
+      ],
+      "已保存的设置无效，当前使用默认规则；请检查并重新保存。": [
+        "Saved settings are invalid; defaults are active. Review and save the settings again."
+      ],
+      "已停用": [
+        "Disabled"
+      ],
+      "已升至 %1$s！": [
+        "You reached %1$s!"
+      ],
+      "已升至 Level ": [
+        "Reached Level "
+      ],
+      "已参与公开榜单。": [
+        "You participate in public standings."
+      ],
+      "已启用": [
+        "Enabled"
+      ],
+      "已提交说明，等待管理员审核。": [
+        "Submitted and awaiting administrator review."
+      ],
+      "已有经验记录，不能修改时区。": [
+        "The time zone cannot change after XP has been recorded."
+      ],
+      "已有经验记录，不能修改时区，以免重复领取每日奖励。": [
+        "The time zone cannot change after XP has been recorded, to prevent duplicate daily claims."
+      ],
+      "已添加 Level %1$s，请设置最低经验。": [
+        "Added Level %1$s. Set its minimum XP."
+      ],
+      "已添加新档位，请设置次数和经验，保存后生效。": [
+        "Milestone added. Set its count and XP, then save."
+      ],
+      "已签到": [
+        "Checked in"
+      ],
+      "已获成就": [
+        "Earned achievements"
+      ],
+      "已读范围超过当前通知。": [
+        "The read boundary exceeds current notifications."
+      ],
+      "已退回": [
+        "Returned"
+      ],
+      "已通过": [
+        "Approved"
+      ],
+      "应用已预览配置": [
+        "Apply previewed configuration"
+      ],
+      "建立新版本": [
+        "New version"
+      ],
+      "开始": [
+        "From"
+      ],
+      "开始日期": [
+        "Start date"
+      ],
+      "开始日期不能晚于结束日期。": [
+        "The start date cannot be after the end date."
+      ],
+      "开始：": [
+        "From: "
+      ],
+      "开放日期与前置任务": [
+        "Open dates and prerequisites"
+      ],
+      "当前任务完成情况": [
+        "Current task completion"
+      ],
+      "当前任务完成率": [
+        "Current task completion rate"
+      ],
+      "当前可用任务已完成，或正在等待开放／前置任务。": [
+        "Available tasks are complete, or waiting for open dates or prerequisites."
+      ],
+      "当前时段": [
+        "Current range"
+      ],
+      "当前未参与公开榜单。": [
+        "You are not participating in public standings."
+      ],
+      "当前未参与公开榜单；经验和私人任务照常保留。": [
+        "You are not participating in public standings. Your XP and private tasks remain intact."
+      ],
+      "当前版本与当前周期": [
+        "Current version and current period"
+      ],
+      "当前经验不足以扣回原奖励，成就与经验均未改变。": [
+        "Insufficient XP to reclaim the original reward. Neither the achievement nor XP was changed."
+      ],
+      "当前经验不足，原评论奖励尚未扣回。": [
+        "Insufficient XP; the original comment reward has not been reclaimed."
+      ],
+      "待完成": [
+        "Not completed"
+      ],
+      "待审核说明": [
+        "Pending submissions"
+      ],
+      "待核对的活动线索": [
+        "Activity clues for review"
+      ],
+      "恢复榜单资格": [
+        "Restore standings eligibility"
+      ],
+      "成就审核": [
+        "Achievement review"
+      ],
+      "成就展示与可选奖励": [
+        "Achievement display and optional reward"
+      ],
+      "成就已撤销": [
+        "Achievement revoked"
+      ],
+      "成就已记录。": [
+        "Achievement recorded."
+      ],
+      "成就授予与撤销": [
+        "Achievement grants and revocations"
+      ],
+      "成就授予记录不存在。": [
+        "Achievement grant not found."
+      ],
+      "成就操作未能保存，请重试。": [
+        "Could not save the achievement action. Please retry."
+      ],
+      "成就申请": [
+        "Achievement submission"
+      ],
+      "成就管理操作": [
+        "Achievement management"
+      ],
+      "成长中心": [
+        "Growth center"
+      ],
+      "成长中心设置": [
+        "Growth center settings"
+      ],
+      "成长设置不完整。": [
+        "Incomplete growth settings."
+      ],
+      "成长设置已更新，请刷新页面。": [
+        "Growth settings changed. Refresh the page."
+      ],
+      "成长设置无效。": [
+        "Invalid growth settings."
+      ],
+      "成长设置未能保存，请重试。": [
+        "Could not save growth settings. Please retry."
+      ],
+      "我的审核记录": [
+        "My review history"
+      ],
+      "我的成长": [
+        "My growth"
+      ],
+      "我的本期位置": [
+        "My position this period"
+      ],
+      "所需次数": [
+        "Required count"
+      ],
+      "扣回": [
+        "Reclaimed"
+      ],
+      "扣回经验": [
+        "XP reclaimed"
+      ],
+      "指定内容暂未公开，请选择其他可用目标或等待开放。": [
+        "The specified content is not publicly available. Choose another target or wait until it opens."
+      ],
+      "按活动净经验统计，同分并列，不含人工调分与历史初始化。结果实时更新，翻页时名次可能变化。": [
+        "Ranked by net activity XP with tied ranks, excluding manual adjustments and imports. Results update live; ranks may change while paging."
+      ],
+      "授予中仍有效": [
+        "Grants still effective"
+      ],
+      "授予原因": [
+        "Grant reason"
+      ],
+      "授予当前周期成就": [
+        "Grant current-period achievement"
+      ],
+      "授予成就": [
+        "Grant achievement"
+      ],
+      "授予或撤销请求无效。": [
+        "Invalid grant or revocation request."
+      ],
+      "授予次数": [
+        "Grants"
+      ],
+      "排除公开榜单": [
+        "Exclude from public standings"
+      ],
+      "提交信息无效。": [
+        "Invalid submission information."
+      ],
+      "提交审核": [
+        "Submit for review"
+      ],
+      "提交编号已用于另一份说明。": [
+        "This submission ID was already used for another note."
+      ],
+      "提交记录不存在。": [
+        "Submission not found."
+      ],
+      "提交记录不完整，未能审核。": [
+        "Incomplete submission cannot be reviewed."
+      ],
+      "提交说明后审核": [
+        "Submit a note for review"
+      ],
+      "提交说明并通过审核": [
+        "Submit a note and receive approval"
+      ],
+      "插件不会自动创建或公开榜单页面。榜单按本期活动净经验排序，扣回会影响本期结果；不使用历史余额，不包含人工调分，同分并列。": [
+        "The plugin does not create or publish a standings page automatically. Standings use current-period net activity XP, including deductions, rather than historical balances. Manual adjustments are excluded; equal scores share ranks."
+      ],
+      "插件信息与帮助": [
+        "Plugin information and help"
+      ],
+      "撤销人工成就": [
+        "Manual achievement revocation"
+      ],
+      "撤销人工调整": [
+        "Manual adjustment reversal"
+      ],
+      "撤销原因": [
+        "Revocation reason"
+      ],
+      "撤销已获成就": [
+        "Revoke earned achievement"
+      ],
+      "撤销成就并扣回原经验": [
+        "Revoke achievement and reclaim original XP"
+      ],
+      "操作": [
+        "Action"
+      ],
+      "操作已记录。": [
+        "Action recorded."
+      ],
+      "操作未能完成，请保留请求编号后重试。": [
+        "The action could not finish. Keep the request ID and retry."
+      ],
+      "操作编号已用于其他内容。": [
+        "This operation ID was used for different content."
+      ],
+      "操作需要填写原因并检查目标用户权限。人工授予可确认自动步骤以外的完成依据，仍需满足任务日期与前置条件；其经验不进入活动榜。": [
+        "A reason and target-user permissions are required. Manual grants may accept evidence beyond automatic steps, but still require task dates and prerequisites. Manual XP is excluded from public standings."
+      ],
+      "收起其余任务": [
+        "Collapse remaining tasks"
+      ],
+      "收起最近成就": [
+        "Collapse recent achievements"
+      ],
+      "放置周榜与月榜": [
+        "Add weekly and monthly standings"
+      ],
+      "数值可以设置多大？": [
+        "What are the numeric limits?"
+      ],
+      "文章与页面 ID": [
+        "Post and page IDs"
+      ],
+      "文章分类 ID": [
+        "Post category IDs"
+      ],
+      "文章／页面 ID": [
+        "Post / page IDs"
+      ],
+      "新值": [
+        "New value"
+      ],
+      "新建": [
+        "New"
+      ],
+      "新建任务": [
+        "New task"
+      ],
+      "方式": [
+        "Method"
+      ],
+      "无": [
+        "None"
+      ],
+      "无起点证据": [
+        "No origin evidence"
+      ],
+      "日常活动": [
+        "Daily activity"
+      ],
+      "日期与依据": [
+        "Dates and evidence"
+      ],
+      "日期包含首尾，使用经验规则的时区；留空表示不限。前置任务全部完成后可领取或提交，本任务仍从本版创建后的有效活动累计。": [
+        "Dates are inclusive in the XP time zone; blank means unlimited. All prerequisites must be met to claim or submit. This task counts eligible activity after this version was created."
+      ],
+      "日期格式无效。": [
+        "Invalid date format."
+      ],
+      "日期范围须为截至今日的连续 1–366 天。": [
+        "The date range must contain 1–366 consecutive days ending no later than today."
+      ],
+      "日期须为有效的 YYYY-MM-DD。": [
+        "Dates must use a valid YYYY-MM-DD format."
+      ],
+      "是": [
+        "Yes"
+      ],
+      "显示当前登录用户的私人成长面板；访客看到登录入口。": [
+        "Show the signed-in user’s private growth panel. Visitors see a sign-in link."
+      ],
+      "显示本期公开活动榜；退出或被排除的账号不会展示。": [
+        "Show current-period public standings, excluding opted-out or excluded accounts."
+      ],
+      "暂不指定": [
+        "Not selected"
+      ],
+      "暂无这类站内通知。": [
+        "No notifications of this type yet."
+      ],
+      "暂时无法记录": [
+        "Could not record this now"
+      ],
+      "暂时无法记录任务，请重试。": [
+        "Could not record the task. Please retry."
+      ],
+      "暂时无法记录，请稍后重试。": [
+        "Could not record this now. Please retry later."
+      ],
+      "暂时无法读取个人位置。": [
+        "Your position is temporarily unavailable."
+      ],
+      "暂时无法读取任务完成率。": [
+        "Task completion rates are temporarily unavailable."
+      ],
+      "暂时无法读取任务版本统计。": [
+        "Task version statistics are temporarily unavailable."
+      ],
+      "暂时无法读取成长记录，请稍后重试。": [
+        "Growth records are temporarily unavailable. Please retry."
+      ],
+      "暂时无法读取期间趋势。": [
+        "Period trends are temporarily unavailable."
+      ],
+      "暂时无法读取未完成记录。": [
+        "Incomplete records are temporarily unavailable."
+      ],
+      "暂时无法读取来源分析。": [
+        "Source analysis is temporarily unavailable."
+      ],
+      "暂时无法读取活动线索。": [
+        "Activity clues are temporarily unavailable."
+      ],
+      "暂时无法读取经验榜。": [
+        "Standings are temporarily unavailable."
+      ],
+      "暂时无法读取经验记录。": [
+        "XP history is temporarily unavailable."
+      ],
+      "暂时无法读取规则修改记录。": [
+        "Rule change records are temporarily unavailable."
+      ],
+      "暂时无法读取，请稍后重试。": [
+        "Temporarily unavailable. Please retry later."
+      ],
+      "暂时没有开放的任务，日常参与仍可获得经验。": [
+        "No open tasks yet. Daily participation can still earn XP."
+      ],
+      "更新偏好已保存。": [
+        "Update preferences saved."
+      ],
+      "更新设置已变化，请刷新。": [
+        "Update settings changed. Refresh the page."
+      ],
+      "更新设置无效。": [
+        "Invalid update settings."
+      ],
+      "更新设置未能保存。": [
+        "Could not save update settings."
+      ],
+      "更早的待审核说明": [
+        "Older pending submissions"
+      ],
+      "更早的通知": [
+        "Older notifications"
+      ],
+      "最低经验在“经验规则”中设置。这里可修改每级的名称、图标字符、颜色和说明。": [
+        "Set minimum XP under XP rules. Edit level names, character icons, colors and descriptions here."
+      ],
+      "最多保留五十个任务，可先停用不再使用的任务。": [
+        "At most 50 tasks can be retained. Disable unused tasks instead."
+      ],
+      "最多八个前置任务。": [
+        "At most eight prerequisites."
+      ],
+      "最多排除一千个账号。": [
+        "At most 1000 accounts can be excluded."
+      ],
+      "最近三十五天签到": [
+        "Check-ins in the last 35 days"
+      ],
+      "最近获得的成就": [
+        "Recently earned achievements"
+      ],
+      "有效浏览累计与奖励": [
+        "Eligible view totals and rewards"
+      ],
+      "有效点赞累计与奖励": [
+        "Eligible like totals and rewards"
+      ],
+      "有效评论": [
+        "Eligible comments"
+      ],
+      "有效阅读": [
+        "Eligible reading"
+      ],
+      "有效阅读停留时间": [
+        "Reading dwell time"
+      ],
+      "有起点的样本／平均秒": [
+        "Timed samples / mean seconds"
+      ],
+      "未启用点赞服务：需要 PageNest Companion 及其点赞功能。此组暂不可编辑和发奖，已有设置会保留。": [
+        "Like service is unavailable. PageNest Companion with likes enabled is required. This group cannot be edited or issue rewards; saved settings are preserved."
+      ],
+      "未启用额外签到阶段奖励。": [
+        "Additional check-in stage rewards are disabled."
+      ],
+      "未完成的奖励记录": [
+        "Incomplete reward records"
+      ],
+      "未完成记录编号无效。": [
+        "Invalid incomplete-record ID."
+      ],
+      "未找到原评论奖励。": [
+        "Original comment reward not found."
+      ],
+      "未找到可重试的记录。": [
+        "Retryable record not found."
+      ],
+      "未找到用户。": [
+        "User not found."
+      ],
+      "未改变": [
+        "Unchanged"
+      ],
+      "未知操作。": [
+        "Unknown action."
+      ],
+      "未知模板。": [
+        "Unknown template."
+      ],
+      "未签到": [
+        "Not checked in"
+      ],
+      "本周": [
+        "This week"
+      ],
+      "本周在三个不同自然日签到。": [
+        "Check in on three different calendar days this week."
+      ],
+      "本周经验榜": [
+        "Weekly XP standings"
+      ],
+      "本月": [
+        "This month"
+      ],
+      "本月经验榜": [
+        "Monthly XP standings"
+      ],
+      "本期净经验": [
+        "Net XP this period"
+      ],
+      "本期尚无符合条件的活动记录。": [
+        "No eligible activity records this period."
+      ],
+      "本期已完成 ✓": [
+        "Completed this period ✓"
+      ],
+      "本期成就已撤销，不能再次授予。": [
+        "This period’s achievement was revoked and cannot be granted again."
+      ],
+      "本期成就已撤销，不能再次领取。": [
+        "This period’s achievement was revoked and cannot be claimed again."
+      ],
+      "本期成就已撤销，不能重复授予。": [
+        "This period’s achievement was revoked and cannot be granted twice."
+      ],
+      "本期成就已经获得。": [
+        "This period’s achievement has already been earned."
+      ],
+      "本期提交次数已达上限，请联系管理员。": [
+        "Submission limit reached this period. Contact an administrator."
+      ],
+      "本期撤销次数": [
+        "Revocations this period"
+      ],
+      "本期没有符合上述条件的线索。": [
+        "No matching clues in this period."
+      ],
+      "本期活动位置": [
+        "Activity position this period"
+      ],
+      "本期还没有计入榜单的活动净经验。": [
+        "No eligible net activity XP in these standings this period."
+      ],
+      "本版%1$s签到 %2$s 天，达到 %3$s 天可获 %4$s 阶段经验。": [
+        "This version: %1$s check-ins on %2$s days; reach %3$s days for %4$s stage XP."
+      ],
+      "本版签到阶段目标已达到。": [
+        "This version’s check-in stage goals are complete."
+      ],
+      "本站使用高级接入配置；面板页与短代码名称由现有配置提供。": [
+        "This site uses advanced integration. The panel and shortcode names come from its existing configuration."
+      ],
+      "本级成长进度": [
+        "Progress within this level"
+      ],
+      "本页暂无符合条件的活动记录。": [
+        "No eligible activity records on this page."
+      ],
+      "来源": [
+        "Source"
+      ],
+      "查找用户": [
+        "Find user"
+      ],
+      "查清奖励来源，保留每一次调整的依据。": [
+        "Identify reward sources and retain the basis for every adjustment."
+      ],
+      "查看任务": [
+        "View task"
+      ],
+      "查看依据": [
+        "View evidence"
+      ],
+      "查看经验与签到": [
+        "View XP and check-in"
+      ],
+      "查看统计": [
+        "View statistics"
+      ],
+      "查看项目文档、更新记录与贡献方式。": [
+        "Read project documentation, changes and contribution instructions."
+      ],
+      "查询": [
+        "Search"
+      ],
+      "查询事件": [
+        "Find events"
+      ],
+      "查询条件无效。": [
+        "Invalid search filters."
+      ],
+      "查询范围无效。": [
+        "Invalid query range."
+      ],
+      "标为已读": [
+        "Mark read"
+      ],
+      "档位已移除，保存后永久停用；重新添加会创建新档位。": [
+        "Milestone removed. Saving retires it permanently; adding creates a new identity."
+      ],
+      "榜单偏好已更新，请刷新后再修改。": [
+        "Standings preferences changed. Refresh before editing."
+      ],
+      "榜单偏好未能保存，请重试。": [
+        "Could not save standings preferences. Please retry."
+      ],
+      "榜单分页": [
+        "Standings pagination"
+      ],
+      "榜单分页参数无效。": [
+        "Invalid standings pagination."
+      ],
+      "榜单参与设置无效。": [
+        "Invalid standings participation settings."
+      ],
+      "榜单排除列表已更新。": [
+        "Standings exclusion list changed."
+      ],
+      "榜单排除设置无效。": [
+        "Invalid standings exclusion settings."
+      ],
+      "榜单排除设置未能保存。": [
+        "Could not save standings exclusions."
+      ],
+      "榜单设置": [
+        "Standings settings"
+      ],
+      "榜单账号排除": [
+        "Standings account exclusions"
+      ],
+      "模板只供预览，不会自动创建任务。重复使用同一模板更新其已导入任务，不重新发放已领取奖励。": [
+        "Templates are previews only and never create tasks automatically. Reusing a template updates its imported task without repeating earned rewards."
+      ],
+      "次": [
+        "events"
+      ],
+      "次 / 日": [
+        "times / day"
+      ],
+      "次数": [
+        "Count"
+      ],
+      "次有效活动": [
+        "eligible events"
+      ],
+      "次活动": [
+        "activities"
+      ],
+      "正在读取本期位置…": [
+        "Loading your position…"
+      ],
+      "正数增加，负数扣减。不会覆盖旧记录；扣减不能超过当前经验。": [
+        "Positive adds XP; negative deducts it. Old records remain intact. A deduction cannot exceed the current balance."
+      ],
+      "此时段没有任务授予或撤销记录。": [
+        "No task grants or revocations in this range."
+      ],
+      "此账号由管理员排除榜单；个人经验仍照常记录。": [
+        "An administrator excluded this account from standings. Personal XP is still recorded."
+      ],
+      "每个任务最多八个步骤。": [
+        "At most eight steps per task."
+      ],
+      "每周": [
+        "Weekly"
+      ],
+      "每周参与": [
+        "Weekly participation"
+      ],
+      "每周活动经验上限": [
+        "Weekly activity XP cap"
+      ],
+      "每日": [
+        "Daily"
+      ],
+      "每日奖励次数": [
+        "Daily reward count"
+      ],
+      "每日活动经验上限": [
+        "Daily activity XP cap"
+      ],
+      "每日签到": [
+        "Daily check-in"
+      ],
+      "每日签到 +": [
+        "Daily check-in +"
+      ],
+      "每日签到 +%1$s": [
+        "Daily check-in +%1$s"
+      ],
+      "每日统计时区": [
+        "Daily statistics time zone"
+      ],
+      "每月": [
+        "Monthly"
+      ],
+      "每次最多标记五十条通知。": [
+        "At most 50 notifications can be marked in one request."
+      ],
+      "每篇作品每档仅奖励一次，修改次数不会重置已领取档位。移除后保存，该档位会永久停用；新增档位使用独立标识。保存规则不补发历史奖励，之后的有效活动会按累计次数判断。": [
+        "Each content item and milestone is rewarded only once. Editing thresholds never resets claims. Saving a removed milestone retires it permanently; new milestones have independent IDs. Saving rules never backfills rewards; future eligible activity evaluates cumulative counts."
+      ],
+      "每组可设置 0–20 档，次数须从小到大排列。": [
+        "Set 0–20 milestones per group with strictly increasing counts."
+      ],
+      "每组最多设置 20 档里程碑。": [
+        "At most 20 milestones per group."
+      ],
+      "每组适用范围最多填写 200 个 ID。": [
+        "At most 200 IDs per scope."
+      ],
+      "每组里程碑次数必须严格递增。": [
+        "Milestone counts must be strictly increasing."
+      ],
+      "每页人数": [
+        "Users per page"
+      ],
+      "每项任务按当前版本、当前周期单独统计，不随上方来源日期切换。参与者是有相关活动或提交记录的用户，包含已经获得成就的用户；这不是曝光转化率或全站注册用户完成比例。": [
+        "Tasks are evaluated for the current version and period, independently of the source-analysis date range. Participants have matching activity, submissions or earned achievements. This is neither an exposure conversion rate nor the share of registered users completing tasks."
+      ],
+      "比较当前日期范围与紧邻的前一等长时段；这是活动观察，不能证明任务带来了变化。": [
+        "Compare this date range with the immediately preceding equal-length range. This describes activity and does not establish causation."
+      ],
+      "没有审核成就的权限。": [
+        "You cannot review achievements."
+      ],
+      "没有导出经验记录的权限。": [
+        "You cannot export XP records."
+      ],
+      "没有查看审核记录的权限。": [
+        "You cannot view review records."
+      ],
+      "没有查看激励效果的权限。": [
+        "You cannot view incentive insights."
+      ],
+      "没有查看经验管理的权限。": [
+        "You cannot view XP management."
+      ],
+      "没有查看统计的权限。": [
+        "You cannot view statistics."
+      ],
+      "没有符合条件的事件。": [
+        "No eligible events."
+      ],
+      "没有符合条件的经验记录。": [
+        "No matching XP records."
+      ],
+      "没有等待处理的失败记录。": [
+        "No pending failures."
+      ],
+      "没有管理任务的权限。": [
+        "You cannot manage tasks."
+      ],
+      "没有管理成长中心的权限。": [
+        "You cannot manage the growth center."
+      ],
+      "没有管理成长设置的权限。": [
+        "You cannot manage growth settings."
+      ],
+      "没有管理榜单的权限。": [
+        "You cannot manage standings."
+      ],
+      "没有管理经验的权限。": [
+        "You cannot manage XP."
+      ],
+      "没有管理经验面板的权限。": [
+        "You cannot manage the XP panel."
+      ],
+      "没有管理设置的权限。": [
+        "You cannot manage settings."
+      ],
+      "没有管理该用户经验的权限。": [
+        "You cannot manage this user’s XP."
+      ],
+      "活动奖励未启用。": [
+        "Activity rewards are disabled."
+      ],
+      "活动开关不完整。": [
+        "Incomplete activity switches."
+      ],
+      "活动开关无效。": [
+        "Invalid activity switch."
+      ],
+      "活动提供者或目标无效。": [
+        "Invalid activity provider or recipient."
+      ],
+      "活动提供者设置无效。": [
+        "Invalid activity provider settings."
+      ],
+      "活动未能记录，请重试。": [
+        "Could not record activity. Please retry."
+      ],
+      "活动未通过服务端资格检查。": [
+        "Activity failed the server-side eligibility check."
+      ],
+      "活动次数": [
+        "Event count"
+      ],
+      "活动经验上限无效。": [
+        "Invalid activity XP caps."
+      ],
+      "活动编号归属冲突。": [
+        "Activity ID ownership conflict."
+      ],
+      "浏览里程碑": [
+        "View milestone"
+      ],
+      "添加 ": [
+        "Add "
+      ],
+      "添加档位": [
+        "Add milestone"
+      ],
+      "添加步骤": [
+        "Add step"
+      ],
+      "添加等级": [
+        "Add level"
+      ],
+      "添加签到阶段": [
+        "Add check-in stage"
+      ],
+      "添加经验面板": [
+        "Add XP panel"
+      ],
+      "清除筛选": [
+        "Clear filters"
+      ],
+      "渠道 ": [
+        "Channel "
+      ],
+      "源码与使用说明 ": [
+        "Source and instructions "
+      ],
+      "激励效果": [
+        "Incentive insights"
+      ],
+      "点赞服务不可用。": [
+        "Like service unavailable."
+      ],
+      "点赞服务已启用，按经验账本记录的有效点赞累计。": [
+        "Like service is enabled, using eligible likes recorded in the XP ledger."
+      ],
+      "点赞计数": [
+        "Like count"
+      ],
+      "点赞里程碑": [
+        "Like milestone"
+      ],
+      "版本": [
+        "Version"
+      ],
+      "状态": [
+        "Status"
+      ],
+      "独立的 WordPress 经验与等级系统。": [
+        "An independent WordPress XP and level system."
+      ],
+      "生成配置 JSON": [
+        "Generate configuration JSON"
+      ],
+      "用户": [
+        "User"
+      ],
+      "用户、页码或每页数量无效。": [
+        "Invalid user, page or page size."
+      ],
+      "用户不存在。": [
+        "User does not exist."
+      ],
+      "用户名／显示名称": [
+        "Username / display name"
+      ],
+      "用户经验与人工调整": [
+        "User XP and manual adjustments"
+      ],
+      "用户编号": [
+        "User ID"
+      ],
+      "用逗号分隔，可在文章或页面编辑地址中找到 ID。": [
+        "Separate with commas. Find IDs in post or page edit URLs."
+      ],
+      "用逗号分隔，页面不按文章分类匹配。": [
+        "Separate with commas. Pages do not match post categories."
+      ],
+      "留空不限，逗号分隔": [
+        "Blank for all; separate with commas"
+      ],
+      "登录": [
+        "Sign in"
+      ],
+      "登录后查看自己的等级、签到和任务进度。": [
+        "Sign in to view your level, check-ins and task progress."
+      ],
+      "登录验证已过期，请刷新页面。": [
+        "Authentication expired. Refresh the page."
+      ],
+      "目前没有等待审核的说明。": [
+        "No submissions awaiting review."
+      ],
+      "短代码": [
+        "Shortcode"
+      ],
+      "确认完成": [
+        "Confirm completion"
+      ],
+      "秒": [
+        "seconds"
+      ],
+      "移除": [
+        "Remove"
+      ],
+      "移除 Level %1$s": [
+        "Remove Level %1$s"
+      ],
+      "移除第 %1$s 档": [
+        "Remove milestone %1$s"
+      ],
+      "稳定版": [
+        "Stable"
+      ],
+      "稳定版与预发布": [
+        "Stable and prerelease"
+      ],
+      "站内通知": [
+        "Site notifications"
+      ],
+      "第 %1$s 档": [
+        "Milestone %1$s"
+      ],
+      "等待审核": [
+        "Awaiting review"
+      ],
+      "等级已移除，后续等级已重新编号；保存后生效。": [
+        "Level removed and subsequent levels renumbered. Save to apply."
+      ],
+      "等级成长": [
+        "Level growth"
+      ],
+      "等级提升": [
+        "Level increase"
+      ],
+      "等级资料": [
+        "Level profiles"
+      ],
+      "等级资料只影响展示；阶段奖励用于新签到。": [
+        "Level profiles affect display only; stage rewards apply to new check-ins."
+      ],
+      "等级资料无效。": [
+        "Invalid level profile."
+      ],
+      "等级门槛必须从 0 开始、严格递增，且不超过 1000000000。": [
+        "Level thresholds must start at 0, increase strictly and not exceed 1000000000."
+      ],
+      "签到": [
+        "Check-in"
+      ],
+      "签到不支持内容范围或不同内容计数。": [
+        "Check-in does not support content scopes or different-content counting."
+      ],
+      "签到天数": [
+        "Check-in days"
+      ],
+      "签到奖励天数必须严格递增。": [
+        "Check-in reward day thresholds must increase strictly."
+      ],
+      "签到奖励已关闭": [
+        "Check-in rewards are disabled"
+      ],
+      "签到奖励无效。": [
+        "Invalid check-in reward."
+      ],
+      "签到奖励编号无效或重复。": [
+        "Invalid or duplicate check-in reward ID."
+      ],
+      "签到成长奖励": [
+        "Check-in growth rewards"
+      ],
+      "签到成长设置无效。": [
+        "Invalid check-in growth settings."
+      ],
+      "签到日历": [
+        "Check-in calendar"
+      ],
+      "签到每日奖励一次；阅读须满足停留时间。关闭活动或将次数设为 0 后停止发放新奖励，已发评论的撤销与恢复继续按原金额处理。": [
+        "Check-in rewards once daily; reading requires dwell time. Disabling an activity or setting its count to 0 stops new rewards. Existing comment reversals and restorations continue using the original actual amount."
+      ],
+      "签到阶段奖励": [
+        "Check-in stage reward"
+      ],
+      "简短说明": [
+        "Short description"
+      ],
+      "管理员可以排除测试账号等不应进入公开榜的用户。不会删除经验、活动或私人任务。": [
+        "Administrators can exclude test accounts or other users from public standings. XP, activity and private tasks remain intact."
+      ],
+      "系列": [
+        "Series"
+      ],
+      "累计": [
+        "cumulative"
+      ],
+      "累计方式": [
+        "Counting mode"
+      ],
+      "累计签到": [
+        "Cumulative check-ins"
+      ],
+      "终身荣誉（含旧版本）": [
+        "Lifetime honors (including old versions)"
+      ],
+      "终身（含旧版本荣誉）": [
+        "Lifetime (including old versions)"
+      ],
+      "经验": [
+        "XP"
+      ],
+      "经验 %1$s · Level %2$s": [
+        "XP %1$s · Level %2$s"
+      ],
+      "经验与成长": [
+        "Experience and growth"
+      ],
+      "经验与等级": [
+        "Experience and levels"
+      ],
+      "经验事件表": [
+        "Experience event table"
+      ],
+      "经验余额超出可用范围。": [
+        "XP balance exceeds the supported range."
+      ],
+      "经验变化": [
+        "XP change"
+      ],
+      "经验来源": [
+        "XP source"
+      ],
+      "经验来源统计": [
+        "XP source statistics"
+      ],
+      "经验活动榜": [
+        "XP activity standings"
+      ],
+      "经验由发表、签到、访问、评论和文章里程碑获得，不能购买或转让。": [
+        "XP comes from posts, check-ins, visits, comments and post milestones. It cannot be purchased or transferred."
+      ],
+      "经验签到": [
+        "XP check-in"
+      ],
+      "经验系统": [
+        "XP system"
+      ],
+      "经验系统尚未就绪，请先检查插件安装与配置。": [
+        "The XP system is not ready. Check installation and configuration."
+      ],
+      "经验系统维护中。": [
+        "The XP system is under maintenance."
+      ],
+      "经验系统维护中，请稍后再试。": [
+        "The XP system is under maintenance. Please retry later."
+      ],
+      "经验系统维护中，请稍后重试。": [
+        "The XP system is under maintenance. Please try again later."
+      ],
+      "经验规则": [
+        "XP rules"
+      ],
+      "经验规则 · 让每一次参与都有积累": [
+        "XP rules · Make participation count"
+      ],
+      "经验记录": [
+        "XP history"
+      ],
+      "经验账本": [
+        "XP ledger"
+      ],
+      "经验面板放在普通 WordPress 页面中，无需已有账户插件。": [
+        "The XP panel lives on a regular WordPress page and requires no account plugin."
+      ],
+      "经验／等级": [
+        "XP / level"
+      ],
+      "结束": [
+        "To"
+      ],
+      "结束日期": [
+        "End date"
+      ],
+      "结束日期不得早于开始日期。": [
+        "The end date cannot precede the start date."
+      ],
+      "结束：": [
+        "To: "
+      ],
+      "统计参数无效。": [
+        "Invalid statistics parameters."
+      ],
+      "统计周期": [
+        "Statistics period"
+      ],
+      "统计时段": [
+        "Statistics range"
+      ],
+      "继续核对": [
+        "Continue checking"
+      ],
+      "编辑": [
+        "Edit"
+      ],
+      "编辑任务": [
+        "Edit task"
+      ],
+      "自动任务按有效活动完成，审核任务由用户提交说明。经验奖励默认关闭，可为任务单独设置。": [
+        "Automatic tasks use eligible activity; reviewed tasks use completion notes. XP rewards default to zero and can be enabled per task."
+      ],
+      "自动任务至少需要一个步骤。": [
+        "Automatic tasks require at least one step."
+      ],
+      "自动完成": [
+        "Automatic completion"
+      ],
+      "自选日期": [
+        "Custom dates"
+      ],
+      "自选日期最多 366 天，截至今日。这里包含人工调整；公开活动榜只统计活动净经验。": [
+        "Choose up to 366 days ending no later than today. Manual adjustments are included here; public standings use only net activity XP."
+      ],
+      "荣誉任务": [
+        "Honor task"
+      ],
+      "获得成就": [
+        "Achievement earned"
+      ],
+      "获得条件": [
+        "Earned for"
+      ],
+      "规则修改记录": [
+        "Rule change history"
+      ],
+      "规则变化：": [
+        "Rule changes: "
+      ],
+      "规则说明": [
+        "Rule notes"
+      ],
+      "计数方式": [
+        "Counting mode"
+      ],
+      "让参与有明确目标，为完成的事情留下荣誉。": [
+        "Give participation clear goals and recognize completed work."
+      ],
+      "记录撤销": [
+        "Record revocation"
+      ],
+      "记录未完成": [
+        "Record incomplete"
+      ],
+      "记录经验调整": [
+        "Record XP adjustment"
+      ],
+      "记录编号无效。": [
+        "Invalid record ID."
+      ],
+      "许可证": [
+        "License"
+      ],
+      "设置": [
+        "Settings"
+      ],
+      "设置字段不完整或包含未知字段。": [
+        "Settings are incomplete or contain unknown fields."
+      ],
+      "设置已保存。": [
+        "Settings saved."
+      ],
+      "设置已被其他管理员更新，请刷新后重新修改。": [
+        "Another administrator changed these settings. Refresh before editing."
+      ],
+      "设置未能保存，请重试。": [
+        "Could not save settings. Please retry."
+      ],
+      "设置正被修改。": [
+        "Settings are being modified."
+      ],
+      "设置正被其他管理员修改，请重试。": [
+        "Another administrator is editing settings. Please retry."
+      ],
+      "设置每次参与的奖励，以及每日可获得奖励的次数。": [
+        "Set rewards for each activity and the daily reward counts."
+      ],
+      "访问网页": [
+        "Visit a page"
+      ],
+      "评论": [
+        "Comments"
+      ],
+      "评论奖励 %1$s / %2$s 次": [
+        "Comment rewards %1$s / %2$s"
+      ],
+      "评论奖励净额异常，请先检查账本。": [
+        "Unexpected comment reward subtotal. Check the ledger first."
+      ],
+      "评论奖励已关闭": [
+        "Comment rewards are disabled"
+      ],
+      "评论状态调整": [
+        "Comment status adjustment"
+      ],
+      "该文章或评论目前不符合奖励条件。": [
+        "This post or comment is no longer eligible for rewards."
+      ],
+      "该用户已经不存在。": [
+        "This user no longer exists."
+      ],
+      "该用户的经验不足，无法完成扣减。": [
+        "Insufficient user XP for the deduction."
+      ],
+      "该请求编号已用于另一项操作，请刷新后重试。": [
+        "This request ID was used for a different action. Refresh and retry."
+      ],
+      "说明已提交，等待审核。": [
+        "Note submitted and awaiting review."
+      ],
+      "说明未能提交，请重试。": [
+        "Could not submit the note. Please retry."
+      ],
+      "请先将当前通知全部标为已读。": [
+        "Mark current notifications read first."
+      ],
+      "请先登录。": [
+        "Please sign in first."
+      ],
+      "请先预览本次配置。": [
+        "Preview this configuration first."
+      ],
+      "请刷新页面并登录后点赞。": [
+        "Refresh and sign in before liking."
+      ],
+      "请在页面停留后再记录访问。": [
+        "Stay on this page before recording a visit."
+      ],
+      "请填写 1–100 个等级门槛。": [
+        "Provide 1–100 level thresholds."
+      ],
+      "请填写 1–300 字的原因。": [
+        "Provide a reason of 1–300 characters."
+      ],
+      "请填写任务名称。": [
+        "Enter a task title."
+      ],
+      "请填写操作原因。": [
+        "Enter a reason for this action."
+      ],
+      "请填写有效的整数。": [
+        "Enter a valid integer."
+      ],
+      "请填写有效的次数。": [
+        "Enter a valid count."
+      ],
+      "请填写至少五个字的完成说明。": [
+        "Provide a completion note of at least five characters."
+      ],
+      "请填写范围内的整数。": [
+        "Enter an integer within the allowed range."
+      ],
+      "请填写退回原因。": [
+        "Enter a reason for returning the submission."
+      ],
+      "请求包含无效字段。": [
+        "The request contains invalid fields."
+      ],
+      "请求参数无效。": [
+        "Invalid request parameters."
+      ],
+      "请求格式无效。": [
+        "Invalid request format."
+      ],
+      "请求编号或操作参数无效。": [
+        "Invalid request ID or action parameters."
+      ],
+      "请选择任务类型、周期和启用状态。": [
+        "Choose a task type, period and activation state."
+      ],
+      "请选择可公开展示的媒体库图片。": [
+        "Choose a publicly accessible media-library image."
+      ],
+      "请选择已读操作或通知偏好。": [
+        "Choose a read action or notification preferences."
+      ],
+      "请选择有效操作。": [
+        "Choose a valid action."
+      ],
+      "请选择有效日期。": [
+        "Choose a valid date."
+      ],
+      "请选择有效时区。": [
+        "Choose a valid time zone."
+      ],
+      "请选择有效的任务步骤。": [
+        "Choose a valid task step."
+      ],
+      "请选择有效的已发布页面。": [
+        "Choose a valid published page."
+      ],
+      "请选择有效的等级颜色。": [
+        "Choose a valid level color."
+      ],
+      "请选择有效计数方式。": [
+        "Choose a valid counting mode."
+      ],
+      "请选择本周或本月。": [
+        "Choose this week or this month."
+      ],
+      "请选择没有密码保护的已发布页面。": [
+        "Choose a published page without password protection."
+      ],
+      "请选择用户并填写非零整数经验，单次最多 1000000。": [
+        "Choose a user and a nonzero integer XP change, up to 1000000 per action."
+      ],
+      "调整原因": [
+        "Adjustment reason"
+      ],
+      "账本与余额核对": [
+        "Ledger and balance check"
+      ],
+      "账本合计": [
+        "Ledger total"
+      ],
+      "输入用户编号查看详情，或按用户名查找。": [
+        "Enter a user ID or search by username."
+      ],
+      "运行诊断": [
+        "Diagnostics"
+      ],
+      "还没有任务。可以先创建一个简单的签到任务。": [
+        "No tasks yet. Start with a simple check-in task."
+      ],
+      "还没有启用的任务。可以从“任务与成就”创建一个目标。": [
+        "No enabled tasks yet. Create a goal under Tasks and achievements."
+      ],
+      "这份说明已被审核，请刷新页面。": [
+        "This submission has already been reviewed. Refresh the page."
+      ],
+      "这项人工调整已经撤销。": [
+        "This manual adjustment has already been reversed."
+      ],
+      "这项任务已有一份说明等待审核。": [
+        "This task already has a pending submission."
+      ],
+      "这项操作已经记录，没有再次发放。": [
+        "This action was already recorded; no additional reward was issued."
+      ],
+      "进入 ": [
+        "Go to "
+      ],
+      "连续": [
+        "consecutive"
+      ],
+      "连续 %1$s 天 · 累计 %2$s 天": [
+        "Consecutive %1$s days · Total %2$s days"
+      ],
+      "连续签到": [
+        "Consecutive check-ins"
+      ],
+      "连续签到断开后重新累计，不扣除已获得经验。每档奖励在这一版规则下只领取一次。": [
+        "A missed check-in restarts the consecutive count without reclaiming XP. Each stage is claimable once in this rule generation."
+      ],
+      "退回说明": [
+        "Return submission"
+      ],
+      "适用内容与每日统计时区": [
+        "Eligible content and daily statistics time zone"
+      ],
+      "适用内容设置无效。": [
+        "Invalid content scope."
+      ],
+      "选择后，顶栏“经验签到”和登录返回链接会指向此页。请先按上方步骤加入短代码；保存不会创建或发布页面。": [
+        "The top-bar check-in and login return links will point here. Add the shortcode first; saving never creates or publishes a page."
+      ],
+      "选择已发布的经验页面": [
+        "Choose a published XP page"
+      ],
+      "选择徽章图片": [
+        "Choose badge image"
+      ],
+      "选择模板 ": [
+        "Choose template "
+      ],
+      "逐级设置最低经验，当前共 ": [
+        "Set minimum XP for each level. Current count: "
+      ],
+      "逐页读取现有记录并比较，不修改经验。差异需要先查清原因。": [
+        "Read existing records page by page and compare without changing XP. Investigate differences before taking action."
+      ],
+      "通知不存在。": [
+        "Notification not found."
+      ],
+      "通知偏好": [
+        "Notification preferences"
+      ],
+      "通知偏好须为布尔值。": [
+        "Notification preferences must be booleans."
+      ],
+      "通知分页或编号无效。": [
+        "Invalid notification pagination or ID."
+      ],
+      "通知暂时无法读取，请重试。": [
+        "Notifications are temporarily unavailable. Please retry."
+      ],
+      "通知查询字段无效。": [
+        "Invalid notification query fields."
+      ],
+      "通知类型偏好无效。": [
+        "Invalid notification type preferences."
+      ],
+      "通知编号无效。": [
+        "Invalid notification ID."
+      ],
+      "通知设置字段无效。": [
+        "Invalid notification settings fields."
+      ],
+      "通知设置已更新，请重新读取后操作。": [
+        "Notification settings changed. Refresh before acting."
+      ],
+      "通知设置未能保存，请重试。": [
+        "Could not save notification settings. Please retry."
+      ],
+      "通过并授予成就": [
+        "Approve and grant achievement"
+      ],
+      "配置 JSON": [
+        "Configuration JSON"
+      ],
+      "配置大小或导入方式无效。": [
+        "Invalid configuration size or import mode."
+      ],
+      "配置导出与导入": [
+        "Configuration export and import"
+      ],
+      "配置工具": [
+        "Configuration tools"
+      ],
+      "配置已应用。": [
+        "Configuration applied."
+      ],
+      "配置已更新，请重新预览。": [
+        "Configuration changed. Preview again."
+      ],
+      "配置未能应用，请重新预览。": [
+        "Could not apply configuration. Preview again."
+      ],
+      "配置格式无效。": [
+        "Invalid configuration format."
+      ],
+      "配置超过任务或导入映射上限。": [
+        "Configuration exceeds task or import-mapping limits."
+      ],
+      "配置预览失败。": [
+        "Could not preview configuration."
+      ],
+      "里程碑变更": [
+        "Milestone changes"
+      ],
+      "里程碑标识重复、无效或已经停用。": [
+        "Duplicate, invalid or retired milestone ID."
+      ],
+      "里程碑次数设置不完整。": [
+        "Incomplete milestone thresholds."
+      ],
+      "里程碑设置无效。": [
+        "Invalid milestone settings."
+      ],
+      "重新检查并重试": [
+        "Recheck and retry"
+      ],
+      "阅读三篇不同的公开内容。": [
+        "Read three different public content items."
+      ],
+      "阅读奖励 %1$s / %2$s 次；有效停留 %3$s 秒": [
+        "Reading rewards %1$s / %2$s; required dwell %3$s seconds"
+      ],
+      "阅读奖励已关闭": [
+        "Reading rewards are disabled"
+      ],
+      "阅读起步": [
+        "Reading starter"
+      ],
+      "阶段经验": [
+        "Stage XP"
+      ],
+      "限定内容（可选）": [
+        "Content scope (optional)"
+      ],
+      "需要核对": [
+        "Needs review"
+      ],
+      "面板设置已更新，请刷新页面。": [
+        "Panel settings changed. Refresh the page."
+      ],
+      "面板设置未能保存，请重试。": [
+        "Could not save panel settings. Please retry."
+      ],
+      "面板设置正被修改，请重试。": [
+        "Panel settings are being modified. Please retry."
+      ],
+      "页面 → 新建页面": [
+        "Pages → Add New"
+      ],
+      "页面不可用。": [
+        "Page unavailable."
+      ],
+      "项不同内容": [
+        "different content items"
+      ],
+      "预览": [
+        "Preview"
+      ],
+      "预览内容": [
+        "Preview content"
+      ],
+      "预览模板": [
+        "Preview template"
+      ],
+      "预览配置": [
+        "Preview configuration"
+      ],
+      "颜色": [
+        "Color"
+      ],
+      "首次发表文章": [
+        "First post publication"
+      ],
+      "首级固定为 0，门槛须严格递增，最多 100 级。修改门槛会立即影响等级展示，不改变经验余额。": [
+        "The first threshold is fixed at 0; values must increase strictly, up to 100 levels. Threshold edits immediately affect level display without changing XP balances."
+      ],
+      "验证已过期，请刷新设置页。": [
+        "Verification expired. Refresh the settings page."
+      ],
+      "验证已过期，请刷新页面。": [
+        "Verification expired. Refresh the page."
+      ],
+      "默认 Asia/Shanghai。已有经验记录后不能修改，以免同一天重复领取奖励。": [
+        "Default: Asia/Shanghai. The time zone cannot change after XP is recorded, to avoid duplicate daily claims."
+      ],
+      "默认关闭。仅检查 wzf2000/wp-xp-core 官方安装 ZIP；稳定渠道忽略预发布，预发布渠道同时接受更新的稳定版。不会降级，不新增定时任务。缓存最多六小时。": [
+        "Disabled by default. Checks only official installation ZIPs from wzf2000/wp-xp-core. Stable ignores prereleases; the prerelease channel also accepts newer stable releases. Never downgrades or adds scheduled tasks. Cache lasts up to six hours."
+      ],
+      "（分类）": [
+        "(category)"
+      ],
+      "（指定内容范围）": [
+        "(specified content scope)"
+      ],
+      "（经验 +": [
+        "(XP +"
+      ],
+      "（账号已删除）": [
+        "(account deleted)"
+      ],
+      "，发布后即可公开展示。可用 ": [
+        ", then publish to display publicly. Use "
+      ],
+      "，标题可填“我的经验”。": [
+        ", with a title such as “My XP”."
+      ],
+      "；成长变化：": [
+        "; Growth changes: "
+      ],
+      "": {
+        "domain": "wp-xp-core",
+        "lang": "en_US"
+      }
+    }
+  }
+}

@@ -9,6 +9,7 @@ import shutil
 import stat
 import subprocess
 import time
+import uuid
 
 ROOT = Path(__file__).resolve().parent.parent
 DATABASE = "wp_xp_core_ci"
@@ -43,6 +44,9 @@ def main():
     parser.add_argument(
         "--core-source", type=Path, help="Copy only core code for an offline local run"
     )
+    parser.add_argument(
+        "--scale", action="store_true", help="Opt in to owned 10k/50k synthetic read benchmarks"
+    )
     args = parser.parse_args()
     lab = args.lab.resolve()
     if lab.parent != Path("/tmp") or args.lab.is_symlink() or lab.exists():
@@ -68,6 +72,11 @@ def main():
     lab.mkdir()
     site = lab / "site"
     site.mkdir()
+    owner_token = uuid.uuid4().hex
+    owner_file = lab / ".wp-xp-core-test-owner"
+    owner_file.write_text(
+        json.dumps({"database": DATABASE, "site": str(site.resolve()), "token": owner_token}) + "\n"
+    )
     env = dict(os.environ)
     env.setdefault("WP_XP_TEST_DB_USER", "root")
     env.setdefault("WP_XP_TEST_DB_PASSWORD", "")
@@ -167,6 +176,7 @@ try {
         "--admin_email=author@example.invalid",
         "--skip-email",
     )
+    wp("option", "add", "wp_xp_core_test_owner", owner_token, "--autoload=no")
     for username in ["fixture-reader", "fixture-concurrent"]:
         wp(
             "user",
@@ -178,11 +188,40 @@ try {
         )
     plugin = site / "wp-content/plugins/wp-xp-core"
     plugin.mkdir(parents=True)
-    for path in ROOT.glob("*.php"):
+    import release
+
+    for name in release.source_files():
+        path = ROOT / name
         if path.is_symlink():
-            raise ValueError("Plugin PHP source must contain no symlinks")
-        shutil.copy2(path, plugin / path.name)
-    copy_directory(ROOT / "assets", plugin / "assets")
+            raise ValueError("Installation source must contain no symlinks")
+        target = plugin / name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(path, target)
+    # No core language pack is implied. The lab's low-priority locale can still be
+    # overridden by WordPress's real locale switcher for English-catalog tests.
+    mu_plugins = site / "wp-content/mu-plugins"
+    mu_plugins.mkdir(exist_ok=True)
+    (mu_plugins / "xp-owned-test-locale.php").write_text(
+        "<?php\n"
+        "if (DB_NAME !== 'wp_xp_core_ci' || wp_get_environment_type() !== 'local' || "
+        "get_option('wp_xp_core_test_owner') !== " + json.dumps(owner_token) + ") return;\n"
+        "add_filter('locale', static fn($locale) => 'zh_CN', 0);\n"
+        "add_filter('determine_locale', static fn($locale) => 'zh_CN', 0);\n"
+    )
+    locale_probe = lab / "locale-probe.php"
+    locale_probe.write_text(
+        "<?php\n"
+        "if (PHP_SAPI !== 'cli' || DB_NAME !== 'wp_xp_core_ci' || "
+        "wp_get_environment_type() !== 'local' || get_option('wp_xp_core_test_owner') !== "
+        + json.dumps(owner_token)
+        + ") throw new RuntimeException('Owned synthetic locale probe required');\n"
+        "echo determine_locale();\n"
+    )
+    try:
+        if wp("eval-file", str(locale_probe)).strip() != "zh_CN":
+            raise RuntimeError("Owned synthetic locale fixture did not initialize")
+    finally:
+        locale_probe.unlink()
     results = {"wordpress": {"version": wp("core", "version").strip()}}
     fixture = str(ROOT / "tests/wordpress-install.php")
     for mode in ["install", "verify"]:
@@ -218,11 +257,128 @@ try {
     results["concurrency"] = json.loads(wp("eval-file", fixture, mode="concurrency-verify"))
     results["concurrency"]["clients"] = clients
     (lab / "results.json").write_text(json.dumps(results, indent=2) + "\n")
-    for stage in ("management", "policy", "growth", "insights"):
+    for stage in (
+        "management",
+        "policy",
+        "growth",
+        "achievement-rewards",
+        "notifications",
+        "fairness",
+        "product",
+        "insights",
+    ):
         results[stage] = json.loads(
             wp("eval-file", str(ROOT / ("tests/wordpress-" + stage + ".php")))
         )
         (lab / "results.json").write_text(json.dumps(results, indent=2) + "\n")
+    # Exercise optional task XP with two independent administrator requests.
+    parallel_env = dict(env, WP_XP_TEST_BARRIER=str(time.time() + 1.0))
+    reward_fixture = str(ROOT / "tests/wordpress-achievement-concurrent.php")
+    processes = [
+        subprocess.Popen(
+            command + ["eval-file", reward_fixture],
+            env=parallel_env,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        for _ in range(2)
+    ]
+    clients = []
+    try:
+        for process in processes:
+            output, errors = process.communicate(timeout=60)
+            if process.returncode:
+                failure(
+                    "Concurrent achievement",
+                    subprocess.CompletedProcess([], process.returncode, output, errors),
+                )
+            clients.append(json.loads(output))
+    finally:
+        for process in processes:
+            if process.poll() is None:
+                process.terminate()
+                process.wait(timeout=10)
+    results["achievement-concurrency"] = json.loads(wp("eval-file", reward_fixture, mode="verify"))
+    results["achievement-concurrency"]["clients"] = clients
+    (lab / "results.json").write_text(json.dumps(results, indent=2) + "\n")
+    parallel_env = dict(env, WP_XP_TEST_BARRIER=str(time.time() + 1.0))
+    retry_fixture = str(ROOT / "tests/wordpress-comment-retry-concurrent.php")
+    processes = [
+        subprocess.Popen(
+            command + ["eval-file", retry_fixture],
+            env=parallel_env,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        for _ in range(2)
+    ]
+    clients = []
+    try:
+        for process in processes:
+            output, errors = process.communicate(timeout=60)
+            if process.returncode:
+                failure(
+                    "Concurrent comment compensation",
+                    subprocess.CompletedProcess([], process.returncode, output, errors),
+                )
+            clients.append(json.loads(output))
+    finally:
+        for process in processes:
+            if process.poll() is None:
+                process.terminate()
+                process.wait(timeout=10)
+    results["comment-retry-concurrency"] = json.loads(wp("eval-file", retry_fixture, mode="verify"))
+    results["comment-retry-concurrency"]["clients"] = clients
+    configuration_fixture = str(ROOT / "tests/wordpress-configuration-concurrent.php")
+    wp("eval-file", configuration_fixture, mode="prepare")
+    parallel_env = dict(env, WP_XP_TEST_BARRIER=str(time.time() + 1.0))
+    processes = [
+        subprocess.Popen(
+            command + ["eval-file", configuration_fixture],
+            env=parallel_env,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        for _ in range(2)
+    ]
+    clients = []
+    try:
+        for process in processes:
+            output, errors = process.communicate(timeout=60)
+            if process.returncode:
+                failure(
+                    "Concurrent configuration",
+                    subprocess.CompletedProcess([], process.returncode, output, errors),
+                )
+            clients.append(json.loads(output))
+    finally:
+        for process in processes:
+            if process.poll() is None:
+                process.terminate()
+                process.wait(timeout=10)
+    if sorted(client["result"] for client in clients) != ["applied", "conflict"]:
+        raise RuntimeError("Concurrent preview must apply once and reject one stale revision")
+    results["configuration-concurrency"] = json.loads(
+        wp("eval-file", configuration_fixture, mode="verify")
+    )
+    results["configuration-concurrency"]["clients"] = clients
+    (lab / "results.json").write_text(json.dumps(results, indent=2) + "\n")
+    if args.scale:
+        scale_env = dict(env, WP_XP_SCALE_TEST="1", WP_XP_TEST_OWNER_FILE=str(owner_file))
+        scale = subprocess.run(
+            command + ["eval-file", str(ROOT / "tests/wordpress-scale.php")],
+            env=scale_env,
+            text=True,
+            capture_output=True,
+            timeout=600,
+        )
+        if scale.returncode:
+            failure("Owned scale workload", scale)
+        results["scale"] = json.loads(scale.stdout)
+    (lab / "results.json").write_text(json.dumps(results, indent=2) + "\n")
     print(
         json.dumps({key: len(value.get("checks", [])) for key, value in results.items()}, indent=2)
     )

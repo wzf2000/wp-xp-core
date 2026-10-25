@@ -66,6 +66,7 @@ function submit_button($label, ...$args)
     echo '<button type="submit">' . $label . '</button>';
 }
 $_SERVER['REQUEST_METHOD'] = 'GET';
+require_once dirname(__DIR__) . '/i18n.php';
 require $root . '/settings.php';
 ob_start();
 WP_XP_Core_Settings::page();
@@ -249,6 +250,33 @@ class WP_XP_Core_Insights
             ],
         ];
     }
+    public static function trends($input = [])
+    {
+        return [
+            'current' => [
+                'from' => '2026-10-19',
+                'to' => '2026-10-25',
+                'net_xp' => 2,
+                'events' => 1,
+                'participants' => 1,
+            ],
+            'previous' => [
+                'from' => '2026-10-12',
+                'to' => '2026-10-18',
+                'net_xp' => 1,
+                'events' => 1,
+                'participants' => 1,
+            ],
+        ];
+    }
+    public static function anomalies($input = [])
+    {
+        return ['items' => []];
+    }
+    public static function task_history($input = [])
+    {
+        return ['rows' => [], 'more' => false];
+    }
     public static function task_rates()
     {
         return [
@@ -270,6 +298,17 @@ class WP_XP_Core_Insights
         ];
     }
 }
+class WP_XP_Core_Fairness
+{
+    public static function excluded()
+    {
+        return [];
+    }
+    public static function exclusion_revision()
+    {
+        return str_repeat('b', 64);
+    }
+}
 require $root . '/management-ui.php';
 require $root . '/achievements-ui.php';
 require $root . '/insights-ui.php';
@@ -289,4 +328,42 @@ $insights = ob_get_clean();
 file_put_contents(
     $dir . '/insights.html',
     $head . '<link rel="stylesheet" href="' . $assets['admin_css'] . '">' . $insights,
+);
+
+class WP_XP_Core_Achievements
+{
+    public static function definitions(): array
+    {
+        return [];
+    }
+    public static function revision(): string
+    {
+        return str_repeat('a', 64);
+    }
+    public static function pending(int $cursor = 0): array
+    {
+        return ['items' => [], 'next_cursor' => null];
+    }
+}
+function checked($a, $b, $echo = false)
+{
+    return $a == $b ? ' checked' : '';
+}
+function wp_generate_uuid4()
+{
+    return '11111111-1111-4111-8111-111111111111';
+}
+ob_start();
+WP_XP_Core_Achievements_UI::page();
+$task_markup = ob_get_clean();
+file_put_contents(
+    $dir . '/tasks.html',
+    $head .
+        '<link rel="stylesheet" href="' .
+        $assets['admin_css'] .
+        '">' .
+        $task_markup .
+        '<script src="' .
+        $assets['growth_admin_js'] .
+        '"></script>',
 );

@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.0.0-rc.3
+
+Unreleased development candidate; the published rc.2 ZIP does not include these changes. / 尚未发行的开发候选，已公开 rc.2 安装包不包含以下改动。
+
+- Add scoped/versioned tasks, monthly periods, prerequisites, optional XP/image badges and atomic reasoned grant/revocation. / 范围任务、月度周期、前置、可选经验和图片徽章、原子人工授予与撤销。
+- Add private durable notifications, next goals, gross daily/weekly activity caps, standings privacy and bounded comparative/version diagnostics. Protect insufficient comment compensation with captured, revalidated administrator retry. / 私人通知、目标指引、活动上限、榜单隐私与统计；不足余额评论补偿整笔拒绝并可受控重试。
+- Add previewed atomic configuration import/export, explicit templates, editor blocks, English/Chinese catalogs, compact keyboard-accessible personal tasks, WordPress personal-data export and explicit retention policy. / 配置预览与原子导入、模板、区块、中英翻译、紧凑可访问任务界面、分页个人数据导出和保留政策。
+- Add default-off server provider policies and fixed-origin stable/prerelease GitHub checks; preserve existing APIs, history, earned snapshots and default behavior. No migration, new table/index, email or cron. / 默认关闭的活动提供者策略与固定官方更新渠道，保持旧接口与历史，不迁移、不加表／索引、邮件或定时任务。
+
 ## 2.0.0-rc.2
 
 Prerelease adding activity leaderboards and read-only incentive insights.

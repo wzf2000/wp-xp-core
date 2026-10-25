@@ -70,6 +70,7 @@ class PanelStorage
     }
 }
 $GLOBALS['wpdb'] = new PanelStorage();
+require_once dirname(__DIR__) . '/i18n.php';
 require dirname(__DIR__) . '/settings.php';
 $checks = 0;
 function verify_panel($name, $condition)
