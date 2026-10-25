@@ -913,6 +913,74 @@ foreach (['events' => 3, 'objects' => 2, 'days' => 2] as $mode => $expected) {
             $progress['period'] === '2031-02',
     );
 }
+// Repeated counters share SQL work, while thresholds, scope, dates and boundaries stay distinct.
+$counter_original = WP_XP_Core_Achievements::definitions();
+$counter_defs = [];
+foreach ($round_six_ids as $mode => $id) {
+    $counter_defs[$id] = $counter_original[$id];
+}
+$counter_base = $counter_original[$round_six_ids['events']];
+$counter_probes = [];
+foreach (['low', 'high', 'scope', 'date', 'boundary'] as $i => $name) {
+    $task = $counter_base;
+    $task['id'] = 't_' . sprintf('%016x', 0xfed100 + $i);
+    $task['number'] = 500 + $i;
+    if ($name === 'low') {
+        $task['steps'][0]['count'] = 1;
+    }
+    if ($name === 'high') {
+        $task['steps'][0]['count'] = 10;
+    }
+    if ($name === 'scope') {
+        $task['steps'][0]['post_ids'] = [$pages[1]];
+        $task['steps'][0]['category_ids'] = [];
+    }
+    if ($name === 'date') {
+        $task['starts_on'] = '2031-02-28';
+    }
+    if ($name === 'boundary') {
+        $task['start_event_id'] = (int) $wpdb->get_var(
+            'SELECT MAX(id) FROM ' . Reader_Experience::table(),
+        );
+    }
+    $counter_probes[$name] = $task['id'];
+    $counter_defs[$task['id']] = $task;
+}
+$counter_queries = [];
+$capture_counters = static function ($sql) use (&$counter_queries) {
+    if (str_starts_with($sql, 'SELECT COUNT(DISTINCT CASE WHEN')) {
+        $counter_queries[] = $sql;
+    }
+    return $sql;
+};
+update_option(WP_XP_Core_Achievements::OPTION, $counter_defs, false);
+WP_XP_Core_Achievements::clear_cache();
+add_filter('query', $capture_counters);
+try {
+    $counter_personal = array_column(WP_XP_Core_Achievements::personal()['tasks'], null, 'id');
+} finally {
+    remove_filter('query', $capture_counters);
+    update_option(WP_XP_Core_Achievements::OPTION, $counter_original, false);
+    WP_XP_Core_Achievements::clear_cache();
+}
+$verify(
+    'Shared event counters compare independent task thresholds',
+    $counter_personal[$counter_probes['low']]['steps'][0]['current'] === 1 &&
+        $counter_personal[$counter_probes['low']]['steps'][0]['complete'] &&
+        $counter_personal[$counter_probes['high']]['steps'][0]['current'] === 3 &&
+        !$counter_personal[$counter_probes['high']]['steps'][0]['complete'],
+);
+$verify(
+    'Scope, date and version boundary remain independent in the batched counter query',
+    $counter_personal[$counter_probes['scope']]['steps'][0]['current'] === 1 &&
+        $counter_personal[$counter_probes['date']]['steps'][0]['current'] === 1 &&
+        $counter_personal[$counter_probes['boundary']]['steps'][0]['current'] === 0,
+);
+$verify(
+    'Eight task steps with shared counters produce only six SQL counter expressions',
+    count($counter_queries) === 1 &&
+        substr_count($counter_queries[0], 'COUNT(DISTINCT CASE WHEN') === 6,
+);
 wp_update_post(['ID' => $scoped_post, 'post_password' => 'synthetic-only']);
 $verify(
     'Password protected content stops contributing',

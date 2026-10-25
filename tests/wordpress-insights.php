@@ -540,6 +540,79 @@ try {
         'Insights reads never change events balance projections options or task rewards',
         $before === $snapshot(),
     );
+    $rate_probes = [];
+    foreach (['threshold', 'once', 'scope', 'date', 'boundary'] as $i => $name) {
+        $task = $weekly;
+        $task['id'] = 't_' . sprintf('%016x', 0xfee100 + $i);
+        $task['number'] = 700 + $i;
+        $task['steps'][0]['count'] = $name === 'threshold' ? 100 : 1;
+        if ($name === 'once') {
+            $task['period'] = 'once';
+        }
+        if ($name === 'scope') {
+            $task['steps'][0]['post_ids'] = [999999999];
+        }
+        if ($name === 'date') {
+            $task['period'] = 'once';
+            $task['ends_on'] = '2032-03-07';
+        }
+        if ($name === 'boundary') {
+            $task['start_event_id'] = (int) $wpdb->get_var('SELECT MAX(id) FROM ' . $table);
+        }
+        $rate_probes[$name] = $task;
+        $defs[$task['id']] = $task;
+    }
+    $scope_task = $rate_probes['scope'];
+    $scope_period = WP_XP_Core_Achievements::period($scope_task)['key'];
+    $event(
+        $beta,
+        'task_grant',
+        0,
+        '2032-03-10',
+        'task:' . $scope_task['id'] . ':2:' . $scope_period . ':' . $beta,
+    );
+    $revoked_grant = $event(
+        $gamma,
+        'task_grant',
+        0,
+        '2032-03-10',
+        'task:' . $scope_task['id'] . ':2:' . $scope_period . ':' . $gamma,
+    );
+    $event(
+        $gamma,
+        'task_grant_revoke',
+        0,
+        '2032-03-10',
+        'task-revoke:' . $revoked_grant,
+        $revoked_grant,
+    );
+    update_option(WP_XP_Core_Achievements::OPTION, $defs, false);
+    WP_XP_Core_Achievements::clear_cache();
+    $probe_before = $snapshot();
+    $probe_query_count = $wpdb->num_queries;
+    $probe_rates = WP_XP_Core_Insights::task_rates();
+    $probe_queries = $wpdb->num_queries - $probe_query_count;
+    $probe_rows = array_column($probe_rates['rows'], null, 'id');
+    $verify(
+        'Task participant counts do not depend on completion thresholds',
+        $probe_rows[$weekly['id']]['participants'] === 1 &&
+            $probe_rows[$rate_probes['threshold']['id']]['participants'] === 1,
+    );
+    $verify(
+        'Per-task branches retain independent period, end-date and version boundary filters',
+        $probe_rows[$rate_probes['once']['id']]['participants'] === 2 &&
+            $probe_rows[$rate_probes['date']['id']]['participants'] === 1 &&
+            $probe_rows[$rate_probes['boundary']['id']]['participants'] === 0,
+    );
+    $verify(
+        'Scope excludes unrelated activity while valid earned-only users participate and revoked-only users do not',
+        $probe_rows[$scope_task['id']]['participants'] === 1 &&
+            $probe_rows[$scope_task['id']]['completed'] === 1,
+    );
+    $verify(
+        'Per-task UNION report retains constant query count and remains read only',
+        $probe_queries <= 3 && $probe_before === $snapshot(),
+    );
     $maximum = [];
     for ($index = 0; $index < 50; $index++) {
         $task = $auto;

@@ -1347,6 +1347,7 @@ final class WP_XP_Core_Achievements
         $definitions ??= self::definitions();
         $select = [];
         $aliases = [];
+        $expressions = [];
         $keys = [];
         $pending = [];
         $minimum = PHP_INT_MAX;
@@ -1354,9 +1355,13 @@ final class WP_XP_Core_Achievements
             $keys[] = self::key($task, $uid);
             $minimum = min($minimum, $task['start_event_id']);
             foreach ($task['steps'] as $i => $step) {
-                $alias = 'n' . count($select);
-                $condition = self::condition($task, $step);
-                $select[] = self::counter($step, $condition) . ' AS ' . $alias;
+                $expression = self::counter($step, self::condition($task, $step));
+                if (!isset($expressions[$expression])) {
+                    $alias = 'n' . count($select);
+                    $expressions[$expression] = $alias;
+                    $select[] = $expression . ' AS ' . $alias;
+                }
+                $alias = $expressions[$expression];
                 $aliases[$task['id']][$i] = $alias;
             }
             if ($task['type'] === 'review') {

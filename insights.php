@@ -495,10 +495,8 @@ final class WP_XP_Core_Insights
         }
         try {
             global $wpdb;
-            $today = Reader_Experience::day();
             $tasks = [];
             $selects = [];
-            $activity_conditions = [];
             $definitions = WP_XP_Core_Achievements::definitions();
             if ($wpdb->last_error !== '') {
                 throw new RuntimeException('Task definitions unavailable');
@@ -520,68 +518,74 @@ final class WP_XP_Core_Insights
                     'to' => $period['to'],
                     'start_event_id' => (int) $task['start_event_id'],
                 ];
+                // Each task filters its own ledger candidates. There is no task x ledger
+                // derived-table join and no cross-task OR expression to evaluate per row.
+                $activity_conditions = [];
                 foreach ($task['steps'] as $step) {
-                    $activity_conditions[] =
-                        '(t.task_index=' .
-                        $index .
-                        ' AND (' .
-                        WP_XP_Core_Achievements::condition($task, $step) .
-                        '))';
+                    $activity_conditions[] = WP_XP_Core_Achievements::condition($task, $step);
                 }
-                $selects[] = $wpdb->prepare(
-                    'SELECT %d AS task_index,%s AS task_id,%d AS version,%d AS number,' .
-                        '%s AS task_type,%s AS kinds,%s AS date_from,%s AS date_to,' .
-                        '%d AS boundary,%s AS period_key,%s AS completion_prefix',
-                    $index,
-                    $task['id'],
-                    $task['version'],
-                    $task['number'],
-                    $task['type'],
-                    implode(',', array_unique(array_column($task['steps'], 'kind'))),
-                    $period['from'],
-                    $period['to'],
-                    $task['start_event_id'],
-                    $period['key'],
-                    'task:' . $task['id'] . ':' . $task['version'] . ':' . $period['key'] . ':',
+                $activity_conditions = array_values(array_unique($activity_conditions));
+                $activity = $activity_conditions
+                    ? '(' . implode(' OR ', $activity_conditions) . ')'
+                    : '0=1';
+                $detail = "IF(JSON_VALID(e.detail),e.detail,'{}')";
+                $prefix =
+                    'task:' . $task['id'] . ':' . $task['version'] . ':' . $period['key'] . ':';
+                $earned =
+                    "e.kind IN ('task_complete','task_grant') AND e.event_key=CONCAT(" .
+                    $wpdb->prepare('%s', $prefix) .
+                    ',e.user_id) AND ' .
+                    WP_XP_Core_Achievements::valid_receipt();
+                $submission =
+                    $task['type'] === 'review'
+                        ? $wpdb->prepare(
+                            "e.kind='achievement_submit' AND e.object_id=%d AND JSON_UNQUOTE(JSON_EXTRACT($detail,'$.task_id'))=%s AND JSON_UNQUOTE(JSON_EXTRACT($detail,'$.version'))=%s AND JSON_UNQUOTE(JSON_EXTRACT($detail,'$.period'))=%s",
+                            $task['number'],
+                            $task['id'],
+                            (string) $task['version'],
+                            $period['key'],
+                        )
+                        : '0=1';
+                $kinds = array_values(
+                    array_unique(
+                        array_merge(
+                            array_column($task['steps'], 'kind'),
+                            ['task_complete', 'task_grant'],
+                            $task['type'] === 'review' ? ['achievement_submit'] : [],
+                        ),
+                    ),
                 );
-            }
-            if (!$tasks) {
-                return ['timezone' => WP_XP_Core_Settings::rules()['timezone'], 'rows' => []];
-            }
-            // JSON_VALID protects legacy text. Completion uses the exact canonical event key.
-            $detail = "IF(JSON_VALID(e.detail),e.detail,'{}')";
-            $earned =
-                "e.kind IN ('task_complete','task_grant') AND e.event_key=CONCAT(t.completion_prefix,e.user_id) AND " .
-                WP_XP_Core_Achievements::valid_receipt();
-            $activity = $activity_conditions
-                ? '(' . implode(' OR ', $activity_conditions) . ')'
-                : '0=1';
-            $submission =
-                "t.task_type='review' AND e.kind='achievement_submit' AND e.object_id=t.number" .
-                " AND JSON_UNQUOTE(JSON_EXTRACT($detail,'$.task_id'))=t.task_id" .
-                " AND JSON_UNQUOTE(JSON_EXTRACT($detail,'$.version'))=CAST(t.version AS CHAR)" .
-                " AND JSON_UNQUOTE(JSON_EXTRACT($detail,'$.period'))=t.period_key";
-            $rows = self::rows(
-                'SELECT t.task_index,COUNT(DISTINCT CASE WHEN (' .
+                $selects[] =
+                    'SELECT ' .
+                    $index .
+                    ' AS task_index,COUNT(DISTINCT CASE WHEN (' .
                     $earned .
-                    ') THEN e.user_id END) AS completed,' .
-                    'COUNT(DISTINCT e.user_id) AS participants FROM (' .
-                    implode(' UNION ALL ', $selects) .
-                    ') t INNER JOIN ' .
+                    ') THEN e.user_id END) AS completed,COUNT(DISTINCT e.user_id) AS participants FROM ' .
                     Reader_Experience::table() .
-                    ' e ON e.id>t.boundary AND e.local_day BETWEEN t.date_from AND t.date_to' .
-                    " INNER JOIN {$wpdb->users} u ON u.ID=e.user_id" .
+                    " e INNER JOIN {$wpdb->users} u ON u.ID=e.user_id" .
                     WP_XP_Core_Achievements::joins() .
-                    ' WHERE ((' .
+                    ' WHERE ' .
+                    $wpdb->prepare(
+                        'e.id>%d AND e.local_day BETWEEN %s AND %s',
+                        $task['start_event_id'],
+                        $period['from'],
+                        $period['to'],
+                    ) .
+                    ' AND e.kind IN (' .
+                    self::quoted($kinds) .
+                    ') AND ((' .
                     $earned .
                     ') OR (' .
                     $activity .
                     ') OR (' .
                     $submission .
                     '))' .
-                    self::membership() .
-                    ' GROUP BY t.task_index',
-            );
+                    self::membership();
+            }
+            if (!$tasks) {
+                return ['timezone' => WP_XP_Core_Settings::rules()['timezone'], 'rows' => []];
+            }
+            $rows = self::rows(implode(' UNION ALL ', $selects));
             $counts = array_column($rows, null, 'task_index');
             foreach ($tasks as $index => &$task) {
                 $task['participants'] = (int) ($counts[$index]['participants'] ?? 0);
