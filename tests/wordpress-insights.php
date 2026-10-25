@@ -589,6 +589,14 @@ try {
     update_option(WP_XP_Core_Achievements::OPTION, $defs, false);
     WP_XP_Core_Achievements::clear_cache();
     $probe_before = $snapshot();
+    // A cold WordPress option cache adds fixed metadata loads, not per-task queries.
+    // Verify that cold path is read only, then measure the same warm metadata
+    // baseline used by the existing fixed-query-count checks below and above.
+    $probe_cold_rates = WP_XP_Core_Insights::task_rates();
+    $verify(
+        'Cold task-rate metadata loading remains read only',
+        !is_wp_error($probe_cold_rates) && $probe_before === $snapshot(),
+    );
     $probe_query_count = $wpdb->num_queries;
     $probe_rates = WP_XP_Core_Insights::task_rates();
     $probe_queries = $wpdb->num_queries - $probe_query_count;
@@ -610,9 +618,10 @@ try {
             $probe_rows[$scope_task['id']]['completed'] === 1,
     );
     $verify(
-        'Per-task UNION report retains constant query count and remains read only',
+        'Warm per-task UNION report retains constant query count and remains read only',
         $probe_queries <= 3 && $probe_before === $snapshot(),
     );
+    $verify('Cold and warm task-rate results agree', $probe_cold_rates === $probe_rates);
     $maximum = [];
     for ($index = 0; $index < 50; $index++) {
         $task = $auto;
