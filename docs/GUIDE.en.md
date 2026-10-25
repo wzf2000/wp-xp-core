@@ -1,8 +1,10 @@
+<!-- wp-xp-core-version: 2.0.0 -->
+
 # User guide
 
 [简体中文](GUIDE.md) · English · [Back to overview](../README.en.md)
 
-This administrator guide describes the **2.0.0-rc.2 prerelease**. For released versions, use the guide at the matching Release tag. From 1.4.0, new sites can install and activate with default rules, without server JSON configuration. See [Get started](../README.en.md#get-started) for installation.
+This administrator guide describes **2.0.0**. For released versions, use the guide at the matching Release tag. From 1.4.0, new sites can install and activate with default rules, without server JSON configuration. See [Get started](../README.en.md#get-started) for installation.
 
 ## Create an experience page
 
@@ -208,3 +210,9 @@ Deactivation, updates and deleting plugin files retain the ledger, balances, tas
 The optional updater is unavailable on multisite networks. Network administrators update the plugin manually; subsite preferences cannot affect network-shared update results.
 
 After an update-channel change, cached candidates are immediately checked against the current channel, version and official asset URL; other plugins remain untouched. Initial and duplicate provider deliveries return the same ledger `event_id`, never a balance projection metadata ID.
+
+## Database requirements and read failures
+
+Use InnoDB for transactional storage and a database providing `JSON_VALID`, `JSON_EXTRACT`, `JSON_UNQUOTE` and `JSON_TYPE`. Activation checks those functions before installation writes. If a check fails, ask the server administrator to provide a compatible database and retry activation; no tables are converted or adopted.
+
+When a claim, daily quota, milestone, original comment receipt or response history cannot be read, the reward operation stops and rolls back. Restore database access before retrying the original action; do not edit the balance or replay initialization. Personal-data exports include review decisions, feedback and the associated submission ID, without internal administrator identities or reasons.

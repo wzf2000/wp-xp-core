@@ -30,6 +30,7 @@ final class WP_XP_Core_Lifecycle
                     'The external compatibility profile is invalid or has no experience section.',
                 );
             }
+            self::requirements();
             if (reader_experience_external()) {
                 return;
             }
@@ -40,6 +41,24 @@ final class WP_XP_Core_Lifecycle
                 'WP XP Core installation',
                 ['back_link' => true],
             );
+        }
+    }
+    /** Probe functions, not version strings: MariaDB and MySQL number releases differently. */
+    private static function requirements(): void
+    {
+        global $wpdb;
+        $previous = $wpdb->suppress_errors(true);
+        try {
+            $supported = $wpdb->get_var(
+                "SELECT JSON_VALID('{\"ok\":\"yes\"}')=1 AND JSON_UNQUOTE(JSON_EXTRACT('{\"ok\":\"yes\"}','$.ok'))='yes' AND JSON_TYPE(JSON_EXTRACT('{\"n\":1}','$.n'))='INTEGER'",
+            );
+            if ($wpdb->last_error !== '' || (string) $supported !== '1') {
+                throw new RuntimeException(
+                    'The database must support JSON_VALID, JSON_EXTRACT, JSON_UNQUOTE and JSON_TYPE. No installation changes were made.',
+                );
+            }
+        } finally {
+            $wpdb->suppress_errors($previous);
         }
     }
     private static function engine(string $table): ?string

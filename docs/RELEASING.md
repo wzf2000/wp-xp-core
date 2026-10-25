@@ -27,3 +27,9 @@ For local verification, run `npm run package` and `npm run package:check` from a
 The installation allowlist and independent publication verifier include `languages/` PO/MO/POT/JSON and `modules/` PHP. Run the catalog compiler/check and inspect the actual ZIP; a source-only language directory is insufficient. The first changelog heading must match the exact release version. Update candidate notices in both READMEs and the changelog when preparing publication.
 
 语言文件与区块模块须实际进入 ZIP；发行检查包括 catalog 与载荷白名单。首个版本标题保留准确版本以兼容发行工具；准备公开发行时，同步更新双语 README 和变更日志中的候选状态说明。
+
+## Stable release checks / 正式版检查
+
+Before publishing a stable version, require the minimum WordPress/PHP fixture, fresh installation, old-release ZIP upgrade fixtures and the normal accounting, permission, concurrency and package checks to pass on its exact source. Upgrade tests preserve existing data and only award subsequent synthetic activity once. Keep both READMEs and guides at the release version; documentation markers are checked by CI. A stable version does not enable optional rewards, tasks, providers or the updater automatically.
+
+正式发行前，固定源提交须通过最低 WordPress／PHP 组合、全新安装、旧发行 ZIP 升级以及既有记账、权限、并发和安装包检查。升级夹具验证已有数据保留、后续合成活动只奖励一次；CI 同时核对双语 README 与指南版本。正式版本不会自动启用可选奖励、任务、提供者或更新器。

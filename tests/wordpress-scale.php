@@ -78,6 +78,8 @@ for ($i = 0; $i < 10; $i++) {
     $comments[] = (int) $cid;
 }
 $old_definitions = get_option(WP_XP_Core_Achievements::OPTION, null);
+// Exclude events from preceding integration suites from the expected participant set.
+$boundary = (int) $wpdb->get_var('SELECT COALESCE(MAX(id),0) FROM ' . $table);
 $defs = [];
 $ids = [];
 for ($i = 0; $i < 50; $i++) {
@@ -128,7 +130,7 @@ for ($i = 0; $i < 50; $i++) {
         'category' => '',
         'series' => '',
         'version' => 1,
-        'start_event_id' => 0,
+        'start_event_id' => $boundary,
         'created_at' => time(),
     ];
 }
@@ -236,10 +238,57 @@ try {
             'trends',
             static fn() => WP_XP_Core_Insights::trends(['period' => 'month']),
         );
-        $metrics['task_rates_50_tasks'] = $measure(
-            'task_rates',
-            static fn() => WP_XP_Core_Insights::task_rates(),
-        );
+        $task_rate_sql = [];
+        $observe_task_rates = static function ($sql) use (&$task_rate_sql) {
+            if (str_starts_with($sql, 'SELECT task_index,COUNT(DISTINCT user_id)')) {
+                $task_rate_sql[] = $sql;
+            }
+            return $sql;
+        };
+        add_filter('query', $observe_task_rates);
+        try {
+            $metrics['task_rates_50_tasks'] = $measure('task_rates', static function () use ($ids) {
+                $rates = WP_XP_Core_Insights::task_rates();
+                if (is_wp_error($rates)) {
+                    return $rates;
+                }
+                $rows = array_column($rates['rows'], null, 'id');
+                if (count($rows) !== 50) {
+                    throw new RuntimeException('Scale task-rate row count differs.');
+                }
+                foreach ($ids as $i => $id) {
+                    $completed = $i < 8 ? 1 : 0;
+                    if (
+                        $rows[$id]['participants'] !== 8 ||
+                        $rows[$id]['completed'] !== $completed ||
+                        $rows[$id]['rate'] !== $completed / 8
+                    ) {
+                        throw new RuntimeException(
+                            'Scale task-rate participant/completion union differs.',
+                        );
+                    }
+                }
+                return $rates;
+            });
+        } finally {
+            remove_filter('query', $observe_task_rates);
+        }
+        if (
+            count($task_rate_sql) !== 1 ||
+            substr_count($task_rate_sql[0], 'SELECT DISTINCT e.user_id FROM ') !== 1 ||
+            $metrics['task_rates_50_tasks']['queries'] > 3
+        ) {
+            throw new RuntimeException('Equivalent scale tasks must share one activity scan.');
+        }
+        $task_rate_plan = $wpdb->get_results('EXPLAIN ' . $task_rate_sql[0], ARRAY_A);
+        if ($wpdb->last_error !== '' || !is_array($task_rate_plan)) {
+            throw new RuntimeException('Scale task-rate EXPLAIN failed.');
+        }
+        // One activity derived table and one receipt/submission branch reference e.
+        // DISTINCT must prevent the activity branch from merging into 50 task scans.
+        if (count(array_filter($task_rate_plan, static fn($row) => $row['table'] === 'e')) !== 2) {
+            throw new RuntimeException('Scale task-rate plan repeats ledger scans per task.');
+        }
         $metrics['task_history'] = $measure(
             'task_history',
             static fn() => WP_XP_Core_Insights::task_history(['period' => 'month']),
@@ -275,6 +324,15 @@ try {
             'prerequisites_per_task_max' => 8,
             'cache' => 'same local process; WordPress and database caches may be warm',
             'metrics' => $metrics,
+            'task_rate_activity_groups' => 1,
+            'task_rate_expected_participants' => 8,
+            'task_rate_plan' => array_map(
+                static fn($row) => array_intersect_key(
+                    $row,
+                    array_flip(['id', 'select_type', 'table', 'type', 'key', 'rows', 'Extra']),
+                ),
+                $task_rate_plan,
+            ),
             'range_plan' => array_map(
                 static fn($row) => array_intersect_key(
                     $row,
@@ -299,6 +357,7 @@ echo wp_json_encode(
             'Opt-in owned 10k and 50k workloads completed',
             'Personal and per-task query counts are bounded',
             'All measured operations leave the ledger unchanged',
+            'Task rates retain deduplicated participant/completion semantics and shared activity scans',
         ],
         'environment' =>
             'isolated synthetic loopback WordPress; timings are not production benchmarks',

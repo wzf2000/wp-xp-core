@@ -11,7 +11,7 @@
  * Update URI: https://github.com/wzf2000/wp-xp-core
  * Text Domain: wp-xp-core
  * Domain Path: /languages
- * Version: 2.0.0-rc.3
+ * Version: 2.0.0
  */
 defined('ABSPATH') || exit();
 require_once __DIR__ . '/config.php';
@@ -37,7 +37,7 @@ require_once __DIR__ . '/modules/blocks.php';
 register_activation_hook(__FILE__, [WP_XP_Core_Lifecycle::class, 'activate']);
 final class Reader_Experience
 {
-    const VERSION = '2.0.0-rc.3';
+    const VERSION = '2.0.0';
     const BALANCE_META = 'reader_experience_balance';
     const MINS = [0, 5, 20, 60, 150, 300, 600, 1000, 1800, 3000];
     private static bool $writing = false;
@@ -216,17 +216,26 @@ final class Reader_Experience
         }
         return $level;
     }
+    private static function scalar(string $sql)
+    {
+        global $wpdb;
+        $value = $wpdb->get_var($sql);
+        if ($wpdb->last_error !== '') {
+            throw new RuntimeException('Experience read failed');
+        }
+        return $value;
+    }
     public static function exists(string $key): bool
     {
         global $wpdb;
-        return (bool) $wpdb->get_var(
+        return (bool) self::scalar(
             $wpdb->prepare('SELECT id FROM ' . self::table() . ' WHERE event_key=%s', $key),
         );
     }
     public static function count_day(int $uid, string $kind, string $day): int
     {
         global $wpdb;
-        return (int) $wpdb->get_var(
+        return (int) self::scalar(
             $wpdb->prepare(
                 'SELECT COUNT(*) FROM ' .
                     self::table() .
@@ -331,6 +340,18 @@ final class Reader_Experience
         wp_cache_delete($uid, 'user_meta');
         $xp = (int) get_user_meta($uid, self::balance_meta(), true);
         $level = self::level($xp);
+        $history = $wpdb->get_results(
+            $wpdb->prepare(
+                'SELECT kind,xp,local_day FROM ' .
+                    self::table() .
+                    ' WHERE user_id=%d AND xp<>0 ORDER BY id DESC LIMIT 12',
+                $uid,
+            ),
+            ARRAY_A,
+        );
+        if ($wpdb->last_error !== '' || !is_array($history)) {
+            throw new RuntimeException('Experience history unavailable');
+        }
         return [
             'experience' => $xp,
             'level' => $level,
@@ -343,15 +364,7 @@ final class Reader_Experience
             'checked_in' => self::exists('checkin:' . $uid . ':' . self::day()),
             'visit_today' => self::count_day($uid, 'visit', self::day()),
             'comment_today' => self::count_day($uid, 'comment', self::day()),
-            'history' => $wpdb->get_results(
-                $wpdb->prepare(
-                    'SELECT kind,xp,local_day FROM ' .
-                        self::table() .
-                        ' WHERE user_id=%d AND xp<>0 ORDER BY id DESC LIMIT 12',
-                    $uid,
-                ),
-                ARRAY_A,
-            ),
+            'history' => $history,
         ];
     }
     public static function permission($r)
@@ -565,7 +578,7 @@ final class Reader_Experience
         if (!$p || $p->post_type !== 'post' || $p->post_status !== 'publish') {
             return;
         }
-        $n = (int) $wpdb->get_var(
+        $n = (int) self::scalar(
             $wpdb->prepare(
                 'SELECT COUNT(*) FROM ' . self::table() . ' WHERE object_id=%d AND kind=%s',
                 $pid,
@@ -665,6 +678,9 @@ final class Reader_Experience
                     ),
                     ARRAY_A,
                 );
+                if ($wpdb->last_error !== '') {
+                    throw new RuntimeException('Comment reward receipt unavailable');
+                }
                 if (!$first) {
                     if (
                         $eligible &&
@@ -939,10 +955,14 @@ final class Reader_Experience
     }
     public static function panel(): string
     {
-        if (!self::ready()) {
-            return '<p>' . esc_html(wp_xp_core_t('经验系统维护中，请稍后再试。')) . '</p>';
+        try {
+            if (self::ready()) {
+                return WP_XP_Core_Growth_UI::panel();
+            }
+        } catch (Throwable $e) {
+            error_log('reader_experience panel read failed');
         }
-        return WP_XP_Core_Growth_UI::panel();
+        return '<p>' . esc_html(wp_xp_core_t('经验系统维护中，请稍后再试。')) . '</p>';
     }
 
     public static function admin_profile($user): void

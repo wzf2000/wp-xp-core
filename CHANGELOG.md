@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.0.0
+
+Configure independent XP, personal growth, versioned tasks, achievements and activity standings without another points plugin. / 独立配置经验、个人成长、版本化任务、成就与活动榜单，无需其他积分插件。
+
+- Include the management, growth, tasks, private notifications, configuration tools and optional integrations from the 2.0 prereleases. Existing events, balances, rules and earned snapshots are preserved; no historical awards or database migrations run. / 整合 2.0 预发布版的管理、成长、任务、私人通知、配置工具与可选接入；保留历史事件、余额、规则和成就快照，不补发或迁移数据。
+- Stop accounting on failed deduplication, quota, milestone, comment-receipt or response-history reads, with transaction rollback instead of treating failures as empty results. / 去重、额度、里程碑、评论原记录或响应历史读取失败时中止记账并回滚，不再将读取失败解释为空记录。
+- Share equivalent task-participation scans while keeping deduplicated participants and completions in SQL. / 相同任务参与条件共享查询，参与者与完成者仍由数据库去重统计。
+- Check required JSON database functions before activation writes and include recipient-visible review feedback in personal exports. / 激活写入前检查所需 JSON 数据库函数，个人导出补齐用户可见审核反馈。
+- Correct MO catalog offsets for the legacy WordPress translation reader; verify minimum WordPress compatibility and upgrades from 1.4.1 and 2.0.0-rc.3, and synchronize versioned bilingual guides. / 修正旧版 WordPress 翻译读取器所需的 MO 偏移；验证最低版本兼容性及从 1.4.1、2.0.0-rc.3 的保留数据升级，同步双语指南版本。
+
 ## 2.0.0-rc.3
 
 Prerelease expanding configurable tasks, private growth feedback and plugin administration. / 扩展可配置任务、私人成长反馈与插件管理的预发布版。

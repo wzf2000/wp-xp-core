@@ -56,6 +56,10 @@ Edit reviewed `languages/wp-xp-core-{locale}.po` entries and run `python3 tools/
 
 修改 PO 后离线编译 MO／JSON，同步 POT 与 JS 文案列表；保留位置占位符，不翻译用户文字或整段输出 HTML。新增语言文件必须通过实际安装 ZIP 的白名单与验证。
 
-CI currently covers PHP 8.0/8.2/8.5 basic/browser fixtures and real WordPress/MySQL installation/concurrency on WordPress 6.8.3 + PHP 8.0/8.2 and WordPress 7.1.3 + PHP 8.5. The declared WordPress 6.0 minimum does not mean every historical combination was tested.
+CI covers PHP 8.0/8.2/8.5 basic/browser fixtures and real WordPress/MySQL installation/concurrency on WordPress 6.0 + PHP 8.0, WordPress 6.8.3 + PHP 8.0/8.2 and WordPress 7.1.3 + PHP 8.5. Separate upgrade fixtures install verified official 1.4.1 and 2.0.0-rc.3 ZIPs, seed synthetic account state, replace only plugin files, and verify unchanged data plus idempotent future awards. These combinations define tested coverage, not every historical environment.
 
-实际 CI 组合为 PHP 8.0／8.2／8.5 基础与浏览器检查，以及 WordPress 6.8.3 + PHP 8.0／8.2、WordPress 7.1.3 + PHP 8.5 的真实数据库安装／并发测试；不将最低版本声明当作所有历史组合的验收证据。
+实际 CI 包含 WordPress 6.0 + PHP 8.0 最低组合、WordPress 6.8.3 + PHP 8.0／8.2 和 WordPress 7.1.3 + PHP 8.5 的安装／并发检查，以及 PHP 8.0／8.2／8.5 基础与浏览器检查。独立升级夹具从经校验的官方 1.4.1 与 2.0.0-rc.3 ZIP 建立合成旧站，只替换插件文件，检查数据保留及后续奖励幂等。没有将这些组合扩称为所有历史环境。
+
+The database must provide InnoDB transactions and `JSON_VALID`, `JSON_EXTRACT`, `JSON_UNQUOTE` and `JSON_TYPE`. Activation probes those functions before making installation changes. Run SELECT-failure fixtures when changing accounting reads: an unreadable claim, quota or history must never become a successful empty result.
+
+数据库须支持 InnoDB 事务及上述 JSON 函数；激活会先做只读能力探测。修改记账查询时运行 SELECT 故障夹具：去重、额度或响应历史读取失败必须中止并回滚，不能按空结果继续发奖。

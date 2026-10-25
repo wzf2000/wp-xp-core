@@ -1,3 +1,5 @@
+<!-- wp-xp-core-version: 2.0.0 -->
+
 <p align="center"><img src="docs/assets/hero.svg" alt="WP XP Core — Experience for participation, levels for progress" width="100%"></p>
 
 <p align="center">
@@ -24,7 +26,7 @@ The plugin manages experience and levels independently of myCRED. Likes are an o
 
 ## Get started
 
-**2.0.0-rc.3 is a prerelease** with expanded task conditions, achievement rewards, private notifications and configuration tools. Download its installation ZIP from the [Release](https://github.com/wzf2000/wp-xp-core/releases/tag/v2.0.0-rc.3) and verify it in an isolated environment first.
+This branch documents **2.0.0**, including task conditions, achievement rewards, private notifications and configuration tools. Download the version actually published on [Releases](https://github.com/wzf2000/wp-xp-core/releases).
 
 Back up existing sites and verify updates in an isolated environment first; use the documentation at your Release tag for version-specific behavior. On a new site, installing and activating creates the experience ledger and uses default rules. No server JSON profile or other experience plugin is required. Existing users start at zero XP; old articles and historical comments do not trigger automatic backfill.
 
@@ -78,7 +80,7 @@ See the [user guide](docs/GUIDE.en.md) for steps and change effects. These featu
 | Contribute improvements                                        | [Contributing](CONTRIBUTING.md)                                           |
 | Maintain GitHub releases                                       | [Releasing](docs/RELEASING.md)                                            |
 
-Documentation on this branch describes 2.0.0-rc.3. For another version, use the documentation at its Release tag.
+Documentation on this branch describes 2.0.0. For another version, use the documentation at its Release tag.
 
 [Open an Issue](https://github.com/wzf2000/wp-xp-core/issues/new/choose) with your version, observed behavior and reproduction steps. Report security issues privately under the [security policy](SECURITY.md).
 
@@ -87,3 +89,5 @@ Documentation on this branch describes 2.0.0-rc.3. For another version, use the 
 Maintained by [wzf2000](https://github.com/wzf2000), under **[GPL-2.0-or-later](LICENSE)**. Issues and Pull Requests are welcome.
 
 Minimum requirements: WordPress 6.0 and PHP 8.0. See [Contributing](CONTRIBUTING.md) for the combinations actually tested in CI. Configuration tools provide previewed imports and explicit templates; editor blocks retain shortcode compatibility. [The guide](docs/GUIDE.en.md) covers compact task lists, language, personal-data export and retention. [Integration](docs/CONFIGURATION.en.md) documents the trusted provider API and optional updates.
+
+The database must support InnoDB transactions and `JSON_VALID`, `JSON_EXTRACT`, `JSON_UNQUOTE` and `JSON_TYPE`. Activation checks these functions before installation writes; unsupported databases receive an explicit activation error without changing storage.

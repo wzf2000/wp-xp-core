@@ -468,6 +468,8 @@ Reader_Experience::transaction(function () use ($uid) {
             Reader_Experience::day(),
             [
                 'title' => 'User literal 经验规则',
+                'feedback' => 'Recipient-visible review feedback',
+                'submission_id' => 123,
                 'reason' => 'INTERNAL-REASON',
                 'actor' => 98765,
                 'other_user_email' => 'SECRET@example.invalid',
@@ -488,6 +490,8 @@ $verify(
             array_column($b['data'], 'item_id'),
         ) &&
         str_contains(wp_json_encode($a, JSON_UNESCAPED_UNICODE), 'User literal 经验规则') &&
+        str_contains(wp_json_encode($a), 'Recipient-visible review feedback') &&
+        str_contains(wp_json_encode($a), 'submission_id') &&
         !str_contains(wp_json_encode($a), 'INTERNAL-REASON') &&
         !str_contains(wp_json_encode($a), 'SECRET@example.invalid'),
 );
