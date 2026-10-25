@@ -509,7 +509,8 @@ final class WP_XP_Core_Management
             return self::error('storage', '操作未能完成，请保留请求编号后重试。', 503);
         }
     }
-    private static function balance_allows(int $uid, int $xp)
+    /** Read-only range check; callers hold the ledger transaction lock. */
+    public static function balance_allows(int $uid, int $xp)
     {
         wp_cache_delete($uid, 'user_meta');
         $balance = (int) get_user_meta($uid, Reader_Experience::balance_meta(), true);

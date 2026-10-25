@@ -336,3 +336,29 @@
     padding: 10px 6px;
   }
 }
+
+.xp-personal-task > img,
+.xp-badges img {
+  object-fit: contain;
+  vertical-align: middle;
+}
+
+.xp-inbox {
+  margin-block: 1.5em;
+}
+.xp-inbox-list li {
+  margin-block: 1em;
+}
+.xp-inbox-preferences {
+  display: grid;
+  gap: 0.7em;
+  margin-block: 1em;
+}
+.xp-inbox-preferences label {
+  display: flex;
+  gap: 0.5em;
+  align-items: center;
+}
+.xp-inbox-preferences input[type='checkbox'] {
+  width: auto;
+}

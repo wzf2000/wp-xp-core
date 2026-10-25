@@ -32,6 +32,9 @@ final class WP_XP_Core_Growth_UI
             return;
         }
         WP_XP_Core_Settings::assets('settings_page_wp-xp-core');
+        if ($hook === 'settings_page_wp-xp-achievements' && current_user_can('upload_files')) {
+            wp_enqueue_media();
+        }
         $assets = json_decode(file_get_contents(__DIR__ . '/assets/assets.json'), true);
         wp_enqueue_script(
             'wp-xp-core-growth-admin',
@@ -157,7 +160,18 @@ final class WP_XP_Core_Growth_UI
             )
             as $namespace
         ) {
-            foreach (['growth', 'history', 'tasks', 'claim', 'submit'] as $action) {
+            foreach (
+                [
+                    'growth',
+                    'history',
+                    'tasks',
+                    'claim',
+                    'submit',
+                    'notifications',
+                    'notification-settings',
+                ]
+                as $action
+            ) {
                 register_rest_route($namespace, '/' . $action, [
                     'methods' => 'POST',
                     'permission_callback' => [Reader_Experience::class, 'permission'],
@@ -179,6 +193,8 @@ final class WP_XP_Core_Growth_UI
             $allowed = match ($action) {
                 'growth', 'tasks' => [],
                 'history' => ['cursor', 'kind', 'from', 'to', 'limit'],
+                'notifications' => ['cursor', 'limit'],
+                'notification-settings' => ['revision', 'preferences', 'ids', 'through'],
                 'claim' => ['task_id'],
                 'submit' => ['task_id', 'text', 'request_id'],
             };
@@ -189,6 +205,14 @@ final class WP_XP_Core_Growth_UI
                 'growth' => WP_XP_Core_Growth::summary(get_current_user_id()),
                 'history' => WP_XP_Core_Management::personal_history($data),
                 'tasks' => WP_XP_Core_Achievements::personal(),
+                'notifications' => WP_XP_Core_Notifications::listing(
+                    $data,
+                    $request->get_header('X-WP-Nonce'),
+                ),
+                'notification-settings' => WP_XP_Core_Notifications::save(
+                    $data,
+                    $request->get_header('X-WP-Nonce'),
+                ),
                 'claim' => WP_XP_Core_Achievements::claim(
                     $data['task_id'] ?? null,
                     $request->get_header('X-WP-Nonce'),
@@ -256,7 +280,7 @@ final class WP_XP_Core_Growth_UI
             $s['checkins']['consecutive'] .
             ' 天 · 累计 ' .
             $s['checkins']['cumulative'] .
-            ' 天</p></div></div><p class="reader-experience-message" role="status" aria-live="polite"></p><details><summary>签到日历</summary><ol class="xp-checkin-calendar" aria-label="最近三十五天签到"></ol><p class="xp-streak-progress"></p></details><section class="xp-personal-tasks" aria-label="任务与成就"><h3>任务与成就</h3><div class="xp-task-list"></div><div class="xp-badges" aria-label="已获成就"></div><div class="xp-submissions"></div></section><section class="xp-personal-standing" aria-label="本期活动位置" hidden><h3>我的本期位置</h3><div class="xp-position-switch" role="group" aria-label="统计周期"><button type="button" data-xp-position-period="week" aria-pressed="true">本周</button><button type="button" data-xp-position-period="month" aria-pressed="false">本月</button></div><p class="xp-personal-position" role="status">正在读取本期位置…</p></section><details class="xp-private-history"><summary>经验记录</summary><form class="xp-history-filter"><label>来源<select name="kind"><option value="">全部来源</option><option value="checkin">每日签到</option><option value="visit">有效阅读</option><option value="comment">评论</option><option value="article">发表文章</option><option value="manual_adjust">人工调整</option><option value="streak_reward">签到阶段奖励</option></select></label><label>开始<input type="date" name="from"></label><label>结束<input type="date" name="to"></label><button type="submit">查询</button></form><ul class="reader-experience-history"></ul><button type="button" class="xp-history-more" hidden>加载更早记录</button></details></section>';
+            ' 天</p></div></div><p class="reader-experience-message" role="status" aria-live="polite"></p><details><summary>签到日历</summary><ol class="xp-checkin-calendar" aria-label="最近三十五天签到"></ol><p class="xp-streak-progress"></p></details><section class="xp-inbox" aria-label="站内通知"><h3>站内通知</h3><p class="xp-inbox-message" role="status"></p><ul class="xp-inbox-list"></ul><button type="button" class="xp-inbox-refresh">刷新通知</button><button type="button" class="xp-inbox-read-all">全部标为已读</button><button type="button" class="xp-inbox-more" hidden>更早的通知</button><details><summary>通知偏好</summary><form class="xp-inbox-preferences"><label><input type="checkbox" name="task" checked>成就授予与撤销</label><label><input type="checkbox" name="review" checked>审核结果</label><label><input type="checkbox" name="level" checked>等级提升</label><button>保存通知偏好</button></form></details></section><section class="xp-personal-tasks" aria-label="任务与成就"><h3>任务与成就</h3><div class="xp-task-list"></div><div class="xp-badges" aria-label="已获成就"></div><div class="xp-submissions"></div></section><section class="xp-personal-standing" aria-label="本期活动位置" hidden><h3>我的本期位置</h3><div class="xp-position-switch" role="group" aria-label="统计周期"><button type="button" data-xp-position-period="week" aria-pressed="true">本周</button><button type="button" data-xp-position-period="month" aria-pressed="false">本月</button></div><p class="xp-personal-position" role="status">正在读取本期位置…</p></section><details class="xp-private-history"><summary>经验记录</summary><form class="xp-history-filter"><label>来源<select name="kind"><option value="">全部来源</option><option value="checkin">每日签到</option><option value="visit">有效阅读</option><option value="comment">评论</option><option value="article">发表文章</option><option value="manual_adjust">人工调整</option><option value="streak_reward">签到阶段奖励</option><option value="task_complete">任务完成奖励</option><option value="task_revoke">任务奖励撤销</option><option value="task_grant">人工授予成就</option><option value="task_grant_revoke">撤销人工成就</option></select></label><label>开始<input type="date" name="from"></label><label>结束<input type="date" name="to"></label><button type="submit">查询</button></form><ul class="reader-experience-history"></ul><button type="button" class="xp-history-more" hidden>加载更早记录</button></details></section>';
         return $html;
     }
 }

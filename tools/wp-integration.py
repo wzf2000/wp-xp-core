@@ -218,11 +218,49 @@ try {
     results["concurrency"] = json.loads(wp("eval-file", fixture, mode="concurrency-verify"))
     results["concurrency"]["clients"] = clients
     (lab / "results.json").write_text(json.dumps(results, indent=2) + "\n")
-    for stage in ("management", "policy", "growth", "insights"):
+    for stage in (
+        "management",
+        "policy",
+        "growth",
+        "achievement-rewards",
+        "notifications",
+        "insights",
+    ):
         results[stage] = json.loads(
             wp("eval-file", str(ROOT / ("tests/wordpress-" + stage + ".php")))
         )
         (lab / "results.json").write_text(json.dumps(results, indent=2) + "\n")
+    # Exercise optional task XP with two independent administrator requests.
+    parallel_env = dict(env, WP_XP_TEST_BARRIER=str(time.time() + 1.0))
+    reward_fixture = str(ROOT / "tests/wordpress-achievement-concurrent.php")
+    processes = [
+        subprocess.Popen(
+            command + ["eval-file", reward_fixture],
+            env=parallel_env,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        for _ in range(2)
+    ]
+    clients = []
+    try:
+        for process in processes:
+            output, errors = process.communicate(timeout=60)
+            if process.returncode:
+                failure(
+                    "Concurrent achievement",
+                    subprocess.CompletedProcess([], process.returncode, output, errors),
+                )
+            clients.append(json.loads(output))
+    finally:
+        for process in processes:
+            if process.poll() is None:
+                process.terminate()
+                process.wait(timeout=10)
+    results["achievement-concurrency"] = json.loads(wp("eval-file", reward_fixture, mode="verify"))
+    results["achievement-concurrency"]["clients"] = clients
+    (lab / "results.json").write_text(json.dumps(results, indent=2) + "\n")
     print(
         json.dumps({key: len(value.get("checks", [])) for key, value in results.items()}, indent=2)
     )

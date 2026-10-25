@@ -282,7 +282,7 @@ $verify(
 );
 wp_set_current_user($admin->ID);
 $edited = $task_input($automatic);
-$edited['description'] = 'Synthetic updated version';
+$edited['steps'][0]['count']++;
 $verify('Changing a task creates a new definition version', !is_wp_error($save_task($edited)));
 $new_version = WP_XP_Core_Achievements::definitions()[$automatic_id];
 $progress = WP_XP_Core_Achievements::progress($new_version, $reader);
@@ -464,7 +464,7 @@ $stale_submission = $submit_pending(
     'Synthetic explanation under the first task version.',
 );
 $task = $task_input(WP_XP_Core_Achievements::definitions()[$stale_id]);
-$task['description'] = 'Synthetic task requirements have changed';
+$task['period'] = 'month';
 $verify(
     'Review task can advance while old explanation remains pending',
     !is_wp_error($save_task($task)),
@@ -851,6 +851,213 @@ $verify(
         WP_XP_Core_Achievements::definitions()[$review_task_id]['description'] ===
             'Synthetic newest persisted task description',
 );
+// Round six: scoped counters share the same conditions in direct and personal reads.
+wp_set_current_user($admin->ID);
+$category = wp_insert_term('Synthetic round six category', 'category');
+$verify('Synthetic category created', !is_wp_error($category));
+$scoped_post = wp_insert_post(
+    [
+        'post_title' => 'Synthetic scoped post',
+        'post_status' => 'publish',
+        'post_author' => $admin->ID,
+        'post_category' => [$category['term_id']],
+    ],
+    true,
+);
+$verify('Synthetic scoped post created', !is_wp_error($scoped_post));
+$round_six_ids = [];
+foreach (['events', 'objects', 'days'] as $mode) {
+    $input = $new_task('Synthetic scoped ' . $mode, 'automatic', [
+        [
+            'kind' => 'visit',
+            'count' => 5,
+            'mode' => $mode,
+            'post_ids' => [$pages[0]],
+            'category_ids' => [$category['term_id']],
+        ],
+    ]);
+    $input['period'] = 'month';
+    $input['starts_on'] = '2031-02-01';
+    $input['ends_on'] = '2031-02-28';
+    $saved = $save_task($input);
+    $verify('Scoped counter task saves', !is_wp_error($saved));
+    $round_six_ids[$mode] = $saved['id'];
+}
+$GLOBALS['xp_growth_test_day'] = '2031-02-01';
+$record_visit = static function (int $pid) use ($reader): void {
+    Reader_Experience::transaction(
+        static fn() => Reader_Experience::record(
+            'synthetic-round-six:' . wp_generate_uuid4(),
+            $reader,
+            'visit',
+            $pid,
+            0,
+            Reader_Experience::day(),
+        ),
+    );
+};
+$record_visit($pages[0]);
+$record_visit($pages[0]);
+$record_visit($pages[1]); // Outside both lists.
+$GLOBALS['xp_growth_test_day'] = '2031-02-28';
+$record_visit($scoped_post);
+wp_set_current_user($reader);
+$personal_six = array_column(WP_XP_Core_Achievements::personal()['tasks'], null, 'id');
+foreach (['events' => 3, 'objects' => 2, 'days' => 2] as $mode => $expected) {
+    $definition = WP_XP_Core_Achievements::definitions()[$round_six_ids[$mode]];
+    $progress = WP_XP_Core_Achievements::progress($definition, $reader);
+    $verify(
+        'Scoped ' . $mode . ' counts use inclusive dates, OR scope and personal parity',
+        $progress['steps'][0]['current'] === $expected &&
+            $personal_six[$definition['id']]['steps'][0]['current'] === $expected &&
+            $progress['period'] === '2031-02',
+    );
+}
+wp_update_post(['ID' => $scoped_post, 'post_password' => 'synthetic-only']);
+$verify(
+    'Password protected content stops contributing',
+    WP_XP_Core_Achievements::progress($definition, $reader)['steps'][0]['current'] === 1,
+);
+wp_update_post(['ID' => $scoped_post, 'post_password' => '', 'post_status' => 'private']);
+$verify(
+    'Private content stops contributing',
+    WP_XP_Core_Achievements::progress($definition, $reader)['steps'][0]['current'] === 1,
+);
+$GLOBALS['xp_growth_test_day'] = '2031-03-01';
+$verify(
+    'Task expires after inclusive end date',
+    !WP_XP_Core_Achievements::unlocked($definition, $reader),
+);
+$verify(
+    'Expired automatic task cannot be claimed',
+    $error(
+        WP_XP_Core_Achievements::claim($definition['id'], wp_create_nonce('wp_rest')),
+        'incomplete',
+    ),
+);
+$GLOBALS['xp_growth_test_day'] = '2031-01-31';
+$verify(
+    'Task does not open before start date',
+    !WP_XP_Core_Achievements::unlocked($definition, $reader),
+);
+$GLOBALS['xp_growth_test_day'] = '2031-02-01';
+wp_set_current_user($admin->ID);
+$editable =
+    $task_input($definition) +
+    array_intersect_key($definition, array_flip(['starts_on', 'ends_on', 'prerequisites']));
+$editable['title'] = 'Synthetic renamed task';
+$editable['description'] = 'Synthetic clearer instructions';
+$editable['icon'] = '◇';
+$verify('Display-only edit saves', !is_wp_error($save_task($editable)));
+$renamed = WP_XP_Core_Achievements::definitions()[$definition['id']];
+$verify(
+    'Display-only edit preserves version and event boundary',
+    $renamed['version'] === $definition['version'] &&
+        $renamed['start_event_id'] === $definition['start_event_id'],
+);
+$editable['ends_on'] = '2031-03-01';
+$verify('Condition edit saves', !is_wp_error($save_task($editable)));
+$verify(
+    'Date edit creates a new version',
+    WP_XP_Core_Achievements::definitions()[$definition['id']]['version'] ===
+        $definition['version'] + 1,
+);
+$dependent_ids = [];
+foreach (['current', 'lifetime'] as $scope) {
+    $input = $new_task('Synthetic prerequisite ' . $scope, 'review');
+    $input['prerequisites'] = [['id' => $automatic_id, 'scope' => $scope]];
+    $result = $save_task($input);
+    $verify('Prerequisite definition saves', !is_wp_error($result));
+    $dependent_ids[$scope] = $result['id'];
+    $verify(
+        'Prerequisite ' . $scope . ' has explicit version semantics',
+        WP_XP_Core_Achievements::unlocked(
+            WP_XP_Core_Achievements::definitions()[$result['id']],
+            $reader,
+        ) ===
+            ($scope === 'lifetime'),
+    );
+}
+$cycle = $task_input(WP_XP_Core_Achievements::definitions()[$automatic_id]);
+$cycle['prerequisites'] = [['id' => $dependent_ids['lifetime'], 'scope' => 'lifetime']];
+$verify('Cross-task prerequisite cycle is rejected', $error($save_task($cycle), 'input'));
+$cycle['prerequisites'] = [['id' => 't_0000000000000000', 'scope' => 'lifetime']];
+$verify('Unknown prerequisite is rejected', $error($save_task($cycle), 'input'));
+foreach (
+    [
+        ['kind' => 'checkin', 'count' => 1, 'mode' => 'objects'],
+        ['kind' => 'visit', 'count' => 1, 'post_ids' => ['1oops']],
+        ['kind' => 'visit', 'count' => 1, 'mode' => 'invalid'],
+    ]
+    as $invalid_step
+) {
+    $verify(
+        'Invalid step fields are rejected',
+        $error(
+            $save_task($new_task('Synthetic invalid step', 'automatic', [$invalid_step])),
+            'input',
+        ),
+    );
+}
+$invalid = $new_task('Synthetic invalid date', 'review');
+$invalid['starts_on'] = '2031-02-29';
+$verify('Invalid calendar date is rejected', $error($save_task($invalid), 'input'));
+wp_set_current_user($reader);
+$verify(
+    'Locked prerequisite review cannot be submitted',
+    $error(
+        WP_XP_Core_Achievements::submit(
+            [
+                'task_id' => $dependent_ids['current'],
+                'text' => 'Synthetic valid explanation',
+                'request_id' => wp_generate_uuid4(),
+            ],
+            wp_create_nonce('wp_rest'),
+        ),
+        'locked',
+    ),
+);
+wp_set_current_user($admin->ID);
+$dated_review = $new_task('Synthetic date-bound review', 'review');
+$dated_review['starts_on'] = '2031-02-01';
+$dated_review['ends_on'] = '2031-02-01';
+$saved_review = $save_task($dated_review);
+$verify('Date-bound review definition saves', !is_wp_error($saved_review));
+wp_set_current_user($reader);
+$review_request = [
+    'task_id' => $saved_review['id'],
+    'text' => 'Synthetic review on boundary day',
+    'request_id' => wp_generate_uuid4(),
+];
+$verify(
+    'Review submission allowed on both date boundaries',
+    !is_wp_error(WP_XP_Core_Achievements::submit($review_request, wp_create_nonce('wp_rest'))),
+);
+$submitted = $wpdb->get_var(
+    $wpdb->prepare(
+        'SELECT id FROM ' . $table . ' WHERE event_key=%s',
+        'task-submit:' . $reader . ':' . $review_request['request_id'],
+    ),
+);
+$GLOBALS['xp_growth_test_day'] = '2031-02-02';
+wp_set_current_user($admin->ID);
+$verify(
+    'Expired review cannot be approved',
+    $error(
+        WP_XP_Core_Achievements::review(
+            ['submission_id' => (int) $submitted, 'decision' => 'approve', 'feedback' => ''],
+            wp_create_nonce('wp_xp_core_achievements'),
+        ),
+        'changed',
+    ),
+);
+wp_set_current_user($reader);
+$review_request['request_id'] = wp_generate_uuid4();
+$verify(
+    'Expired review cannot accept a new explanation',
+    $error(WP_XP_Core_Achievements::submit($review_request, wp_create_nonce('wp_rest')), 'locked'),
+);
+
 remove_filter('wp_date', $clock, 10);
 unset($GLOBALS['xp_growth_test_day']);
 echo wp_json_encode(['checks' => $checks], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) . "\n";

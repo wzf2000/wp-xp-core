@@ -12,6 +12,8 @@ final class WP_XP_Core_Insights
         'milestone_view',
         'milestone_like',
         'streak_reward',
+        'task_complete',
+        'task_revoke',
     ];
     private static function error(string $code, string $message, int $status = 400): WP_Error
     {
@@ -241,7 +243,12 @@ final class WP_XP_Core_Insights
             self::fields($input, ['period', 'from', 'to']);
             $range = self::range($input, true);
             global $wpdb;
-            $kinds = array_merge(self::ACTIVITY_KINDS, ['manual_adjust', 'manual_reversal']);
+            $kinds = array_merge(self::ACTIVITY_KINDS, [
+                'manual_adjust',
+                'manual_reversal',
+                'task_grant',
+                'task_grant_revoke',
+            ]);
             $rows = self::rows(
                 'SELECT kind,SUM(CASE WHEN xp>0 THEN xp ELSE 0 END) AS positive_xp,' .
                     'SUM(CASE WHEN xp<0 THEN xp ELSE 0 END) AS negative_xp,SUM(xp) AS net_xp,' .
@@ -294,6 +301,7 @@ final class WP_XP_Core_Insights
             $today = Reader_Experience::day();
             $tasks = [];
             $selects = [];
+            $activity_conditions = [];
             $definitions = WP_XP_Core_Achievements::definitions();
             if ($wpdb->last_error !== '') {
                 throw new RuntimeException('Task definitions unavailable');
@@ -312,9 +320,17 @@ final class WP_XP_Core_Insights
                     'period' => $task['period'],
                     'period_key' => $period['key'],
                     'from' => $period['from'],
-                    'to' => $today,
+                    'to' => $period['to'],
                     'start_event_id' => (int) $task['start_event_id'],
                 ];
+                foreach ($task['steps'] as $step) {
+                    $activity_conditions[] =
+                        '(t.task_index=' .
+                        $index .
+                        ' AND (' .
+                        WP_XP_Core_Achievements::condition($task, $step) .
+                        '))';
+                }
                 $selects[] = $wpdb->prepare(
                     'SELECT %d AS task_index,%s AS task_id,%d AS version,%d AS number,' .
                         '%s AS task_type,%s AS kinds,%s AS date_from,%s AS date_to,' .
@@ -326,7 +342,7 @@ final class WP_XP_Core_Insights
                     $task['type'],
                     implode(',', array_unique(array_column($task['steps'], 'kind'))),
                     $period['from'],
-                    $today,
+                    $period['to'],
                     $task['start_event_id'],
                     $period['key'],
                     'task:' . $task['id'] . ':' . $task['version'] . ':' . $period['key'] . ':',
@@ -338,10 +354,11 @@ final class WP_XP_Core_Insights
             // JSON_VALID protects legacy text. Completion uses the exact canonical event key.
             $detail = "IF(JSON_VALID(e.detail),e.detail,'{}')";
             $earned =
-                "e.kind='task_complete' AND e.event_key=CONCAT(t.completion_prefix,e.user_id)";
-            $activity =
-                "t.task_type='automatic' AND FIND_IN_SET(e.kind,t.kinds)>0 AND " .
-                "(e.kind<>'comment' OR (c.comment_approved='1' AND p.post_status='publish' AND c.user_id=e.user_id))";
+                "e.kind IN ('task_complete','task_grant') AND e.event_key=CONCAT(t.completion_prefix,e.user_id) AND " .
+                WP_XP_Core_Achievements::valid_receipt();
+            $activity = $activity_conditions
+                ? '(' . implode(' OR ', $activity_conditions) . ')'
+                : '0=1';
             $submission =
                 "t.task_type='review' AND e.kind='achievement_submit' AND e.object_id=t.number" .
                 " AND JSON_UNQUOTE(JSON_EXTRACT($detail,'$.task_id'))=t.task_id" .
@@ -357,8 +374,7 @@ final class WP_XP_Core_Insights
                     Reader_Experience::table() .
                     ' e ON e.id>t.boundary AND e.local_day BETWEEN t.date_from AND t.date_to' .
                     " INNER JOIN {$wpdb->users} u ON u.ID=e.user_id" .
-                    " LEFT JOIN {$wpdb->comments} c ON e.kind='comment' AND c.comment_ID=e.object_id" .
-                    " LEFT JOIN {$wpdb->posts} p ON p.ID=c.comment_post_ID" .
+                    WP_XP_Core_Achievements::joins() .
                     ' WHERE ((' .
                     $earned .
                     ') OR (' .

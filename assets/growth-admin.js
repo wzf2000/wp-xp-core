@@ -12,6 +12,7 @@
     const row = holder.firstElementChild;
     list.append(row);
     renumber(list, prefix);
+    updateSteps();
     row.querySelector('input:not([type=hidden]),select')?.focus();
   }
   function renumber(list, prefix) {
@@ -49,11 +50,44 @@
       root.querySelector(list === streaks ? '[data-xp-add-streak]' : '[data-xp-add-step]')
     )?.focus();
   });
+  function updateSteps() {
+    steps?.querySelectorAll('.xp-task-step').forEach((row) => {
+      const checkin = row.querySelector('[data-xp-step-kind]').value === 'checkin';
+      const mode = row.querySelector('[data-xp-step-mode]');
+      mode.querySelector('option[value="objects"]').disabled = checkin;
+      if (checkin && mode.value === 'objects') mode.value = 'events';
+      const scope = row.querySelector('[data-xp-step-scope]');
+      scope.hidden = checkin;
+      scope.querySelectorAll('input').forEach((field) => {
+        field.disabled = checkin;
+      });
+    });
+  }
+  steps?.addEventListener('change', updateSteps);
+  updateSteps();
+  const badge = root.querySelector('[data-xp-badge-image]');
+  root.querySelector('[data-xp-pick-badge]')?.addEventListener('click', () => {
+    if (!window.wp?.media) return;
+    const frame = wp.media({ title: '选择徽章图片', library: { type: 'image' }, multiple: false });
+    frame.on('select', () => {
+      badge.value = frame.state().get('selection').first().get('id');
+    });
+    frame.open();
+  });
+  root.querySelector('[data-xp-clear-badge]')?.addEventListener('click', () => {
+    badge.value = '0';
+  });
+  const grant = root.querySelector('[data-xp-grant-form]');
+  grant?.querySelector('select')?.addEventListener('change', (event) => {
+    const option = event.target.selectedOptions[0];
+    grant.querySelector('[name="achievement[version]"]').value = option.dataset.version;
+    grant.querySelector('[name="achievement[period]"]').value = option.dataset.period;
+  });
   const type = root.querySelector('[data-xp-task-type]');
   function updateType() {
     if (!type) return;
     const manual = type.value === 'review';
-    const fieldset = root.querySelector('.xp-task-steps');
+    const fieldset = root.querySelector('[data-xp-auto-steps]');
     fieldset.hidden = manual;
     fieldset.disabled = manual;
     root.querySelector('.xp-task-review-help').hidden = !manual;

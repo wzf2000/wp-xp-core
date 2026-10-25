@@ -116,3 +116,124 @@ test('completed automatic task has a retryable confirm action', async ({ page })
   await page.getByRole('button', { name: '确认完成' }).click();
   await expect(page.locator('.xp-earned')).toContainText('本期已完成');
 });
+
+test('private inbox marks read and saves only the current user preferences', async ({ page }) => {
+  let read = false;
+  let revision = 'a'.repeat(64);
+  let preferences = { task: true, review: true, level: true };
+  await api(page, (action, data) => {
+    if (action === 'growth') return state;
+    if (action === 'tasks') return emptyTasks;
+    if (action === 'history') return { items: [], next_cursor: null };
+    if (action === 'notifications')
+      return {
+        items: [
+          {
+            id: '17:task',
+            type: 'task',
+            title: '获得成就',
+            message: '合成成就',
+            day: '2026-10-25',
+            read,
+          },
+        ],
+        next_cursor: null,
+        through: 18,
+        revision,
+        preferences,
+      };
+    if (action === 'notification-settings') {
+      expect(data.revision).toBe(revision);
+      expect(data.user_id).toBeUndefined();
+      if (data.ids) {
+        expect(data.ids).toEqual(['17:task']);
+        read = true;
+      }
+      if (data.preferences) preferences = data.preferences;
+      revision = 'b'.repeat(64);
+      return { saved: true, revision, preferences };
+    }
+  });
+  await page.goto('/growth.html');
+  await expect(page.locator('.xp-inbox-list')).toContainText('合成成就');
+  await page.locator('.xp-inbox-list').getByRole('button', { name: '标为已读' }).click();
+  await expect(page.locator('.xp-inbox-list')).toContainText('已读');
+  await page.locator('.xp-inbox summary').click();
+  await page.locator('.xp-inbox-preferences [name="level"]').uncheck();
+  await page.getByRole('button', { name: '保存通知偏好' }).click();
+  await expect(page.locator('.xp-inbox-preferences [name="level"]')).not.toBeChecked();
+  expect(preferences.level).toBe(false);
+});
+
+test('slow inbox reads cannot replace a newer response', async ({ page }) => {
+  let calls = 0;
+  let release;
+  const held = new Promise((resolve) => {
+    release = resolve;
+  });
+  await api(page, async (action) => {
+    if (action === 'growth') return state;
+    if (action === 'tasks') return emptyTasks;
+    if (action === 'history') return { items: [], next_cursor: null };
+    if (action === 'notifications') {
+      const current = ++calls;
+      if (current === 2) await held;
+      return {
+        items: [
+          {
+            id: '17:task',
+            type: 'task',
+            title: '合成通知',
+            message: current >= 3 ? '最新状态' : '旧状态',
+            day: '2026-10-25',
+            read: current >= 3,
+          },
+        ],
+        revision: 'a'.repeat(64),
+        preferences: { task: true, review: true, level: true },
+        through: 17,
+        next_cursor: null,
+      };
+    }
+  });
+  await page.goto('/growth.html');
+  await expect(page.locator('.xp-inbox-list')).toContainText('旧状态');
+  await page.getByRole('button', { name: '刷新通知' }).click();
+  await expect.poll(() => calls).toBe(2);
+  await page.evaluate(() => document.dispatchEvent(new CustomEvent('wp-xp-core-state')));
+  await expect(page.locator('.xp-inbox-list')).toContainText('最新状态');
+  release();
+  await expect(page.locator('.xp-inbox-list')).not.toContainText('旧状态');
+});
+
+test('review tasks keep rewards editable while automatic and checkin controls follow their kind', async ({
+  page,
+}) => {
+  await page.goto('/tasks.html');
+  const type = page.locator('[data-xp-task-type]');
+  const steps = page.locator('[data-xp-auto-steps]');
+  const scope = page.locator('[data-xp-step-scope]');
+  await expect(scope).toBeHidden();
+  await expect(page.locator('[data-xp-step-mode] option[value="objects"]')).toBeDisabled();
+  await page.locator('[data-xp-step-kind]').selectOption('visit');
+  await expect(scope).toBeVisible();
+  await scope.locator('summary').click();
+  await page.locator('[data-xp-step-mode]').selectOption('objects');
+  await scope.locator('input').first().fill('123');
+  await page.locator('[data-xp-step-kind]').selectOption('checkin');
+  await expect(page.locator('[data-xp-step-mode]')).toHaveValue('events');
+  await expect(scope.locator('input').first()).toBeDisabled();
+  await type.selectOption('review');
+  await expect(steps).toBeHidden();
+  await expect(page.locator('[name="task[reward_xp]"]')).toBeEnabled();
+  await page.locator('[name="task[reward_xp]"]').fill('5');
+  await expect(page.locator('[name="task[category]"]')).toBeVisible();
+  const submitted = await page
+    .locator('.xp-task-editor')
+    .first()
+    .evaluate((form) => [...new FormData(form).keys()]);
+  expect(submitted).not.toContain('task[steps][0][kind]');
+  expect(submitted).toContain('task[reward_xp]');
+  await type.selectOption('automatic');
+  await expect(steps).toBeVisible();
+});

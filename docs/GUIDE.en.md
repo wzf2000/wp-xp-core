@@ -81,12 +81,32 @@ Extra check-in stage rewards start disabled. Choose consecutive or cumulative co
 
 ## Create tasks and achievements
 
-Open **任务与成就** (Tasks and achievements), enter a title, description and character icon, then choose activation and a once-only, daily or weekly period. Periods follow the experience time zone; weeks start Monday. At most **50 tasks including disabled tasks** can be stored.
+Open **任务与成就** (Tasks and achievements), enter a title, description and character icon, then choose activation and a once-only, daily, weekly or monthly period. Periods follow the experience time zone; weeks start Monday and months start on the first. At most **50 tasks including disabled tasks** can be stored.
 
 - **Automatic tasks:** define 1–8 steps using check-ins, reading, comments or publication, each targeting 1–1,000 events. All steps must be satisfied. Progress counts qualifying new ledger activity, not raw page views.
 - **Reviewed tasks:** define no automatic steps. Users submit an explanation on their personal page; administrators approve or return it from the pending queue. Rejection requires feedback. Each user can submit at most five attempts per task/version/period, with only one pending at a time.
 
-Achievements are honors and award no extra XP. Editing a task creates a new version whose progress counts only subsequent events, without carrying old progress forward or backfilling history. Earned badges retain their awarded text and icon; editing or disabling a task does not erase them. Finalize task content and periods before inviting users, since frequent edits restart current progress.
+Each step can count events, distinct content or distinct local days. Comments count their parent post/page for distinct content. Check-ins support events or days. Optional post/page IDs and category IDs match either list; empty lists mean unrestricted. Pages do not match post categories. Content must still be published and unprotected; task scopes never grant access to private content.
+
+Optional start/end dates include both boundary days in the experience time zone. Tasks outside their dates cannot complete, be claimed, accept submissions or be approved. Up to eight prerequisites must all be earned: choose the prerequisite's current version/current cycle, or lifetime honors from any version. Missing tasks and cycles are rejected. Prerequisites gate completion and submission; matching activity still accumulates from this task version's event boundary within its dates.
+
+Tasks award honors by default. Set an optional completion reward of 0–1000000 XP; 0 keeps the honor free of XP. Automatic completion and review approval use the version's reward exactly once. Changing the reward creates a new version and never pays existing honors retroactively. Editing a title, description, character icon, badge image, category or series preserves the version and progress. Changing completion type, steps, period, dates, prerequisites or enabled state starts a new version using only subsequent events, without carrying old progress forward or backfilling history. Earned badges retain their awarded text and icon.
+
+Select a public image from the media library or use a character icon. Deleted/unavailable images or attachments with private parents fall back to the character. Personal badges preserve the awarded title, icon, image reference, category, series, condition text and actual XP, and display the earned time. Later display edits do not rewrite these snapshots.
+
+Under **人工授予与撤销** (Manual grants and revocation), provide a user ID, current task and reason for independently verified completion. Grants still check the task version, cycle, dates, prerequisites and target-user permissions. Administrative XP uses a separate source and is excluded from activity standings. Each user/task/version/cycle can be granted only once across all completion methods.
+
+To revoke, find the original completion/grant event ID in the ledger and enter a reason. Revocation appends the original XP's inverse; insufficient balance leaves both XP and honor unchanged. Zero-XP honors can also be revoked. Revoked honors disappear from earned badges, stop satisfying prerequisites and cannot be granted again in the same version/cycle. Revoking a prerequisite blocks future completions without cascading into existing downstream honors. Original ledger events are retained.
+
+Personal history filters include task completion rewards, task reward revocations, administrator grants and their revocations. Automatic/review rewards and their reversals enter activity standings; administrative grants and reversals appear separately only in source analysis.
+
+## Read private notifications and next goals
+
+The personal panel's **站内通知** (Site notifications) shows new achievement grants/revocations, review approvals/returns and genuine level increases. Ordinary reading XP does not produce a notification per event, and changing level settings does not create upgrade messages. Only the signed-in recipient sees the inbox. No email or cron job is created. Use **刷新通知** (Refresh) to retry, mark individual messages read, or mark everything through the observed boundary read. Notification preferences independently control achievements, reviews and levels; reenabling a type preserves its messages and read state.
+
+Notifications recover from saved ledger facts. An inbox failure cannot roll back successful rewards. Reopening the panel neither awards XP/honors nor duplicates messages. Level messages use the event's original before/after levels, unaffected by later threshold edits. Older events without notification snapshots are not backfilled.
+
+The task list explains the next goal, remaining count, distinct content/local-day modes, accessible target content/category links, and prerequisite names, completion and version/cycle scope. Private, protected and unpublished content names/links stay hidden. Following a target link does not bypass activity eligibility or immediately complete the task.
 
 ## Place weekly and monthly boards
 

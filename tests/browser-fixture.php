@@ -290,3 +290,41 @@ file_put_contents(
     $dir . '/insights.html',
     $head . '<link rel="stylesheet" href="' . $assets['admin_css'] . '">' . $insights,
 );
+
+class WP_XP_Core_Achievements
+{
+    public static function definitions(): array
+    {
+        return [];
+    }
+    public static function revision(): string
+    {
+        return str_repeat('a', 64);
+    }
+    public static function pending(int $cursor = 0): array
+    {
+        return ['items' => [], 'next_cursor' => null];
+    }
+}
+function checked($a, $b, $echo = false)
+{
+    return $a == $b ? ' checked' : '';
+}
+function wp_generate_uuid4()
+{
+    return '11111111-1111-4111-8111-111111111111';
+}
+ob_start();
+WP_XP_Core_Achievements_UI::page();
+$task_markup = ob_get_clean();
+file_put_contents(
+    $dir . '/tasks.html',
+    $head .
+        '<link rel="stylesheet" href="' .
+        $assets['admin_css'] .
+        '">' .
+        $task_markup .
+        '<script src="' .
+        $assets['growth_admin_js'] .
+        '"></script>',
+);

@@ -247,10 +247,7 @@ try {
     );
     $verify(
         'Source analysis excludes zero markers management receipts and historical calibration',
-        !array_intersect(
-            ['management_retry', 'migration_init', 'task_complete', 'view'],
-            array_keys($by_kind),
-        ),
+        !array_intersect(['management_retry', 'migration_init', 'view'], array_keys($by_kind)),
     );
     $verify(
         'Total unique users are deduplicated across kinds',
@@ -488,8 +485,8 @@ try {
         $review['number'],
         array_replace($submission, ['period' => '2032-09']),
     );
-    $event($delta, 'visit', 0, '2032-03-07');
-    $event($alpha, 'visit', 0, '2032-03-08');
+    $event($delta, 'visit', 0, '2032-03-07', '', $post);
+    $event($alpha, 'visit', 0, '2032-03-08', '', $post);
     $event($alpha, 'comment', 0, '2032-03-10', '', $approved);
     $event($beta, 'comment', 0, '2032-03-10', '', $pending);
     $event($gamma, 'comment', 0, '2032-03-10', '', $approved);

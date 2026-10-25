@@ -156,6 +156,10 @@ final class WP_XP_Core_Management_UI
             'streak_reward' => '签到阶段奖励',
             'management_retry' => '失败事件重试',
             'task_complete' => '完成任务',
+            'task_revoke' => '任务奖励撤销',
+            'task_grant' => '人工授予成就',
+            'task_grant_revoke' => '撤销人工成就',
+            'achievement_admin' => '成就管理操作',
             'achievement_submit' => '成就申请',
             'achievement_review' => '成就审核',
         ][$kind] ?? $kind;

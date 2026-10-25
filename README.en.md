@@ -60,7 +60,8 @@ For value ranges, comment eligibility, counting and examples, see [Rule settings
 
 - **Ledger and diagnostics:** filter events by user, source and date; adjust individual XP with a reason or reverse a manual adjustment; compare balances to the ledger without writes and handle explicitly recorded failed rewards.
 - **Growth center:** customize level names, character icons, colors and descriptions. Personal pages show check-in calendars, consecutive and cumulative counts, progress and private history. Optional check-in stage rewards start disabled and count new check-ins only.
-- **Tasks and achievements:** create once-only, daily or weekly tasks. Automatic tasks combine activity steps; reviewed tasks accept a user's explanation. Achievements are honors with no extra XP, and earned badges retain their original name and icon.
+- **Tasks and achievements:** create once-only, daily, weekly or monthly tasks. Automatic tasks combine activity steps; reviewed tasks accept a user's explanation. Achievements default to honors, with optional XP rewards and image badges. Reasoned administrative grants/revocations are supported, and earned badges retain their awarded snapshots.
+- **Private notifications and next goals:** review achievement, review and level messages with read/type preferences; task goals explain remaining counts, available content links and prerequisites.
 - **Weekly/monthly boards and insights:** manually place `[xp_leaderboard period="week" limit="10"]` or its monthly variant to rank net activity XP. Personal panels show the current user’s position; administrators can review source aggregates and current task completion rates. New weeks and months do not reset XP balances.
 
 See the [user guide](docs/GUIDE.en.md) for steps and change effects. These features do not backfill all historical activity, schedule cron jobs or provide a shop or spendable currency.

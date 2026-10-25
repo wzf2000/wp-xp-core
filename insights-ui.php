@@ -107,7 +107,7 @@ final class WP_XP_Core_Insights_UI
             if (!$sources['rows']) {
                 echo '<tr><td colspan="6">本期尚无符合条件的活动记录。</td></tr>';
             }
-            echo '</tbody></table></div><p class="xp-help">奖励为 0 的有效活动也计入事件和参与人数。总参与人数已跨来源去重，不能把每行人数相加；历史初始化、校准和零经验荣誉不计入这里。</p>';
+            echo '</tbody></table></div><p class="xp-help">奖励为 0 的有效活动也计入事件和参与人数。总参与人数已跨来源去重，不能把每行人数相加；任务完成及其撤销计入活动来源；人工授予及其撤销单列，不进入活动榜。历史初始化、校准和管理操作回执不计入这里。</p>';
         }
         echo '</section><section class="xp-card"><h2>当前任务完成率</h2><p>每项任务按当前版本、当前周期单独统计，不随上方来源日期切换。参与者是有相关活动或提交记录的用户，包含已经获得成就的用户；这不是曝光转化率或全站注册用户完成比例。</p>';
         if (is_wp_error($tasks)) {

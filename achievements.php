@@ -1,5 +1,5 @@
 <?php
-/** Optional, non-monetary tasks. Definitions never replay or grant historical rewards. */
+/** Versioned tasks and optional rewards. Definitions never replay historical activity. */
 defined('ABSPATH') || exit();
 final class WP_XP_Core_Achievements
 {
@@ -42,7 +42,7 @@ final class WP_XP_Core_Achievements
         }
         return trim($value);
     }
-    public static function validate(array $input): array
+    public static function validate(array $input, bool $check_media = true): array
     {
         if (
             array_diff(array_keys($input), [
@@ -54,6 +54,13 @@ final class WP_XP_Core_Achievements
                 'period',
                 'enabled',
                 'steps',
+                'starts_on',
+                'ends_on',
+                'prerequisites',
+                'reward_xp',
+                'image_id',
+                'category',
+                'series',
             ])
         ) {
             throw new InvalidArgumentException('任务字段无效。');
@@ -68,7 +75,7 @@ final class WP_XP_Core_Achievements
         }
         if (
             !in_array($input['type'] ?? '', ['automatic', 'review'], true) ||
-            !in_array($input['period'] ?? '', ['once', 'day', 'week'], true) ||
+            !in_array($input['period'] ?? '', ['once', 'day', 'week', 'month'], true) ||
             !in_array($input['enabled'] ?? false, [true, false, 0, 1, '0', '1'], true)
         ) {
             throw new InvalidArgumentException('请选择任务类型、周期和启用状态。');
@@ -80,14 +87,32 @@ final class WP_XP_Core_Achievements
         foreach ($input['steps'] as $step) {
             if (
                 !is_array($step) ||
-                array_diff(array_keys($step), ['kind', 'count']) ||
+                array_diff(array_keys($step), [
+                    'kind',
+                    'count',
+                    'mode',
+                    'post_ids',
+                    'category_ids',
+                ]) ||
                 !in_array($step['kind'] ?? '', self::KINDS, true)
             ) {
                 throw new InvalidArgumentException('请选择有效的任务步骤。');
             }
+            $mode = $step['mode'] ?? 'events';
+            if (!in_array($mode, ['events', 'objects', 'days'], true)) {
+                throw new InvalidArgumentException('请选择有效计数方式。');
+            }
+            $posts = self::ids($step['post_ids'] ?? []);
+            $categories = self::ids($step['category_ids'] ?? []);
+            if ($step['kind'] === 'checkin' && ($posts || $categories || $mode === 'objects')) {
+                throw new InvalidArgumentException('签到不支持内容范围或不同内容计数。');
+            }
             $steps[] = [
                 'kind' => $step['kind'],
                 'count' => self::integer($step['count'] ?? null, 1, 1000),
+                'mode' => $mode,
+                'post_ids' => $posts,
+                'category_ids' => $categories,
             ];
         }
         if ($input['type'] === 'automatic' && !$steps) {
@@ -96,7 +121,42 @@ final class WP_XP_Core_Achievements
         if ($input['type'] === 'review' && $steps) {
             throw new InvalidArgumentException('审核任务通过提交说明完成，无需自动步骤。');
         }
+        $starts = self::date($input['starts_on'] ?? '');
+        $ends = self::date($input['ends_on'] ?? '');
+        if ($starts && $ends && $starts > $ends) {
+            throw new InvalidArgumentException('结束日期不得早于开始日期。');
+        }
+        $prerequisites = $input['prerequisites'] ?? [];
+        if (!is_array($prerequisites) || count($prerequisites) > 8) {
+            throw new InvalidArgumentException('最多八个前置任务。');
+        }
+        $seen = [];
+        foreach ($prerequisites as $pre) {
+            if (
+                !is_array($pre) ||
+                array_diff(array_keys($pre), ['id', 'scope']) ||
+                !is_string($pre['id'] ?? null) ||
+                !preg_match('/^t_[a-f0-9]{16}$/D', $pre['id']) ||
+                !in_array($pre['scope'] ?? '', ['current', 'lifetime'], true) ||
+                isset($seen[$pre['id']])
+            ) {
+                throw new InvalidArgumentException('前置任务或完成范围无效。');
+            }
+            $seen[$pre['id']] = true;
+        }
+        usort($prerequisites, fn($a, $b) => strcmp($a['id'], $b['id']));
+        $image = self::integer($input['image_id'] ?? 0, 0, 2147483647);
+        if ($check_media && $image && !self::public_image($image)) {
+            throw new InvalidArgumentException('请选择可公开展示的媒体库图片。');
+        }
         return [
+            'reward_xp' => self::integer($input['reward_xp'] ?? 0, 0, 1000000),
+            'image_id' => $image,
+            'category' => self::text($input['category'] ?? '', 40),
+            'series' => self::text($input['series'] ?? '', 60),
+            'starts_on' => $starts,
+            'ends_on' => $ends,
+            'prerequisites' => array_values($prerequisites),
             'id' => $id,
             'title' => $title,
             'description' => self::text($input['description'] ?? '', 300),
@@ -106,6 +166,156 @@ final class WP_XP_Core_Achievements
             'enabled' => (bool) $input['enabled'],
             'steps' => $steps,
         ];
+    }
+    /** Attachment URLs are exposed only while the image and its parent are public. */
+    public static function public_image(int $id): bool
+    {
+        $image = get_post($id);
+        if (
+            !$image ||
+            $image->post_type !== 'attachment' ||
+            !in_array($image->post_status, ['inherit', 'publish'], true) ||
+            !in_array(
+                get_post_mime_type($id),
+                ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/avif'],
+                true,
+            ) ||
+            !wp_attachment_is_image($id) ||
+            $image->post_password !== ''
+        ) {
+            return false;
+        }
+        if ($image->post_parent) {
+            $parent = get_post($image->post_parent);
+            if (
+                !$parent ||
+                !in_array($parent->post_type, ['post', 'page'], true) ||
+                $parent->post_status !== 'publish' ||
+                $parent->post_password !== ''
+            ) {
+                return false;
+            }
+        }
+        return true;
+    }
+    public static function image_url(int $id): string
+    {
+        return $id && self::public_image($id)
+            ? (string) (wp_get_attachment_image_url($id, 'thumbnail') ?: '')
+            : '';
+    }
+    /** Shared validity predicate for personal reads, prerequisites and administration statistics. */
+    public static function valid_receipt(string $alias = 'e'): string
+    {
+        if (!in_array($alias, ['e', 'earned'], true)) {
+            throw new InvalidArgumentException('Invalid event alias');
+        }
+        return 'NOT EXISTS (SELECT 1 FROM ' .
+            Reader_Experience::table() .
+            " revoked WHERE revoked.kind IN ('task_revoke','task_grant_revoke') AND revoked.object_id=$alias.id)";
+    }
+    private static function receipt(string $key): ?array
+    {
+        global $wpdb;
+        $row = $wpdb->get_row(
+            $wpdb->prepare(
+                'SELECT e.* FROM ' .
+                    Reader_Experience::table() .
+                    ' e WHERE e.event_key=%s AND ' .
+                    self::valid_receipt(),
+                $key,
+            ),
+            ARRAY_A,
+        );
+        if ($wpdb->last_error !== '') {
+            throw new RuntimeException('Achievement receipt unavailable');
+        }
+        return $row ?: null;
+    }
+    private static function condition_text(array $task): string
+    {
+        $names = [
+            'checkin' => '签到',
+            'visit' => '有效阅读',
+            'comment' => '有效评论',
+            'article' => '发表文章',
+        ];
+        $modes = ['events' => '次活动', 'objects' => '项不同内容', 'days' => '个自然日'];
+        $parts = [];
+        foreach ($task['steps'] as $step) {
+            $text =
+                ($names[$step['kind']] ?? $step['kind']) .
+                ' ' .
+                $step['count'] .
+                ' ' .
+                $modes[$step['mode'] ?? 'events'];
+            if (!empty($step['post_ids']) || !empty($step['category_ids'])) {
+                $text .= '（指定内容范围）';
+            }
+            $parts[] = $text;
+        }
+        if ($task['type'] === 'review') {
+            $parts[] = '提交说明并通过审核';
+        }
+        if (!empty($task['prerequisites'])) {
+            $parts[] = '完成全部前置任务';
+        }
+        if (!empty($task['starts_on'])) {
+            $parts[] = '开始：' . $task['starts_on'];
+        }
+        if (!empty($task['ends_on'])) {
+            $parts[] = '结束：' . $task['ends_on'];
+        }
+        return implode('；', $parts);
+    }
+    private static function ids($values): array
+    {
+        if (!is_array($values) || count($values) > 100) {
+            throw new InvalidArgumentException('内容范围最多一百个编号。');
+        }
+        $out = array_values(
+            array_unique(array_map(fn($v) => self::integer($v, 1, 2147483647), $values)),
+        );
+        sort($out, SORT_NUMERIC);
+        return $out;
+    }
+    private static function date($value): string
+    {
+        if (
+            !is_string($value) ||
+            ($value !== '' &&
+                (!preg_match('/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/D', $value) ||
+                    !($d = DateTimeImmutable::createFromFormat('!Y-m-d', $value)) ||
+                    $d->format('Y-m-d') !== $value))
+        ) {
+            throw new InvalidArgumentException('日期须为有效的 YYYY-MM-DD。');
+        }
+        return $value;
+    }
+    private static function graph(array $definitions): void
+    {
+        $visiting = [];
+        $done = [];
+        $visit = function ($id) use (&$visit, &$visiting, &$done, $definitions) {
+            if (isset($visiting[$id])) {
+                throw new InvalidArgumentException('前置任务不能形成循环。');
+            }
+            if (isset($done[$id])) {
+                return;
+            }
+            if (!isset($definitions[$id])) {
+                throw new InvalidArgumentException('前置任务不存在。');
+            }
+            $visiting[$id] = true;
+            foreach ($definitions[$id]['prerequisites'] ?? [] as $pre) {
+                $visit($pre['id']);
+            }
+            unset($visiting[$id]);
+            $done[$id] = true;
+        };
+        foreach (array_keys($definitions) as $id) {
+            $visit($id);
+        }
     }
     public static function clear_cache(): void
     {
@@ -157,34 +367,44 @@ final class WP_XP_Core_Achievements
                     $value['id'] = 't_' . substr(str_replace('-', '', wp_generate_uuid4()), 0, 16);
                 }
                 $base = $existing
-                    ? array_intersect_key(
-                        $existing,
-                        array_flip([
-                            'id',
-                            'title',
-                            'description',
-                            'icon',
-                            'type',
-                            'period',
-                            'enabled',
-                            'steps',
-                        ]),
-                    )
+                    ? self::validate(array_intersect_key($existing, $task), false)
                     : null;
+                $next[$value['id']] = $value;
+                try {
+                    self::graph($next);
+                } catch (InvalidArgumentException $e) {
+                    return self::error('input', $e->getMessage());
+                }
                 if ($base === $value) {
                     return ['id' => $value['id'], 'unchanged' => true];
                 }
+                $conditions = [
+                    'type',
+                    'period',
+                    'enabled',
+                    'steps',
+                    'starts_on',
+                    'ends_on',
+                    'prerequisites',
+                    'reward_xp',
+                ];
+                $new_version =
+                    !$existing ||
+                    array_intersect_key($base, array_flip($conditions)) !==
+                        array_intersect_key($value, array_flip($conditions));
                 $value['number'] = $existing ? (int) $existing['number'] : count($old) + 1;
-                $value['version'] = $existing ? (int) $existing['version'] + 1 : 1;
+                $value['version'] = $existing ? (int) $existing['version'] + (int) $new_version : 1;
                 global $wpdb;
-                $boundary = $wpdb->get_var(
-                    'SELECT COALESCE(MAX(id),0) FROM ' . Reader_Experience::table(),
-                );
+                $boundary = $new_version
+                    ? $wpdb->get_var(
+                        'SELECT COALESCE(MAX(id),0) FROM ' . Reader_Experience::table(),
+                    )
+                    : $existing['start_event_id'];
                 if ($wpdb->last_error !== '' || $boundary === null) {
                     throw new RuntimeException('Task boundary unavailable');
                 }
                 $value['start_event_id'] = (int) $boundary;
-                $value['created_at'] = time();
+                $value['created_at'] = $new_version ? time() : $existing['created_at'];
                 $next[$value['id']] = $value;
                 Reader_Experience::touch_option(self::OPTION);
                 if (!update_option(self::OPTION, $next, false)) {
@@ -202,14 +422,18 @@ final class WP_XP_Core_Achievements
     {
         $today = Reader_Experience::day();
         $date = new DateTimeImmutable($today, new DateTimeZone('UTC'));
-        return match ($task['period']) {
+        $period = match ($task['period']) {
             'day' => ['key' => $today, 'from' => $today],
             'week' => [
                 'key' => $date->format('o-W'),
                 'from' => $date->modify('monday this week')->format('Y-m-d'),
             ],
+            'month' => ['key' => $date->format('Y-m'), 'from' => $date->format('Y-m-01')],
             default => ['key' => 'once', 'from' => '0001-01-01'],
         };
+        $period['from'] = max($period['from'], $task['starts_on'] ?? '');
+        $period['to'] = min($today, $task['ends_on'] ?? '' ?: $today);
+        return $period;
     }
     private static function key(array $task, int $uid): string
     {
@@ -242,30 +466,17 @@ final class WP_XP_Core_Achievements
         global $wpdb;
         $period = self::period($task);
         $steps = [];
-        $complete = $task['type'] === 'automatic';
+        $complete = $task['type'] === 'automatic' && self::unlocked($task, $uid);
         foreach ($task['steps'] as $step) {
-            $where = $wpdb->prepare(
-                ' e.user_id=%d AND e.kind=%s AND e.id>%d AND e.local_day>=%s',
-                $uid,
-                $step['kind'],
-                $task['start_event_id'],
-                $period['from'],
-            );
-            $join =
-                $step['kind'] === 'comment'
-                    ? " INNER JOIN {$wpdb->comments} c ON c.comment_ID=e.object_id INNER JOIN {$wpdb->posts} p ON p.ID=c.comment_post_ID "
-                    : '';
-            if ($step['kind'] === 'comment') {
-                $where .=
-                    " AND c.comment_approved='1' AND p.post_status='publish' AND c.user_id=e.user_id";
-            }
             $n = (int) $wpdb->get_var(
-                'SELECT COUNT(*) FROM ' .
+                'SELECT ' .
+                    self::counter($step, self::condition($task, $step)) .
+                    ' FROM ' .
                     Reader_Experience::table() .
                     ' e ' .
-                    $join .
+                    self::joins() .
                     ' WHERE ' .
-                    $where,
+                    $wpdb->prepare('e.user_id=%d', $uid),
             );
             if ($wpdb->last_error !== '') {
                 throw new RuntimeException('Task progress unavailable');
@@ -277,9 +488,101 @@ final class WP_XP_Core_Achievements
         return [
             'steps' => $steps,
             'complete' => $complete,
-            'earned' => self::event(self::key($task, $uid)) !== null,
+            'earned' => self::receipt(self::key($task, $uid)) !== null,
+            'revoked' =>
+                self::event(self::key($task, $uid)) !== null &&
+                self::receipt(self::key($task, $uid)) === null,
             'period' => $period['key'],
+            'available' => self::unlocked($task, $uid),
         ];
+    }
+    public static function joins(): string
+    {
+        global $wpdb;
+        return " LEFT JOIN {$wpdb->comments} c ON e.kind='comment' AND c.comment_ID=e.object_id LEFT JOIN {$wpdb->posts} p ON p.ID=IF(e.kind='comment',c.comment_post_ID,e.object_id) ";
+    }
+    public static function condition(array $task, array $step): string
+    {
+        global $wpdb;
+        $period = self::period($task);
+        $sql = $wpdb->prepare(
+            'e.kind=%s AND e.id>%d AND e.local_day BETWEEN %s AND %s',
+            $step['kind'],
+            $task['start_event_id'],
+            $period['from'],
+            $period['to'],
+        );
+        if ($step['kind'] !== 'checkin') {
+            $sql .=
+                " AND p.post_status='publish' AND p.post_password='' AND p.post_type IN ('post','page')";
+            if ($step['kind'] === 'comment') {
+                $sql .= " AND c.comment_approved='1' AND c.user_id=e.user_id AND c.comment_type IN ('','comment') AND p.post_author<>e.user_id AND NOT EXISTS (SELECT 1 FROM {$wpdb->comments} parent WHERE parent.comment_ID=c.comment_parent AND parent.user_id=e.user_id)";
+            }
+            $scope = [];
+            if (!empty($step['post_ids'])) {
+                $scope[] = 'p.ID IN (' . implode(',', array_map('intval', $step['post_ids'])) . ')';
+            }
+            if (!empty($step['category_ids'])) {
+                $scope[] =
+                    "(p.post_type='post' AND EXISTS (SELECT 1 FROM {$wpdb->term_relationships} tr INNER JOIN {$wpdb->term_taxonomy} tt ON tt.term_taxonomy_id=tr.term_taxonomy_id WHERE tr.object_id=p.ID AND tt.taxonomy='category' AND tt.term_id IN (" .
+                    implode(',', array_map('intval', $step['category_ids'])) .
+                    ')))';
+            }
+            if ($scope) {
+                $sql .= ' AND (' . implode(' OR ', $scope) . ')';
+            }
+        }
+        return $sql;
+    }
+    private static function counter(array $step, string $condition): string
+    {
+        $object = match ($step['mode'] ?? 'events') {
+            'objects' => 'p.ID',
+            'days' => 'e.local_day',
+            default => 'e.id',
+        };
+        return 'COUNT(DISTINCT CASE WHEN (' . $condition . ') THEN ' . $object . ' END)';
+    }
+    public static function unlocked(array $task, int $uid): bool
+    {
+        $today = Reader_Experience::day();
+        if (
+            (!empty($task['starts_on']) && $today < $task['starts_on']) ||
+            (!empty($task['ends_on']) && $today > $task['ends_on'])
+        ) {
+            return false;
+        }
+        $definitions = self::definitions();
+        foreach ($task['prerequisites'] ?? [] as $pre) {
+            if ($pre['scope'] === 'current') {
+                if (
+                    !isset($definitions[$pre['id']]) ||
+                    !self::receipt(self::key($definitions[$pre['id']], $uid))
+                ) {
+                    return false;
+                }
+            } else {
+                global $wpdb;
+                $found = $wpdb->get_var(
+                    $wpdb->prepare(
+                        'SELECT id FROM ' .
+                            Reader_Experience::table() .
+                            " e WHERE e.user_id=%d AND e.kind IN ('task_complete','task_grant') AND e.event_key LIKE %s AND " .
+                            self::valid_receipt() .
+                            ' LIMIT 1',
+                        $uid,
+                        $wpdb->esc_like('task:' . $pre['id'] . ':') . '%',
+                    ),
+                );
+                if ($wpdb->last_error !== '') {
+                    throw new RuntimeException('Prerequisite unavailable');
+                }
+                if (!$found) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
     private static function permission($nonce)
     {
@@ -302,20 +605,38 @@ final class WP_XP_Core_Achievements
         $task = self::definitions()[$id] ?? null;
         return $task && !empty($task['enabled']) ? $task : null;
     }
-    private static function award(array $task, int $uid, array $evidence = []): bool
-    {
+    private static function award(
+        array $task,
+        int $uid,
+        array $evidence = [],
+        string $kind = 'task_complete',
+    ): bool {
+        if (self::event(self::key($task, $uid))) {
+            return false;
+        }
+        $xp = self::integer($task['reward_xp'] ?? 0, 0, 1000000);
+        if (WP_XP_Core_Management::balance_allows($uid, $xp) !== true) {
+            throw new RuntimeException('Task reward exceeds balance range');
+        }
         return Reader_Experience::record(
             self::key($task, $uid),
             $uid,
-            'task_complete',
+            $kind,
             0,
-            0,
+            (int) ($task['reward_xp'] ?? 0),
             Reader_Experience::day(),
             [
                 'task_id' => $task['id'],
                 'version' => $task['version'],
                 'title' => $task['title'],
                 'icon' => $task['icon'],
+                'image_id' => $task['image_id'] ?? 0,
+                'category' => $task['category'] ?? '',
+                'series' => $task['series'] ?? '',
+                'condition_text' => self::condition_text($task),
+                'task_type' => $task['type'],
+                'reward_xp' => (int) ($task['reward_xp'] ?? 0),
+                'period_type' => $task['period'],
                 'period' => self::period($task)['key'],
             ] + $evidence,
         );
@@ -340,6 +661,9 @@ final class WP_XP_Core_Achievements
                 $progress = self::progress($task, $uid);
                 if ($progress['earned']) {
                     return ['earned' => true, 'duplicate' => true];
+                }
+                if (!empty($progress['revoked'])) {
+                    return self::error('revoked', '本期成就已撤销，不能再次领取。', 409);
                 }
                 if (!$progress['complete']) {
                     return self::error('incomplete', '任务步骤尚未完成。', 409);
@@ -379,11 +703,22 @@ final class WP_XP_Core_Achievements
                     return;
                 }
                 $progress = self::progress($current, $uid);
-                if (!$progress['earned'] && $progress['complete']) {
+                if (!$progress['earned'] && empty($progress['revoked']) && $progress['complete']) {
                     self::award($current, $uid);
                 }
             });
         }
+    }
+    private static function submission_detail($detail): bool
+    {
+        return is_array($detail) &&
+            is_string($detail['task_id'] ?? null) &&
+            preg_match('/^t_[a-f0-9]{16}$/D', $detail['task_id']) &&
+            is_int($detail['version'] ?? null) &&
+            $detail['version'] > 0 &&
+            is_string($detail['period'] ?? null) &&
+            is_string($detail['title'] ?? null) &&
+            is_string($detail['text'] ?? null);
     }
     private static function submissions(
         int $uid = 0,
@@ -428,10 +763,16 @@ final class WP_XP_Core_Achievements
         $out = [];
         foreach ($rows as $row) {
             $detail = json_decode($row['detail'], true);
-            if (!is_array($detail)) {
+            if (!self::submission_detail($detail)) {
                 continue;
             }
             $decision = $row['review_detail'] ? json_decode($row['review_detail'], true) : null;
+            if (
+                !is_array($decision) ||
+                !in_array($decision['decision'] ?? '', ['approve', 'reject'], true)
+            ) {
+                $decision = null;
+            }
             $out[] = [
                 'id' => (int) $row['id'],
                 'user_id' => (int) $row['user_id'],
@@ -490,6 +831,9 @@ final class WP_XP_Core_Achievements
                 $task = self::active($input['task_id']);
                 if (!$task || $task['type'] !== 'review') {
                     return self::error('missing', '审核任务当前不可用。', 404);
+                }
+                if (!self::unlocked($task, $uid)) {
+                    return self::error('locked', '任务尚未开放、已结束或前置任务尚未完成。', 409);
                 }
                 if (self::event(self::key($task, $uid))) {
                     return self::error('earned', '本期成就已经获得。', 409);
@@ -588,15 +932,21 @@ final class WP_XP_Core_Achievements
                 $existing = self::event($key);
                 if ($existing) {
                     $d = json_decode($existing['detail'], true);
-                    return $d['decision'] === $input['decision'] && $d['feedback'] === $feedback
+                    return is_array($d) &&
+                        ($d['decision'] ?? null) === $input['decision'] &&
+                        ($d['feedback'] ?? null) === $feedback
                         ? ['reviewed' => true, 'duplicate' => true]
                         : self::error('conflict', '这份说明已被审核，请刷新页面。', 409);
                 }
                 $detail = json_decode($row['detail'], true);
+                if (!self::submission_detail($detail)) {
+                    return self::error('input', '提交记录不完整，未能审核。');
+                }
                 $task = self::active($detail['task_id']);
                 if ($input['decision'] === 'approve') {
                     if (
                         !$task ||
+                        !self::unlocked($task, $uid) ||
                         $task['version'] !== (int) $detail['version'] ||
                         self::period($task)['key'] !== $detail['period']
                     ) {
@@ -605,6 +955,12 @@ final class WP_XP_Core_Achievements
                             '任务已修改、停用或本期已结束，可退回说明并告知用户。',
                             409,
                         );
+                    }
+                    if (
+                        self::event(self::key($task, $uid)) &&
+                        !self::receipt(self::key($task, $uid))
+                    ) {
+                        return self::error('revoked', '本期成就已撤销，不能再次授予。', 409);
                     }
                     self::award($task, $uid, [
                         'submission_id' => $id,
@@ -631,6 +987,225 @@ final class WP_XP_Core_Achievements
             return self::error('input', $e->getMessage());
         } catch (Throwable $e) {
             return self::error('storage', '审核未能保存，请重试。', 503);
+        }
+    }
+    /** Administrator-only current-cycle grant or append-only revocation. */
+    public static function manage(array $input, $nonce)
+    {
+        $allowed = WP_XP_Core_Management::permission();
+        if ($allowed !== true) {
+            return $allowed;
+        }
+        if (!is_string($nonce) || !wp_verify_nonce($nonce, 'wp_xp_core_achievements')) {
+            return self::error('nonce', '验证已过期，请刷新页面。', 403);
+        }
+        if (!Reader_Experience::ready()) {
+            return self::error('maintenance', '经验系统维护中。', 503);
+        }
+        try {
+            $operation = $input['operation'] ?? '';
+            $fields =
+                $operation === 'grant'
+                    ? [
+                        'operation',
+                        'request_id',
+                        'reason',
+                        'user_id',
+                        'task_id',
+                        'version',
+                        'period',
+                    ]
+                    : ['operation', 'request_id', 'reason', 'event_id'];
+            if (
+                !in_array($operation, ['grant', 'revoke'], true) ||
+                array_diff(array_keys($input), $fields) ||
+                !is_string($input['request_id'] ?? null) ||
+                !preg_match(
+                    '/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/iD',
+                    $input['request_id'],
+                )
+            ) {
+                return self::error('input', '授予或撤销请求无效。');
+            }
+            $reason = self::text($input['reason'] ?? '', 300);
+            if ($reason === '') {
+                return self::error('input', '请填写操作原因。');
+            }
+            $value = ['operation' => $operation, 'reason' => $reason];
+            if ($operation === 'grant') {
+                $value['user_id'] = self::integer($input['user_id'] ?? null, 1, 2147483647);
+                $value['task_id'] = self::text($input['task_id'] ?? '', 32);
+                $value['version'] = self::integer($input['version'] ?? null, 1, 2147483647);
+                $value['period'] = self::text($input['period'] ?? '', 16);
+            } else {
+                $value['event_id'] = self::integer($input['event_id'] ?? null, 1, 2147483647);
+            }
+            $actor = get_current_user_id();
+            $request_key = 'task-admin:' . $actor . ':' . strtolower($input['request_id']);
+            $fingerprint = hash('sha256', wp_json_encode($value));
+            return Reader_Experience::transaction(function () use (
+                $value,
+                $actor,
+                $request_key,
+                $fingerprint,
+            ) {
+                self::clear_cache();
+                if (!Reader_Experience::ready()) {
+                    return self::error('maintenance', '经验系统维护中。', 503);
+                }
+                $previous = self::event($request_key);
+                if ($previous) {
+                    $d = json_decode($previous['detail'], true);
+                    $permission = WP_XP_Core_Management::permission((int) $previous['user_id']);
+                    if ($permission !== true) {
+                        return $permission;
+                    }
+                    return ($d['fingerprint'] ?? '') === $fingerprint
+                        ? ['managed' => true, 'duplicate' => true]
+                        : self::error('conflict', '操作编号已用于其他内容。', 409);
+                }
+                $event_id = 0;
+                $duplicate = false;
+                if ($value['operation'] === 'grant') {
+                    $uid = $value['user_id'];
+                    $permission = WP_XP_Core_Management::permission($uid);
+                    if ($permission !== true) {
+                        return $permission;
+                    }
+                    if (!get_userdata($uid)) {
+                        return self::error('missing', '用户不存在。', 404);
+                    }
+                    $task = self::active($value['task_id']);
+                    if (
+                        !$task ||
+                        (int) $task['version'] !== $value['version'] ||
+                        self::period($task)['key'] !== $value['period']
+                    ) {
+                        return self::error(
+                            'changed',
+                            '任务版本、周期或启用状态已改变，请刷新页面。',
+                            409,
+                        );
+                    }
+                    if (!self::unlocked($task, $uid)) {
+                        return self::error('locked', '任务日期或前置条件尚未满足。', 409);
+                    }
+                    $existing = self::event(self::key($task, $uid));
+                    if ($existing && !self::receipt(self::key($task, $uid))) {
+                        return self::error('revoked', '本期成就已撤销，不能重复授予。', 409);
+                    }
+                    $duplicate = $existing !== null;
+                    if (
+                        !$existing &&
+                        !self::award(
+                            $task,
+                            $uid,
+                            ['actor' => $actor, 'reason' => $value['reason']],
+                            'task_grant',
+                        )
+                    ) {
+                        throw new RuntimeException('Grant failed');
+                    }
+                    $event_id = (int) self::event(self::key($task, $uid))['id'];
+                } else {
+                    global $wpdb;
+                    $original = $wpdb->get_row(
+                        $wpdb->prepare(
+                            'SELECT * FROM ' .
+                                Reader_Experience::table() .
+                                " WHERE id=%d AND kind IN ('task_complete','task_grant')",
+                            $value['event_id'],
+                        ),
+                        ARRAY_A,
+                    );
+                    if ($wpdb->last_error !== '') {
+                        throw new RuntimeException('Achievement receipt unavailable');
+                    }
+                    if (!$original) {
+                        return self::error('missing', '成就授予记录不存在。', 404);
+                    }
+                    $uid = (int) $original['user_id'];
+                    $permission = WP_XP_Core_Management::permission($uid);
+                    if ($permission !== true) {
+                        return $permission;
+                    }
+                    if (!get_userdata($uid)) {
+                        return self::error('missing', '用户不存在。', 404);
+                    }
+                    $detail = json_decode($original['detail'], true);
+                    if (
+                        !is_array($detail) ||
+                        !isset($detail['task_id'], $detail['version'], $detail['period']) ||
+                        (int) $original['xp'] < 0
+                    ) {
+                        return self::error('input', '原成就记录无效，未执行撤销。');
+                    }
+                    $revoke_key = 'task-revoke:' . $original['id'];
+                    $duplicate = self::event($revoke_key) !== null;
+                    if (!$duplicate) {
+                        wp_cache_delete($uid, 'user_meta');
+                        if (
+                            (int) get_user_meta($uid, Reader_Experience::balance_meta(), true) <
+                            (int) $original['xp']
+                        ) {
+                            return self::error(
+                                'balance',
+                                '当前经验不足以扣回原奖励，成就与经验均未改变。',
+                                409,
+                            );
+                        }
+                        if (
+                            !Reader_Experience::record(
+                                $revoke_key,
+                                $uid,
+                                $original['kind'] === 'task_grant'
+                                    ? 'task_grant_revoke'
+                                    : 'task_revoke',
+                                (int) $original['id'],
+                                -(int) $original['xp'],
+                                Reader_Experience::day(),
+                                [
+                                    'actor' => $actor,
+                                    'reason' => $value['reason'],
+                                    'original_event_id' => (int) $original['id'],
+                                    'title' => is_string($detail['title'] ?? null)
+                                        ? $detail['title']
+                                        : '',
+                                    'task_id' => $detail['task_id'],
+                                    'version' => $detail['version'],
+                                    'period' => $detail['period'],
+                                ],
+                            )
+                        ) {
+                            throw new RuntimeException('Revocation failed');
+                        }
+                    }
+                    $event_id = (int) $original['id'];
+                }
+                if (
+                    !Reader_Experience::record(
+                        $request_key,
+                        $uid,
+                        'achievement_admin',
+                        $event_id,
+                        0,
+                        Reader_Experience::day(),
+                        [
+                            'actor' => $actor,
+                            'reason' => $value['reason'],
+                            'operation' => $value['operation'],
+                            'fingerprint' => $fingerprint,
+                        ],
+                    )
+                ) {
+                    throw new RuntimeException('Admin receipt failed');
+                }
+                return ['managed' => true, 'duplicate' => $duplicate, 'event_id' => $event_id];
+            });
+        } catch (InvalidArgumentException $e) {
+            return self::error('input', $e->getMessage());
+        } catch (Throwable $e) {
+            return self::error('storage', '成就操作未能保存，请重试。', 503);
         }
     }
     public static function pending(int $cursor = 0, int $limit = 25)
@@ -670,17 +1245,8 @@ final class WP_XP_Core_Achievements
             $minimum = min($minimum, $task['start_event_id']);
             foreach ($task['steps'] as $i => $step) {
                 $alias = 'n' . count($select);
-                $condition = $wpdb->prepare(
-                    'e.kind=%s AND e.id>%d AND e.local_day>=%s',
-                    $step['kind'],
-                    $task['start_event_id'],
-                    self::period($task)['from'],
-                );
-                if ($step['kind'] === 'comment') {
-                    $condition .=
-                        " AND c.comment_approved='1' AND p.post_status='publish' AND c.user_id=e.user_id";
-                }
-                $select[] = 'COALESCE(SUM(' . $condition . '),0) AS ' . $alias;
+                $condition = self::condition($task, $step);
+                $select[] = self::counter($step, $condition) . ' AS ' . $alias;
                 $aliases[$task['id']][$i] = $alias;
             }
             if ($task['type'] === 'review') {
@@ -699,7 +1265,9 @@ final class WP_XP_Core_Achievements
                     implode(',', $select) .
                     ' FROM ' .
                     Reader_Experience::table() .
-                    " e LEFT JOIN {$wpdb->comments} c ON e.kind='comment' AND c.comment_ID=e.object_id LEFT JOIN {$wpdb->posts} p ON p.ID=c.comment_post_ID WHERE " .
+                    ' e ' .
+                    self::joins() .
+                    ' WHERE ' .
                     $wpdb->prepare('e.user_id=%d AND e.id>%d', $uid, $minimum),
                 ARRAY_A,
             );
@@ -707,16 +1275,27 @@ final class WP_XP_Core_Achievements
                 throw new RuntimeException('Task counters unavailable');
             }
         }
-        $earned = $wpdb->get_col(
+        $receipts = $wpdb->get_results(
             $wpdb->prepare(
-                'SELECT event_key FROM ' .
+                'SELECT e.event_key,(' .
+                    self::valid_receipt() .
+                    ') AS valid FROM ' .
                     Reader_Experience::table() .
-                    ' WHERE event_key IN (' .
+                    ' e WHERE e.event_key IN (' .
                     implode(',', array_fill(0, count($keys), '%s')) .
                     ')',
                 ...$keys,
             ),
+            ARRAY_A,
         );
+        if ($wpdb->last_error !== '' || !is_array($receipts)) {
+            throw new RuntimeException('Task receipts unavailable');
+        }
+        $earned = array_column(
+            array_filter($receipts, fn($r) => (int) $r['valid'] === 1),
+            'event_key',
+        );
+        $consumed = array_column($receipts, 'event_key');
         if ($wpdb->last_error !== '') {
             throw new RuntimeException('Task receipts unavailable');
         }
@@ -740,7 +1319,7 @@ final class WP_XP_Core_Achievements
         $out = [];
         foreach ($tasks as $task) {
             $steps = [];
-            $complete = $task['type'] === 'automatic';
+            $complete = $task['type'] === 'automatic' && self::unlocked($task, $uid);
             foreach ($task['steps'] as $i => $step) {
                 $n = (int) ($counts[$aliases[$task['id']][$i]] ?? 0);
                 $done = $n >= $step['count'];
@@ -751,7 +1330,11 @@ final class WP_XP_Core_Achievements
                 'steps' => $steps,
                 'complete' => $complete,
                 'earned' => in_array(self::key($task, $uid), $earned, true),
+                'revoked' =>
+                    in_array(self::key($task, $uid), $consumed, true) &&
+                    !in_array(self::key($task, $uid), $earned, true),
                 'period' => self::period($task)['key'],
+                'available' => self::unlocked($task, $uid),
                 'pending_submission' => in_array(
                     (string) $task['number'],
                     array_map('strval', $pending_numbers),
@@ -760,6 +1343,53 @@ final class WP_XP_Core_Achievements
             ];
         }
         return $out;
+    }
+    private static function scope_links(array $step): array
+    {
+        $links = [];
+        foreach ($step['post_ids'] ?? [] as $id) {
+            $post = get_post($id);
+            if (
+                $post &&
+                in_array($post->post_type, ['post', 'page'], true) &&
+                $post->post_status === 'publish' &&
+                $post->post_password === ''
+            ) {
+                $links[] = ['title' => get_the_title($post), 'url' => get_permalink($post)];
+                if (count($links) >= 8) {
+                    break;
+                }
+            }
+        }
+        foreach (array_slice($step['category_ids'] ?? [], 0, 8) as $id) {
+            $term = get_term($id, 'category');
+            $url = get_category_link($id);
+            if ($term && !is_wp_error($term) && !is_wp_error($url)) {
+                $links[] = ['title' => $term->name . '（分类）', 'url' => $url];
+            }
+        }
+        return $links;
+    }
+    private static function prerequisite_hints(array $task, int $uid): array
+    {
+        $definitions = self::definitions();
+        $hints = [];
+        foreach ($task['prerequisites'] ?? [] as $pre) {
+            $definition = $definitions[$pre['id']] ?? null;
+            $probe = $task;
+            $probe['prerequisites'] = [$pre];
+            $probe['starts_on'] = '';
+            $probe['ends_on'] = '';
+            $hints[] = [
+                'title' =>
+                    $definition && !empty($definition['enabled'])
+                        ? $definition['title']
+                        : '前置任务当前未开放',
+                'scope' => $pre['scope'],
+                'complete' => self::unlocked($probe, $uid),
+            ];
+        }
+        return $hints;
     }
     public static function personal(): array
     {
@@ -774,6 +1404,12 @@ final class WP_XP_Core_Achievements
             if (!$task['enabled']) {
                 continue;
             }
+            foreach ($progress[$task['id']]['steps'] as &$step) {
+                $step['scope_links'] = self::scope_links($step);
+                $step['scoped'] = !empty($step['post_ids']) || !empty($step['category_ids']);
+                unset($step['post_ids'], $step['category_ids']);
+            }
+            unset($step);
             $tasks[] =
                 [
                     'id' => $task['id'],
@@ -784,14 +1420,24 @@ final class WP_XP_Core_Achievements
                     'period_key' => self::period($task)['key'],
                     'version' => $task['version'],
                     'type' => $task['type'],
+                    'starts_on' => $task['starts_on'] ?? '',
+                    'ends_on' => $task['ends_on'] ?? '',
+                    'reward_xp' => (int) ($task['reward_xp'] ?? 0),
+                    'category' => $task['category'] ?? '',
+                    'series' => $task['series'] ?? '',
+                    'image_url' => self::image_url((int) ($task['image_id'] ?? 0)),
+                    'condition_text' => self::condition_text($task),
+                    'prerequisites' => self::prerequisite_hints($task, $uid),
                 ] + $progress[$task['id']];
         }
         global $wpdb;
         $rows = $wpdb->get_results(
             $wpdb->prepare(
-                'SELECT detail,local_day FROM ' .
+                'SELECT e.id,e.detail,e.local_day,e.created_at,e.xp,e.kind FROM ' .
                     Reader_Experience::table() .
-                    " WHERE user_id=%d AND kind='task_complete' ORDER BY id DESC LIMIT 50",
+                    " e WHERE e.user_id=%d AND e.kind IN ('task_complete','task_grant') AND " .
+                    self::valid_receipt() .
+                    ' ORDER BY e.id DESC LIMIT 50',
                 $uid,
             ),
             ARRAY_A,
@@ -802,15 +1448,23 @@ final class WP_XP_Core_Achievements
         $badges = [];
         foreach ($rows as $row) {
             $d = json_decode($row['detail'], true);
-            if (is_array($d)) {
+            if (is_array($d) && is_string($d['title'] ?? null)) {
                 $badges[] = [
                     'title' => $d['title'],
-                    'icon' => $d['icon'],
+                    'icon' => is_string($d['icon'] ?? null) ? $d['icon'] : '',
                     'day' => $row['local_day'],
+                    'earned_at' => (int) $row['created_at'],
+                    'image_url' => self::image_url((int) ($d['image_id'] ?? 0)),
+                    'category' => $d['category'] ?? '',
+                    'series' => $d['series'] ?? '',
+                    'condition_text' => $d['condition_text'] ?? '',
+                    'reward_xp' => (int) $row['xp'],
+                    'method' => $row['kind'] === 'task_grant' ? 'manual' : $d['task_type'] ?? '',
                 ];
             }
         }
         return [
+            'timezone' => WP_XP_Core_Settings::rules()['timezone'],
             'tasks' => $tasks,
             'badges' => $badges,
             'submissions' => self::submissions($uid),

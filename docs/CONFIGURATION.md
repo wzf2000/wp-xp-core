@@ -91,19 +91,39 @@ Companion 原子保存点赞总数与新用户记录，经验记账另属独立�
 
 管理入口要求 `manage_options`，写操作还检查 nonce、操作身份与目标用户权限。`manual_adjust` 和 `manual_reversal` 追加事件，包含原因和操作人；撤销仅针对未撤销的人工调整，不能令余额为负。诊断只读比较账本与投影，不作原地修复。失败列表仅保留明确捕获的首次文章／评论奖励尝试，重试重新校验当前资格，不是历史补发接口。`wp_xp_core_rule_audit` 和 `wp_xp_core_failed_events` 分别有最多 200 项的保留上限，不是永久完整操作日志。
 
-`wp_xp_core_growth` 保存等级展示资料与可选签到阶段规则。阶段奖励通过新一代规则及起始事件边界限定，只累计之后的新签到；读取个人页面不写奖励。`wp_xp_core_achievements` 保存版本化任务，最多 50 项（含停用项），自动任务最多八步。任务变更采用新的事件边界；一次性／每日／每周周期内记录进度，周一开始一周。人工审核仅授予零经验荣誉。成就记录保存名称和图标快照；修改任务不改写已获得成就。
+`wp_xp_core_growth` 保存等级展示资料与可选签到阶段规则。阶段奖励通过新一代规则及起始事件边界限定，只累计之后的新签到；读取个人页面不写奖励。`wp_xp_core_achievements` 保存版本化任务，最多 50 项（含停用项），自动任务最多八步。任务支持一次性／每日／每周／每月周期，周一开始一周，每月一日开始。展示文字与字符图标修改保留版本及起始事件边界，条件、周期或启用变化建立新版本。自动任务与人工审核默认授予零经验荣誉，可选完成经验。成就记录保存名称和图标快照；修改任务不改写已获得成就。
+
+步骤字段为 `kind`、`count`、`mode`、`post_ids`、`category_ids`；旧 `kind/count` 步骤读取时仍按 `events` 计数且不限范围，不自动保存。`mode` 接受 `events`（事件）、`objects`（不同文章／页面，评论映射父内容）或 `days`（经验时区自然日）。签到不接受内容范围或 `objects`。两项 ID 列表各最多 100 项、正整数、任意命中；所有内容计数要求当前公开无密码的文章／页面，评论还须当前批准、保持事件用户归属，且不能是作者自评或回复自己的评论。
+
+任务可选 `starts_on`／`ends_on` 使用有效 `YYYY-MM-DD` 或空字符串，经验时区且包含首尾；自动完成、领取、提交与批准均检查。`prerequisites` 最多八项 `{id, scope}`，`id` 引用已保存任务；`current` 要求前置任务当前版本、当前周期的成就，`lifetime` 接受任意版本的已获荣誉。保存事务内检查缺失引用、重复与循环。条件限制完成／提交，不改变本版活动累计起点。读取不写入，保存不补历史。
 
 个人历史、任务提交及审核状态按当前用户隔离；不要将带登录信息的个人响应用于公共缓存。额外签到奖励默认关闭，无 cron、全历史扫描或自动补发流程。前端初始个人信息由服务端生成，交互和分页由 JavaScript 增强。
+
+`reward_xp` 为 0–1000000 整数，缺失按 0；变更建立新任务版本，已有成就不补奖。`image_id` 为 0 或有效的公开图片 attachment ID；只接受 JPEG/PNG/GIF/WebP/AVIF，父内容须公开无密码，读取时重新检查并回退字符。`category`／`series` 分别最多 40／60 字符，属于展示资料，不改变版本。授予事件保留展示与条件快照、原 XP，获取时间取原事件时间。
+
+自动／审核使用 `task_complete`，人工授予使用 `task_grant`；共享 `task:{id}:{version}:{period}:{user}` 幂等键，成就与奖励在一个事务提交。管理员 `WP_XP_Core_Achievements::manage()` 要求有效管理 nonce、目标用户权限、原因和 UUID 请求编号；授予还要求当前任务版本与周期、日期和前置条件。重复请求绑定规范化输入摘要，不能改目标或金额。所有奖励检查整数溢出；人工授予经验排除活动榜。
+
+撤销使用 `task-revoke:{原事件ID}`，分别追加 `task_revoke`／`task_grant_revoke` 及原 XP 的反向金额；余额不足不写任何事件。`achievement_admin` 是零经验操作回执，不进入活动来源。读取、前置条件、个人徽章与完成率统一排除已撤销荣誉；原键保留，不允许同版本周期重新授予，也不自动级联撤销后续成就。旧无奖励定义与历史零经验荣誉仍可读、可撤销，不做历史写入。
+
+## 私人通知与目标接口
+
+`notifications.php` 从可信账本事件派生收件箱，没有独立发奖或通知队列表。新事件在原事务保存 `notification_schema: 1` 和 `level_transition.before/after`；升级消息只接受 after 严格大于 before。成就和审核消息使用原事件快照。钩子丢失或通知查询失败后可重新读取，不影响已提交经验；旧无通知快照事件不补消息，读取不保存、不奖励。
+
+主命名空间及兼容别名提供 `POST /notifications` 和 `POST /notification-settings`，沿用登录、`read`、`X-WP-Nonce` 和 `private, no-store`／`Vary: Cookie`。仅当前用户，无目标用户字段，请求体最多 4000 字节。查询接受 `limit`（1–50）和可选 `cursor`（`事件ID:task|review|level`）；同一事件的成就与升级消息可分页而不遗漏。返回 `items`、`next_cursor`、当前观察边界 `through`、三类布尔 `preferences` 和 `revision`。
+
+更新要求准确 `revision`，可提交完整 `preferences: {task,review,level}`，或最多 50 个当前用户消息 `ids`，或 `through` 标记全部已读，不能混合这些操作。偏好和已读状态存于当前子站前缀的用户元数据键 `{prefix}wp_xp_core_inbox`，在账本事务锁内重新读取并比较版本，过期请求返回 409。逐条已读最多保留 2000 条边界之后的例外；全部已读会清理覆盖范围。前端按请求顺序丢弃旧响应，保存期间阻止旧读取覆盖新状态。
+
+任务个人响应增加公开 `scope_links`、计数模式和前置提示；不返回受限内容的名称／链接，也不把链接访问当作有效活动。所有这些读取保持只读。
 
 ## 榜单与效果统计接口
 
 `[xp_leaderboard period="week" limit="10"]` 是独立的手动公开入口，`period` 还支持 `month`，每页 1–50 人。它不由外部配置中的 `shortcodes` 字段改名，也不会创建页面。统计使用当前规则的经验时区与账本 `local_day`；周一／月初至今日的活动净经验必须大于 0。同分按 1、1、3 排名，同分记录按用户编号稳定排序，但该编号不进入公开行。单次 SQL 在同一数据库快照内计算该页、总人数与名次；offset 翻页之间的新活动仍可能移动结果。
 
-`WP_XP_Core_Insights::leaderboard()` 仅接受 `period`、`limit`（1–50）、`offset`（0–1000000）。公开行只返回 `display_name`、`author_url`、`xp`、`rank`，另有日期、时区和分页信息；不返回用户编号、登录名或个人记录。已删除用户及多站点中不再属于当前子站的用户不进入公开榜。参与来源是 `checkin`、`visit`、`article`、`comment`、`comment_adjust`、`milestone_view`、`milestone_like`、`streak_reward`，含负补偿；不使用余额投影排名。
+`WP_XP_Core_Insights::leaderboard()` 仅接受 `period`、`limit`（1–50）、`offset`（0–1000000）。公开行只返回 `display_name`、`author_url`、`xp`、`rank`，另有日期、时区和分页信息；不返回用户编号、登录名或个人记录。已删除用户及多站点中不再属于当前子站的用户不进入公开榜。参与来源是 `checkin`、`visit`、`article`、`comment`、`comment_adjust`、`milestone_view`、`milestone_like`、`streak_reward`、`task_complete`、`task_revoke`，含负补偿；不使用余额投影排名。
 
 个人位置使用主 `rest_namespace` 及全部 `rest_aliases` 下的 `POST /position`，沿用原个人接口权限检查。要求登录、`read` 权限及有效 `X-WP-Nonce`；JSON 对象仅支持可选的 `period` 字段（`week` 或 `month`，默认 `week`），例如 `{"period":"month"}`；不接受目标用户编号或其他字段，正文上限 1000 字节。服务端强制读取当前用户，响应的 `position` 是公开行格式或无排名时的 `null`。成长面板用 JavaScript 调用此接口；读取不产生事件，私人响应不可进入共享缓存。
 
-`WP_XP_Core_Insights::sources()` 与 `task_rates()` 仅供具备 `manage_options` 的管理员调用，不注册公开统计 REST 路由。来源接受 `week`、`month` 或 `custom`；自选 `from`／`to` 使用 `YYYY-MM-DD`，包含首尾、最多 366 天且不晚于今日。自动时段不接受自选日期字段。来源包含上述活动及独立的 `manual_adjust`、`manual_reversal`，零 XP 有效活动计入事件与人数；总人数跨来源去重，历史删除用户的记录只保留在脱敏汇总中。历史迁移、校准与荣誉不在统计范围内。
+`WP_XP_Core_Insights::sources()` 与 `task_rates()` 仅供具备 `manage_options` 的管理员调用，不注册公开统计 REST 路由。来源接受 `week`、`month` 或 `custom`；自选 `from`／`to` 使用 `YYYY-MM-DD`，包含首尾、最多 366 天且不晚于今日。自动时段不接受自选日期字段。来源包含上述活动及独立的 `manual_adjust`、`manual_reversal`、`task_grant`、`task_grant_revoke`，零 XP 有效活动计入事件与人数；总人数跨来源去重，历史删除用户的记录只保留在脱敏汇总中。历史迁移、校准与管理操作回执不在统计范围内；零经验任务荣誉仍计入事件与人数。
 
 任务统计只读取当前启用定义、当前版本和当前周期。分母是匹配活动／审核提交用户与完成者的去重并集；分子按准确的任务、版本、周期成就事件识别完成者。零分母返回 `rate: null`，不受来源日期参数影响。用户成员范围与公开榜一致。统计不保存排名元数据，不建表、迁移、索引、缓存或 cron，不改变余额、任务进度及奖励行为。
 

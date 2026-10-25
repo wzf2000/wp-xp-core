@@ -552,12 +552,14 @@
   flex-wrap: wrap;
   gap: 20px;
 }
-.wp-xp-core-admin .xp-task-steps {
+.wp-xp-core-admin .xp-task-steps,
+.wp-xp-core-admin .xp-task-reward-options {
   padding: 16px;
   border: 1px solid #dce2ec;
   border-radius: 8px;
 }
-.wp-xp-core-admin .xp-task-steps legend {
+.wp-xp-core-admin .xp-task-steps legend,
+.wp-xp-core-admin .xp-task-reward-options legend {
   font-weight: 650;
 }
 .wp-xp-core-admin .xp-review-item {
@@ -609,4 +611,14 @@
   .wp-xp-core-admin .xp-insight-totals {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+}
+
+.wp-xp-core-admin .xp-task-editor > label input[type='checkbox'] {
+  width: auto;
+  flex: 0 0 auto;
+}
+
+.wp-xp-core-admin .xp-task-editor > .xp-toggle {
+  display: flex;
+  align-items: center;
 }

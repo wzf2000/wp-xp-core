@@ -14,10 +14,15 @@
     manual_adjust: '人工调整',
     manual_reversal: '撤销人工调整',
     streak_reward: '签到阶段奖励',
+    task_complete: '任务完成奖励',
+    task_revoke: '任务奖励撤销',
+    task_grant: '人工授予成就',
+    task_grant_revoke: '撤销人工成就',
+    achievement_admin: '成就管理操作',
     migration: '历史初始化',
     reconciliation: '历史校准',
   };
-  const periods = { once: '一次性', day: '每日', week: '每周' };
+  const periods = { once: '一次性', day: '每日', week: '每周', month: '每月' };
   let refreshSequence = 0,
     previousLevel = null;
   async function api(action, data = {}) {
@@ -105,19 +110,55 @@
     if (!data.tasks.length) list.append(el('p', '暂时没有开放的任务，日常参与仍可获得经验。'));
     for (const task of data.tasks) {
       const article = el('article', undefined, 'xp-personal-task');
+      article.id = `xp-task-${task.id}`;
       article.append(
         el('h4', `${task.icon || '◇'} ${task.title}`),
         el('p', task.description),
         el('span', periods[task.period], 'xp-period-label'),
+        el('p', task.reward_xp ? `完成奖励 +${task.reward_xp} 经验` : '荣誉任务'),
       );
+      if (task.image_url) {
+        const image = el('img');
+        image.src = task.image_url;
+        image.alt = '';
+        image.width = image.height = 40;
+        image.loading = 'lazy';
+        article.prepend(image);
+      }
+      if (task.category || task.series)
+        article.append(el('p', [task.category, task.series].filter(Boolean).join(' · ')));
+      if (task.condition_text) article.append(el('p', task.condition_text));
+      for (const prerequisite of task.prerequisites || [])
+        article.append(
+          el(
+            'p',
+            `${prerequisite.complete ? '✓' : '待完成'} ${prerequisite.title} · ${prerequisite.scope === 'current' ? '当前版本与当前周期' : '终身荣誉（含旧版本）'}`,
+          ),
+        );
+      for (const step of task.steps || []) {
+        if (step.scoped && !step.scope_links?.length)
+          article.append(el('p', '指定内容暂未公开，请选择其他可用目标或等待开放。'));
+        if (step.scope_links?.length) {
+          const targets = el('p', '可前往：');
+          for (const link of step.scope_links) {
+            const anchor = el('a', link.title);
+            anchor.href = link.url;
+            targets.append(anchor, document.createTextNode(' '));
+          }
+          article.append(targets);
+        }
+      }
       if (task.earned) article.append(el('p', '本期已完成 ✓', 'xp-earned'));
+      else if (task.revoked) article.append(el('p', '本期成就已撤销，不能再次领取。'));
+      else if (task.available === false)
+        article.append(el('p', '尚未开放、已结束或前置任务尚未完成。'));
       else if (task.type === 'automatic') {
         const steps = el('ul');
         for (const step of task.steps)
           steps.append(
             el(
               'li',
-              `${names[step.kind] || step.kind} ${step.current} / ${step.count}${step.complete ? ' ✓' : ''}`,
+              `${names[step.kind] || step.kind}（${{ events: '活动次数', objects: '不同内容', days: '不同自然日' }[step.mode || 'events']}） ${step.current} / ${step.count}${step.complete ? ' ✓' : ''}`,
             ),
           );
         article.append(steps);
@@ -172,13 +213,65 @@
       }
       list.append(article);
     }
+    if (data.tasks.length) {
+      const next = data.tasks.find(
+        (task) => !task.earned && !task.revoked && task.available !== false,
+      );
+      const goal = el(
+        'p',
+        next ? `下一步：${next.title}` : '当前可用任务已完成，或正在等待开放／前置任务。',
+        'xp-next-goal',
+      );
+      if (next) {
+        const step = next.steps?.find((item) => !item.complete);
+        if (step)
+          goal.append(
+            document.createTextNode(
+              ` · 还需 ${Math.max(0, step.count - step.current)} ${{ events: '次有效活动', objects: '项不同内容', days: '个不同自然日' }[step.mode || 'events']}`,
+            ),
+          );
+        const link = el('a', '查看任务');
+        link.href = `#xp-task-${next.id}`;
+        goal.append(document.createTextNode(' '), link);
+      }
+      list.prepend(goal);
+    }
     const badges = panel.querySelector('.xp-badges');
     badges.replaceChildren();
     if (data.badges.length) {
       badges.append(el('h4', '最近获得的成就'));
       const items = el('ul');
-      for (const badge of data.badges)
-        items.append(el('li', `${badge.icon || '★'} ${badge.title} · ${badge.day}`));
+      for (const badge of data.badges) {
+        const item = el('li');
+        if (badge.image_url) {
+          const image = el('img');
+          image.src = badge.image_url;
+          image.alt = '';
+          image.width = image.height = 40;
+          image.loading = 'lazy';
+          item.append(image);
+        }
+        item.append(el('strong', `${badge.icon || '★'} ${badge.title}`));
+        const earned = badge.earned_at
+          ? new Date(badge.earned_at * 1000).toLocaleString('zh-CN', {
+              timeZone: data.timezone || undefined,
+            })
+          : badge.day;
+        item.append(
+          el(
+            'p',
+            `${earned}${badge.reward_xp ? ` · +${badge.reward_xp} 经验` : ''}${badge.method === 'manual' ? ' · 管理员授予' : ''}`,
+          ),
+        );
+        if (badge.category || badge.series)
+          item.append(el('p', [badge.category, badge.series].filter(Boolean).join(' · ')));
+        if (badge.condition_text) {
+          const detail = el('details');
+          detail.append(el('summary', '获得条件'), el('p', badge.condition_text));
+          item.append(detail);
+        }
+        items.append(item);
+      }
       badges.append(items);
     }
     const submissions = panel.querySelector('.xp-submissions');
@@ -198,6 +291,74 @@
         details.append(article);
       }
       submissions.append(details);
+    }
+  }
+  const inboxes = new WeakMap();
+  function inboxBusy(panel, busy) {
+    panel.querySelectorAll('.xp-inbox button,.xp-inbox input').forEach((field) => {
+      field.disabled = busy;
+    });
+  }
+  async function loadInbox(panel, append = false) {
+    if (!panel.querySelector('.xp-inbox')) return;
+    const state = inboxes.get(panel) || { sequence: 0, revision: null, cursor: null, through: 0 };
+    if (state.mutating) return;
+    inboxes.set(panel, state);
+    const sequence = ++state.sequence;
+    inboxBusy(panel, true);
+    try {
+      const data = await api('notifications', {
+        limit: 12,
+        ...(append && state.cursor ? { cursor: state.cursor } : {}),
+      });
+      if (sequence !== state.sequence) return;
+      const list = panel.querySelector('.xp-inbox-list');
+      if (!append) list.replaceChildren();
+      for (const item of data.items || []) {
+        const row = el('li');
+        row.append(el('strong', item.title), el('p', item.message), el('small', item.day));
+        if (!item.read) {
+          const read = el('button', '标为已读');
+          read.type = 'button';
+          read.addEventListener('click', () => saveInbox(panel, { ids: [item.id] }));
+          row.append(read);
+        } else row.append(el('small', ' · 已读'));
+        list.append(row);
+      }
+      if (!list.children.length) list.append(el('li', '暂无这类站内通知。'));
+      state.revision = data.revision;
+      state.cursor = data.next_cursor;
+      state.through = data.through;
+      panel.querySelector('.xp-inbox-more').hidden = !state.cursor;
+      for (const type of ['task', 'review', 'level'])
+        panel.querySelector(`.xp-inbox-preferences [name="${type}"]`).checked =
+          data.preferences?.[type] !== false;
+      panel.querySelector('.xp-inbox-message').textContent = '';
+    } catch (error) {
+      if (sequence === state.sequence)
+        panel.querySelector('.xp-inbox-message').textContent =
+          error.message + ' 可稍后重新打开面板。';
+    } finally {
+      if (sequence === state.sequence) inboxBusy(panel, false);
+    }
+  }
+  async function saveInbox(panel, changes) {
+    const state = inboxes.get(panel);
+    if (!state?.revision || state.mutating) return;
+    state.mutating = true;
+    const sequence = ++state.sequence;
+    inboxBusy(panel, true);
+    try {
+      const result = await api('notification-settings', { revision: state.revision, ...changes });
+      if (sequence !== state.sequence) return;
+      state.revision = result.revision;
+      state.mutating = false;
+      await loadInbox(panel);
+    } catch (error) {
+      if (sequence !== state.sequence) return;
+      state.mutating = false;
+      panel.querySelector('.xp-inbox-message').textContent = error.message;
+      inboxBusy(panel, false);
     }
   }
   const positions = new WeakMap();
@@ -231,6 +392,7 @@
         render(panel, value);
         renderTasks(panel, tasks);
         position(panel, positions.get(panel)?.period || 'week');
+        loadInbox(panel);
         if (previousLevel !== null && previousLevel < value.level)
           message(panel, `已升至 ${value.level_profile.name}！`);
       }
@@ -240,6 +402,19 @@
     }
   }
   for (const panel of panels) {
+    panel
+      .querySelector('.xp-inbox-read-all')
+      ?.addEventListener('click', () =>
+        saveInbox(panel, { through: inboxes.get(panel)?.through || 0 }),
+      );
+    panel.querySelector('.xp-inbox-more')?.addEventListener('click', () => loadInbox(panel, true));
+    panel.querySelector('.xp-inbox-preferences')?.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const preferences = {};
+      for (const type of ['task', 'review', 'level'])
+        preferences[type] = event.currentTarget.querySelector(`[name="${type}"]`).checked;
+      saveInbox(panel, { preferences });
+    });
     panel.querySelectorAll('[data-xp-position-period]').forEach((button) => {
       button.addEventListener('click', () => position(panel, button.dataset.xpPositionPeriod));
     });

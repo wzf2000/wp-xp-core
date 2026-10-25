@@ -21,6 +21,7 @@ require_once __DIR__ . '/growth.php';
 require_once __DIR__ . '/growth-ui.php';
 require_once __DIR__ . '/achievements.php';
 require_once __DIR__ . '/achievements-ui.php';
+require_once __DIR__ . '/notifications.php';
 require_once __DIR__ . '/insights.php';
 require_once __DIR__ . '/insights-ui.php';
 register_activation_hook(__FILE__, [WP_XP_Core_Lifecycle::class, 'activate']);
@@ -246,6 +247,11 @@ final class Reader_Experience
         wp_cache_delete($uid, 'user_meta');
         $before = (int) get_user_meta($uid, self::balance_meta(), true);
         $detail['rule_revision'] = WP_XP_Core_Settings::policy_revision();
+        $detail['notification_schema'] = 1;
+        $detail['level_transition'] = [
+            'before' => self::level($before),
+            'after' => self::level(max(0, $before + $xp)),
+        ];
         self::q(
             $wpdb->prepare(
                 'INSERT INTO ' .
