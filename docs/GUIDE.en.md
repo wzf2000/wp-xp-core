@@ -175,8 +175,34 @@ Yes. Open the event ledger, find the user and submit a signed adjustment with a 
 
 ### How do I update?
 
-Download the installation ZIP from [Releases](https://github.com/wzf2000/wp-xp-core/releases/latest), back up your site, and upload it through WordPress to replace the current version. No automatic updater is included. Older Reader Experience installations also need the directory and early-loading changes described under [Compatibility and upgrades](CONFIGURATION.en.md#compatibility-and-upgrades).
+Download the installation ZIP from [Releases](https://github.com/wzf2000/wp-xp-core/releases/latest), back up your site, and upload it through WordPress to replace the current version. Official GitHub update checks are optional and default to off; enable them explicitly in Configuration tools. Older Reader Experience installations also need the directory and early-loading changes described under [Compatibility and upgrades](CONFIGURATION.en.md#compatibility-and-upgrades).
 
 ### How do I report a problem?
 
 Use [Issues](https://github.com/wzf2000/wp-xp-core/issues/new/choose) with plugin, WordPress and PHP versions, reproduction steps and expected/actual behavior. Remove account records, verification tokens and private server configuration from screenshots and logs. For security problems, use the [private reporting channel](../SECURITY.md).
+
+## Configuration tools, templates and updates
+
+Open **Settings → Configuration tools**. Export produces copyable JSON containing rules, growth settings and tasks only. It excludes users, ledger, balances, administrator audits, notification preferences, storage routing and installation state. Export is read-only. Review site-specific media, post and category IDs before moving configuration.
+
+Choose an import mode and **Preview configuration** first. Same-site updates match existing task IDs; external templates remap tasks and prerequisites. Preview shows old/new rule and growth values, milestone changes, and tasks that are new, display-only modifications, new versions or preserved. **Apply previewed configuration** commits all changes together; any intervening relevant revision change rejects the entire application. Unlisted tasks remain. Reusing a template preserves earned claims and never backfills rewards. External milestones matching an existing threshold retain its local identity; retired identities cannot be reused. Unknown tasks receive local IDs; external versions, event boundaries and generations are rejected.
+
+**Task templates** include Reading starter and Weekly participation, with zero-XP honors by default. Selecting a template only previews it; explicit application is required. Edit its presentation or conditions afterward in Tasks and achievements.
+
+**GitHub update checks** default to off. Opt into stable releases or stable plus prereleases. Only the official `wzf2000/wp-xp-core` Release attachment `wp-xp-core-{version}.zip` is accepted, never GitHub Source code archives or arbitrary URLs. Version comparison prevents downgrading a current RC to an older stable release. Successful responses cache for at most six hours; failures for fifteen minutes. No cron job is added. Turning checks off ignores stale plugin update entries and performs no publication or deployment.
+
+## Blocks, language and navigation
+
+The editor’s **Widgets** category offers **My growth** and **XP activity standings** dynamic blocks. Both reuse existing shortcodes, which remain supported. The editor shows explanatory placeholders without loading private user data. The front-end panel uses the signed-in viewer; public standings respect opt-outs and exclusions.
+
+Fixed product strings support Simplified Chinese and English through WordPress site/user locale and the standard `wp-xp-core` gettext catalogs. User names, task names/descriptions, submitted notes and historical snapshots remain verbatim. A small browser translation map avoids adding a translation library to reading pages.
+
+The personal panel initially shows three actionable tasks. **Show remaining tasks (N)** reveals the rest; **View task** expands and focuses its target. Data refresh preserves the current page’s expansion state. Recent achievements likewise start with three entries; expansion shows only the remaining recent API records, not the complete history. Native buttons and labels, live status text, visible keyboard focus and `aria-expanded` support keyboard navigation.
+
+## Personal data and retention
+
+Administrators use **Tools → Export Personal Data**, with WordPress’s email verification flow, to export the recipient’s site-local XP events, task notes/achievement snapshots, balance, standings status and private notification preferences/read state. Each page reads at most fifty events. Other recipients, internal administrator reasons and unrestricted audit detail are excluded. Reads do not award XP or create notifications.
+
+Deactivation, updates and deleting plugin files retain the ledger, balances, tasks, settings and notification state. Reinstallation does not clear accounts. There is no automatic expiry or one-click personal-ledger eraser. Site operators must document purpose and retention and respond to erasure requests through their own reviewed policy. Direct deletion or promised anonymization would require an accounting and identity design first. Export support does not claim comprehensive privacy compliance certification.
+
+The optional updater is unavailable on multisite networks. Network administrators update the plugin manually; subsite preferences cannot affect network-shared update results.

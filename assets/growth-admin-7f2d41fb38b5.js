@@ -1,5 +1,10 @@
 (() => {
   'use strict';
+  const xpT = (text, ...values) =>
+    (window.WPXPI18n?.[text] || text).replace(/%([1-9][0-9]*)\$s/g, (_, n) =>
+      String(values[Number(n) - 1] ?? ''),
+    );
+
   const root = document.querySelector('.wp-xp-core-admin');
   if (!root) return;
   function addRow(list, template, maximum, prefix) {
@@ -68,7 +73,11 @@
   const badge = root.querySelector('[data-xp-badge-image]');
   root.querySelector('[data-xp-pick-badge]')?.addEventListener('click', () => {
     if (!window.wp?.media) return;
-    const frame = wp.media({ title: '选择徽章图片', library: { type: 'image' }, multiple: false });
+    const frame = wp.media({
+      title: xpT('选择徽章图片'),
+      library: { type: 'image' },
+      multiple: false,
+    });
     frame.on('select', () => {
       badge.value = frame.state().get('selection').first().get('id');
     });

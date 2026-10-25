@@ -1,0 +1,2229 @@
+msgid ""
+msgstr "Project-Id-Version: WP XP Core 2.0.0-rc.3\nContent-Type: text/plain; charset=UTF-8\nLanguage: en_US\nMIME-Version: 1.0\nContent-Transfer-Encoding: 8bit\n"
+
+msgid " · +%1$s 经验"
+msgstr " · +%1$s XP"
+
+msgid " · 净经验 "
+msgstr " · Net XP "
+
+msgid " · 对象 #"
+msgstr " · Object #"
+
+msgid " · 已读"
+msgstr " · Read"
+
+msgid " · 已达最高等级"
+msgstr " · Maximum level reached"
+
+msgid " · 操作者 #"
+msgstr " · Actor #"
+
+msgid " · 活动 "
+msgstr " · Activity "
+
+msgid " · 版本 "
+msgstr " · Version "
+
+msgid " · 用户 #"
+msgstr " · User #"
+
+msgid " · 管理员授予"
+msgstr " · Administrator grant"
+
+msgid " · 距下一级 "
+msgstr " · To next level "
+
+msgid " · 距下一级 %1$s"
+msgstr " · To next level %1$s"
+
+msgid " · 还需 %1$s %2$s"
+msgstr " · Remaining: %1$s %2$s"
+
+msgid " 区块，填入 "
+msgstr " block, enter "
+
+msgid " 可稍后重新打开面板。"
+msgstr " Reopen the panel later to retry."
+
+msgid " 天"
+msgstr " days"
+
+msgid " 天 · 累计 "
+msgstr " days · Total "
+
+msgid " 或 "
+msgstr " or "
+
+msgid " 次 · 参与 "
+msgstr " events · Participants "
+
+msgid " 点击周期可重试。"
+msgstr " Choose a period to retry."
+
+msgid " 级。"
+msgstr " levels."
+
+msgid " 经验"
+msgstr " XP"
+
+msgid " 至 "
+msgstr " to "
+
+msgid " 设置每页人数，最多 50 人。"
+msgstr " sets the page size, up to 50."
+
+msgid " 页 · "
+msgstr " page · "
+
+msgid "%1$s第 %2$s 名 · 活动净经验 +%3$s"
+msgstr "%1$sRank %2$s · Net activity XP +%3$s"
+
+msgid "0 表示不限。仅累计首次活动实际发放的正向经验；扣回不恢复额度，剩余额度不足时只发剩余部分，不补发差额。人工与原金额补偿不受限。"
+msgstr "0 means unlimited. Only actual positive first rewards consume capacity. Reversals do not restore it; a partial allowance issues only the remainder, without later top-ups. Manual awards and original-amount compensation are exempt."
+
+msgid "0 表示只授予荣誉。修改奖励会建立新版本，已有成就不补发奖励。"
+msgstr "0 grants an honor only. Changing XP creates a new version and never tops up existing achievements."
+
+msgid "<p>WP XP Core records account-linked activity, XP, task submissions and achievement snapshots, plus private notification preferences/read state. Public standings show participating accounts. Administrators can export personal experience data through WordPress privacy tools. Deactivation, updates and deletion of plugin files retain the ledger, balances and settings. No automatic expiry or personal-data eraser is provided: deleting append-only records without a reviewed accounting and identity policy could break balances and audit evidence. Site administrators determine legal retention and respond to erasure requests using their site policy.</p>"
+msgstr "<p>WP XP Core records account-linked activity, XP, task submissions and achievement snapshots, plus private notification preferences/read state. Public standings show participating accounts. Administrators can export personal experience data through WordPress privacy tools. Deactivation, updates and deletion of plugin files retain the ledger, balances and settings. No automatic expiry or personal-data eraser is provided: deleting append-only records without a reviewed accounting and identity policy could break balances and audit evidence. Site administrators determine legal retention and respond to erasure requests using their site policy.</p>"
+
+msgid "Balance"
+msgstr "Balance"
+
+msgid "Content ID"
+msgstr "Content ID"
+
+msgid "Date"
+msgstr "Date"
+
+msgid "Event"
+msgstr "Event"
+
+msgid "Experience and growth"
+msgstr "Experience and growth"
+
+msgid "GitHub 更新检查"
+msgstr "GitHub update checks"
+
+msgid "Independent experience and levels with configurable activity rewards, private growth and achievements."
+msgstr "Independent experience and levels with configurable activity rewards, private growth and achievements."
+
+msgid "Notification preferences and read state"
+msgstr "Notification preferences and read state"
+
+msgid "Public standings"
+msgstr "Public standings"
+
+msgid "Recorded at (UTC timestamp)"
+msgstr "Recorded at (UTC timestamp)"
+
+msgid "Snapshot"
+msgstr "Snapshot"
+
+msgid "Source"
+msgstr "Source"
+
+msgid "WP XP Core experience"
+msgstr "WP XP Core experience"
+
+msgid "XP"
+msgstr "XP"
+
+msgid "一次性"
+msgstr "Once"
+
+msgid "一致"
+msgstr "Consistent"
+
+msgid "一项成就已撤销，详情可查看个人经验记录。"
+msgstr "An achievement was revoked. See your private XP history for details."
+
+msgid "上一页"
+msgstr "Previous"
+
+msgid "下一步：%1$s"
+msgstr "Next: %1$s"
+
+msgid "下一页"
+msgstr "Next"
+
+msgid "不同内容"
+msgstr "Different content"
+
+msgid "不同自然日"
+msgstr "Different calendar days"
+
+msgid "不能导入内部状态。"
+msgstr "Internal state cannot be imported."
+
+msgid "不重算或补发历史经验。0 经验仍记录事件，避免日后重复领取；评论撤销与恢复使用首次奖励数值。"
+msgstr "No historical recalculation or backfill. Zero-XP events remain recorded to prevent duplicate claims. Comment reversals and restorations use the original actual amount."
+
+msgid "与内容 ID 任意命中"
+msgstr "Matches either a content ID or a category"
+
+msgid "个不同自然日"
+msgstr "different calendar days"
+
+msgid "个自然日"
+msgstr "calendar days"
+
+msgid "为等级赋予名称，让签到进度清楚可见。"
+msgstr "Give levels names and show check-in progress clearly."
+
+msgid "了解参与来源，观察当前任务的完成情况。"
+msgstr "Understand participation sources and current task completion."
+
+msgid "事件"
+msgstr "Events"
+
+msgid "事件类型无效。"
+msgstr "Invalid event type."
+
+msgid "事件账本"
+msgstr "Event ledger"
+
+msgid "人工授予与撤销"
+msgstr "Manual grants and revocations"
+
+msgid "人工授予成就"
+msgstr "Manual achievement grant"
+
+msgid "人工调整"
+msgstr "Manual adjustment"
+
+msgid "仅使用可公开展示的图片。图片删除或不再公开时回退图标字符；修改展示资料不改变旧成就快照。"
+msgstr "Only publicly accessible images are used. Missing or private images fall back to the character icon. Display edits never alter earned snapshots."
+
+msgid "仅展示本次接口返回的最近成就，不代表全部历史。"
+msgstr "Only the recent achievements returned by this request are shown, not the complete history."
+
+msgid "仅显示最近一百个任务版本，可缩短日期范围。"
+msgstr "Only the most recent 100 task versions are shown. Narrow the date range to see more."
+
+msgid "仅自选时段可指定日期。"
+msgstr "Dates can only be specified for a custom range."
+
+msgid "今日参与"
+msgstr "Today’s participation"
+
+msgid "今日已签到"
+msgstr "Checked in today"
+
+msgid "今日签到已记录。"
+msgstr "Today’s check-in is recorded."
+
+msgid "从媒体库选择图片"
+msgstr "Choose an image from the media library"
+
+msgid "从本版创建起"
+msgstr "Since this version was created"
+
+msgid "以下范围用于阅读、文章、评论与作者里程碑。两项都留空表示全部；填写后，只要内容 ID 或所属分类命中一项即可。不会开放原本无权访问的内容。"
+msgstr "These scopes apply to reading, posts, comments and author milestones. Leave both empty for all eligible content; otherwise either content or category may match. Permissions remain required."
+
+msgid "任务"
+msgstr "Task"
+
+msgid "任务不存在。"
+msgstr "Task not found."
+
+msgid "任务与成就"
+msgstr "Tasks and achievements"
+
+msgid "任务信息无效。"
+msgstr "Invalid task information."
+
+msgid "任务列表"
+msgstr "Task list"
+
+msgid "任务列表已更新，请刷新后再修改。"
+msgstr "Tasks have changed. Refresh before editing."
+
+msgid "任务名称"
+msgstr "Task title"
+
+msgid "任务奖励撤销"
+msgstr "Task reward revocation"
+
+msgid "任务字段无效。"
+msgstr "Invalid task fields."
+
+msgid "任务完成奖励"
+msgstr "Task completion reward"
+
+msgid "任务尚未开放、已结束或前置任务尚未完成。"
+msgstr "This task is not open, has ended or has unmet prerequisites."
+
+msgid "任务已修改、停用或本期已结束，可退回说明并告知用户。"
+msgstr "The task changed, was disabled or its period ended. Return the submission with an explanation."
+
+msgid "任务当前不可领取。"
+msgstr "This task cannot currently be claimed."
+
+msgid "任务文字无效或过长。"
+msgstr "Task text is invalid or too long."
+
+msgid "任务日期或前置条件尚未满足。"
+msgstr "Task dates or prerequisites are not satisfied."
+
+msgid "任务未能保存，请重试。"
+msgstr "Could not save the task. Please retry."
+
+msgid "任务模板"
+msgstr "Task templates"
+
+msgid "任务步骤尚未完成。"
+msgstr "Task steps are not complete."
+
+msgid "任务版本"
+msgstr "Task version"
+
+msgid "任务版本、周期或启用状态已改变，请刷新页面。"
+msgstr "The task version, period or activation changed. Refresh the page."
+
+msgid "任务版本完成记录"
+msgstr "Task version completion records"
+
+msgid "任务编号无效。"
+msgstr "Invalid task ID."
+
+msgid "任务说明"
+msgstr "Task description"
+
+msgid "余额"
+msgstr "Balance"
+
+msgid "作者"
+msgstr "Author"
+
+msgid "作者浏览计数"
+msgstr "Author view count"
+
+msgid "作者里程碑"
+msgstr "Author milestones"
+
+msgid "使用图标字符"
+msgstr "Use character icon"
+
+msgid "例如 10 或 -5"
+msgstr "For example, 10 or -5"
+
+msgid "例如 12, 35"
+msgstr "For example, 12, 35"
+
+msgid "例如 3, 8"
+msgstr "For example, 3, 8"
+
+msgid "例如 checkin"
+msgstr "For example, checkin"
+
+msgid "例如 ★"
+msgstr "For example, ★"
+
+msgid "保存任务"
+msgstr "Save task"
+
+msgid "保存全站规则前，可先了解生效范围。"
+msgstr "Review the scope before saving site-wide rules."
+
+msgid "保存后在前台查看；编辑器不读取私人经验。"
+msgstr "Save and view on the site. The editor does not read private XP."
+
+msgid "保存成长设置"
+msgstr "Save growth settings"
+
+msgid "保存更新偏好"
+msgstr "Save update preferences"
+
+msgid "保存榜单偏好"
+msgstr "Save standings preferences"
+
+msgid "保存榜单排除"
+msgstr "Save standings exclusion"
+
+msgid "保存经验规则"
+msgstr "Save XP rules"
+
+msgid "保存通知偏好"
+msgstr "Save notification preferences"
+
+msgid "保存面板页面"
+msgstr "Save panel page"
+
+msgid "保留"
+msgstr "Preserved"
+
+msgid "修改名称、说明、徽章图片、分类或系列会保留进度；修改条件、周期、开放日期、前置任务或启用状态会建立新版本，从之后的新活动累计。旧成就保留。每周从周一开始，每月从一日开始。"
+msgstr "Title, description, image, category and series edits preserve progress. Conditions, periods, dates, prerequisites, rewards or activation changes create a new version starting with subsequent activity. Earned snapshots stay unchanged. Weeks start Monday; months start on the first."
+
+msgid "修改展示"
+msgstr "Display changed"
+
+msgid "停用里程碑标识无效。"
+msgstr "Invalid retired milestone identity."
+
+msgid "全部完成以下步骤"
+msgstr "Complete all steps below"
+
+msgid "全部来源"
+msgstr "All sources"
+
+msgid "全部标为已读"
+msgstr "Mark all read"
+
+msgid "关于插件"
+msgstr "About the plugin"
+
+msgid "内容范围最多一百个编号。"
+msgstr "A content scope allows at most 100 IDs."
+
+msgid "净经验"
+msgstr "Net XP"
+
+msgid "出现活动上限截断"
+msgstr "Reward cap truncation"
+
+msgid "分类"
+msgstr "Category"
+
+msgid "分类 ID"
+msgstr "Category IDs"
+
+msgid "分页参数无效。"
+msgstr "Invalid pagination parameters."
+
+msgid "列出同日首次活动至少二十次或发生上限截断的账号，供人工核对；不自动处罚或排除。"
+msgstr "Accounts with at least 20 first-reward events in one day or cap truncations are listed for human review. No automatic penalties or exclusions."
+
+msgid "刷新通知"
+msgstr "Refresh notifications"
+
+msgid "前一时段"
+msgstr "Previous range"
+
+msgid "前一等长时段对比"
+msgstr "Compare the previous equal-length range"
+
+msgid "前置任务不存在。"
+msgstr "Prerequisite task not found."
+
+msgid "前置任务不能形成循环。"
+msgstr "Prerequisites cannot form a cycle."
+
+msgid "前置任务当前未开放"
+msgstr "Prerequisite task is not currently open"
+
+msgid "前置任务或完成范围无效。"
+msgstr "Invalid prerequisite task or scope."
+
+msgid "前置任务（可选）"
+msgstr "Prerequisites (optional)"
+
+msgid "加载更早记录"
+msgstr "Load older records"
+
+msgid "历史初始化"
+msgstr "Historical initialization"
+
+msgid "历史校准"
+msgstr "Historical reconciliation"
+
+msgid "历史经验重算"
+msgstr "Historical XP recalculation"
+
+msgid "历史账本校准"
+msgstr "Historical ledger reconciliation"
+
+msgid "原事件编号"
+msgstr "Original event ID"
+
+msgid "原值"
+msgstr "Previous value"
+
+msgid "原成就记录无效，未执行撤销。"
+msgstr "Invalid original achievement. Nothing was revoked."
+
+msgid "原授予事件编号"
+msgstr "Original grant event ID"
+
+msgid "参与人数"
+msgstr "Participants"
+
+msgid "参与公开活动榜"
+msgstr "Participate in public standings"
+
+msgid "参与活动"
+msgstr "Participating activity"
+
+msgid "参与者"
+msgstr "Participants"
+
+msgid "发布页面，登录后即可查看经验与签到。"
+msgstr "Publish the page and sign in to view XP and check-in."
+
+msgid "发放"
+msgstr "Granted"
+
+msgid "发放经验"
+msgstr "XP granted"
+
+msgid "发表文章"
+msgstr "Publish a post"
+
+msgid "只包含规则、成长与任务。不会导出账号、通知、审计、余额、账本或存储配置。导入保留未列出的任务，不删除历史；先预览，再显式应用。跨站内容 ID 和图片 ID 需要先核对。"
+msgstr "Only rules, growth settings and tasks are included. Accounts, notifications, audits, balances, ledger and storage configuration are excluded. Import preserves unlisted tasks and history. Preview before applying; review content and image IDs when moving across sites."
+
+msgid "只处理服务端已记录的首次奖励或评论状态补偿失败，并重新检查原事件和当前状态；不会扫描历史。评论补偿余额不足时不部分扣减，可补足后带原因重试。失败列表最多保留二百项，不是永久日志。"
+msgstr "Only captured first-reward and comment-compensation failures can be retried. The original owner and current state are checked again, without history scans. Insufficient comment compensation is never partial; fund the balance before a reasoned retry. At most 200 failures are retained, not a permanent log."
+
+msgid "只汇总有可靠事件快照的授予与撤销，不补造旧版本参与分母。耗时从任务版本定义创建开始，包含等待和未参与的时间；旧记录没有此证据时留空。"
+msgstr "Only reliable grant and revocation snapshots are counted; old participant denominators are not invented. Duration starts at task-version creation and includes waiting and inactivity. Old records without this evidence have no duration."
+
+msgid "只能撤销人工调整记录。"
+msgstr "Only manual adjustments can be reversed here."
+
+msgid "只能查看自己的经验记录。"
+msgstr "You can only view your own XP history."
+
+msgid "可前往："
+msgstr "Go to: "
+
+msgid "可在任务与成就中查看审核结果。"
+msgstr "View the review result under Tasks and achievements."
+
+msgid "可在每日签到之外设置阶段奖励。默认关闭；启用或修改规则后，从下一次新签到开始累计，不补发旧签到。"
+msgstr "Optional rewards supplement daily check-in. Disabled by default; activation or rule edits start counting subsequent check-ins, with no historical backfill."
+
+msgid "同日首次活动至少二十次"
+msgstr "At least 20 first-reward events in one day"
+
+msgid "同站更新（匹配已保存 ID）"
+msgstr "Same-site update (match saved IDs)"
+
+msgid "名次"
+msgstr "Rank"
+
+msgid "名称"
+msgstr "Name"
+
+msgid "名称或说明包含无效内容。"
+msgstr "Invalid name or description."
+
+msgid "否"
+msgstr "No"
+
+msgid "启用"
+msgstr "Enabled"
+
+msgid "启用 JavaScript 后可添加或移除等级；现有门槛仍可编辑保存。"
+msgstr "Enable JavaScript to add or remove levels. Existing thresholds can still be edited and saved."
+
+msgid "启用任务"
+msgstr "Enable task"
+
+msgid "启用官方更新检查"
+msgstr "Enable official update checks"
+
+msgid "启用阶段奖励"
+msgstr "Enable stage rewards"
+
+msgid "周期"
+msgstr "Period"
+
+msgid "图标字符"
+msgstr "Character icon"
+
+msgid "在事件账本中查找“完成任务”或“人工授予成就”的事件编号。撤销会扣回原经验，余额不足时整项拒绝；同一版本与周期不能再次授予。"
+msgstr "Find the task completion or manual achievement event ID in the ledger. Revocation deducts the original actual XP; insufficient balance rejects the whole operation. A revoked version and period cannot be granted again."
+
+msgid "在普通页面添加短代码区块，分别填入 "
+msgstr "Add a Shortcode block to a regular page and enter "
+
+msgid "填写人工调整的事件编号，追加一条反向记录。每条调整只能撤销一次。"
+msgstr "Enter a manual adjustment event ID to append its reversal. Each adjustment can only be reversed once."
+
+msgid "增减经验"
+msgstr "XP change"
+
+msgid "处理原因"
+msgstr "Reason"
+
+msgid "处理方式"
+msgstr "Action"
+
+msgid "外站模板（重新映射 ID）"
+msgstr "External template (remap IDs)"
+
+msgid "外部活动奖励"
+msgstr "External activity reward"
+
+msgid "多站点网络请由网络管理员手动更新；本站不提供共享更新器设置。"
+msgstr "Multisite plugins must be updated manually by a network administrator; shared updater settings are unavailable here."
+
+msgid "失败事件重试"
+msgstr "Retry failed events"
+
+msgid "失败记录与原评论奖励归属不符。"
+msgstr "Failure ownership does not match the original comment reward."
+
+msgid "奖励"
+msgstr "Reward"
+
+msgid "奖励为 0 的有效活动也计入事件和参与人数。总参与人数已跨来源去重，不能把每行人数相加；任务完成及其撤销计入活动来源；人工授予及其撤销单列，不进入活动榜。历史初始化、校准和管理操作回执不计入这里。"
+msgstr "Eligible zero-XP activity still counts as events and participation. Total participants are deduplicated across sources, so row counts cannot be added. Task rewards and revocations count as activity; manual grants and their reversals are separate and excluded from public standings. Imports, reconciliation and management receipts are excluded here."
+
+msgid "奖励为 0–1000000 的整数，每日次数为 0–1000。等级门槛最高为 1000000000。"
+msgstr "Rewards are integers from 0 to 1000000; daily counts from 0 to 1000. Level thresholds allow up to 1000000000."
+
+msgid "奖励如何生效？"
+msgstr "When do rewards apply?"
+
+msgid "奖励经验"
+msgstr "Reward XP"
+
+msgid "奖励调整仅影响之后首次记账的事件。"
+msgstr "Reward edits affect only events first recorded afterward."
+
+msgid "媒体库徽章图片 ID"
+msgstr "Media library badge image ID"
+
+msgid "存在差异"
+msgstr "Mismatch"
+
+msgid "完成人数"
+msgstr "Completions"
+
+msgid "完成任务"
+msgstr "Task completion"
+
+msgid "完成全部前置任务"
+msgstr "Complete all prerequisites"
+
+msgid "完成奖励 +%1$s 经验"
+msgstr "Completion reward +%1$s XP"
+
+msgid "完成方式"
+msgstr "Completion method"
+
+msgid "完成率"
+msgstr "Completion rate"
+
+msgid "完成经验"
+msgstr "Completion XP"
+
+msgid "完成范围"
+msgstr "Completion scope"
+
+msgid "完成说明"
+msgstr "Completion note"
+
+msgid "完成说明已退回"
+msgstr "Submission returned"
+
+msgid "审核任务不使用自动步骤。用户可填写完成说明，管理员通过后按本版奖励授予成就；退回时需要说明原因。"
+msgstr "Reviewed tasks have no automatic steps. Users submit a completion note; approval grants this version’s XP and achievement. Returns require an explanation."
+
+msgid "审核任务当前不可用。"
+msgstr "This reviewed task is currently unavailable."
+
+msgid "审核任务通过提交说明完成，无需自动步骤。"
+msgstr "Reviewed tasks require an approved completion note, without automatic steps."
+
+msgid "审核内容无效。"
+msgstr "Invalid review content."
+
+msgid "审核分页无效。"
+msgstr "Invalid review pagination."
+
+msgid "审核已通过"
+msgstr "Review approved"
+
+msgid "审核意见"
+msgstr "Review note"
+
+msgid "审核未能保存，请重试。"
+msgstr "Could not save the review. Please retry."
+
+msgid "审核结果"
+msgstr "Review result"
+
+msgid "审核记录暂不可读。"
+msgstr "Review records are temporarily unavailable."
+
+msgid "导入任务必须有唯一编号。"
+msgstr "Imported tasks require unique IDs."
+
+msgid "导入任务编号冲突。"
+msgstr "Imported task identity conflict."
+
+msgid "导入方式 "
+msgstr "Import mode "
+
+msgid "导入配置缺少前置任务。"
+msgstr "A prerequisite task is missing from the import."
+
+msgid "导出当前页 CSV"
+msgstr "Export current page as CSV"
+
+msgid "尚无参与"
+msgstr "No participants yet"
+
+msgid "尚无经验记录。"
+msgstr "No XP records yet."
+
+msgid "尚无规则修改记录。"
+msgstr "No rule change records yet."
+
+msgid "尚未开放、已结束或前置任务尚未完成。"
+msgstr "Not open, ended or prerequisites not completed."
+
+msgid "展开其余任务（%1$s）"
+msgstr "Show remaining tasks (%1$s)"
+
+msgid "展开其余最近记录（%1$s）"
+msgstr "Show remaining recent records (%1$s)"
+
+msgid "已保存。"
+msgstr "Saved."
+
+msgid "已保存的设置无效，当前使用默认规则；请检查并重新保存。"
+msgstr "Saved settings are invalid; defaults are active. Review and save the settings again."
+
+msgid "已停用"
+msgstr "Disabled"
+
+msgid "已升至 %1$s！"
+msgstr "You reached %1$s!"
+
+msgid "已升至 Level "
+msgstr "Reached Level "
+
+msgid "已参与公开榜单。"
+msgstr "You participate in public standings."
+
+msgid "已启用"
+msgstr "Enabled"
+
+msgid "已提交说明，等待管理员审核。"
+msgstr "Submitted and awaiting administrator review."
+
+msgid "已有经验记录，不能修改时区。"
+msgstr "The time zone cannot change after XP has been recorded."
+
+msgid "已有经验记录，不能修改时区，以免重复领取每日奖励。"
+msgstr "The time zone cannot change after XP has been recorded, to prevent duplicate daily claims."
+
+msgid "已添加 Level %1$s，请设置最低经验。"
+msgstr "Added Level %1$s. Set its minimum XP."
+
+msgid "已添加新档位，请设置次数和经验，保存后生效。"
+msgstr "Milestone added. Set its count and XP, then save."
+
+msgid "已签到"
+msgstr "Checked in"
+
+msgid "已获成就"
+msgstr "Earned achievements"
+
+msgid "已读范围超过当前通知。"
+msgstr "The read boundary exceeds current notifications."
+
+msgid "已退回"
+msgstr "Returned"
+
+msgid "已通过"
+msgstr "Approved"
+
+msgid "应用已预览配置"
+msgstr "Apply previewed configuration"
+
+msgid "建立新版本"
+msgstr "New version"
+
+msgid "开始"
+msgstr "From"
+
+msgid "开始日期"
+msgstr "Start date"
+
+msgid "开始日期不能晚于结束日期。"
+msgstr "The start date cannot be after the end date."
+
+msgid "开始："
+msgstr "From: "
+
+msgid "开放日期与前置任务"
+msgstr "Open dates and prerequisites"
+
+msgid "当前任务完成情况"
+msgstr "Current task completion"
+
+msgid "当前任务完成率"
+msgstr "Current task completion rate"
+
+msgid "当前可用任务已完成，或正在等待开放／前置任务。"
+msgstr "Available tasks are complete, or waiting for open dates or prerequisites."
+
+msgid "当前时段"
+msgstr "Current range"
+
+msgid "当前未参与公开榜单。"
+msgstr "You are not participating in public standings."
+
+msgid "当前未参与公开榜单；经验和私人任务照常保留。"
+msgstr "You are not participating in public standings. Your XP and private tasks remain intact."
+
+msgid "当前版本与当前周期"
+msgstr "Current version and current period"
+
+msgid "当前经验不足以扣回原奖励，成就与经验均未改变。"
+msgstr "Insufficient XP to reclaim the original reward. Neither the achievement nor XP was changed."
+
+msgid "当前经验不足，原评论奖励尚未扣回。"
+msgstr "Insufficient XP; the original comment reward has not been reclaimed."
+
+msgid "待完成"
+msgstr "Not completed"
+
+msgid "待审核说明"
+msgstr "Pending submissions"
+
+msgid "待核对的活动线索"
+msgstr "Activity clues for review"
+
+msgid "恢复榜单资格"
+msgstr "Restore standings eligibility"
+
+msgid "成就审核"
+msgstr "Achievement review"
+
+msgid "成就展示与可选奖励"
+msgstr "Achievement display and optional reward"
+
+msgid "成就已撤销"
+msgstr "Achievement revoked"
+
+msgid "成就已记录。"
+msgstr "Achievement recorded."
+
+msgid "成就授予与撤销"
+msgstr "Achievement grants and revocations"
+
+msgid "成就授予记录不存在。"
+msgstr "Achievement grant not found."
+
+msgid "成就操作未能保存，请重试。"
+msgstr "Could not save the achievement action. Please retry."
+
+msgid "成就申请"
+msgstr "Achievement submission"
+
+msgid "成就管理操作"
+msgstr "Achievement management"
+
+msgid "成长中心"
+msgstr "Growth center"
+
+msgid "成长中心设置"
+msgstr "Growth center settings"
+
+msgid "成长设置不完整。"
+msgstr "Incomplete growth settings."
+
+msgid "成长设置已更新，请刷新页面。"
+msgstr "Growth settings changed. Refresh the page."
+
+msgid "成长设置无效。"
+msgstr "Invalid growth settings."
+
+msgid "成长设置未能保存，请重试。"
+msgstr "Could not save growth settings. Please retry."
+
+msgid "我的审核记录"
+msgstr "My review history"
+
+msgid "我的成长"
+msgstr "My growth"
+
+msgid "我的本期位置"
+msgstr "My position this period"
+
+msgid "所需次数"
+msgstr "Required count"
+
+msgid "扣回"
+msgstr "Reclaimed"
+
+msgid "扣回经验"
+msgstr "XP reclaimed"
+
+msgid "指定内容暂未公开，请选择其他可用目标或等待开放。"
+msgstr "The specified content is not publicly available. Choose another target or wait until it opens."
+
+msgid "按活动净经验统计，同分并列，不含人工调分与历史初始化。结果实时更新，翻页时名次可能变化。"
+msgstr "Ranked by net activity XP with tied ranks, excluding manual adjustments and imports. Results update live; ranks may change while paging."
+
+msgid "授予中仍有效"
+msgstr "Grants still effective"
+
+msgid "授予原因"
+msgstr "Grant reason"
+
+msgid "授予当前周期成就"
+msgstr "Grant current-period achievement"
+
+msgid "授予成就"
+msgstr "Grant achievement"
+
+msgid "授予或撤销请求无效。"
+msgstr "Invalid grant or revocation request."
+
+msgid "授予次数"
+msgstr "Grants"
+
+msgid "排除公开榜单"
+msgstr "Exclude from public standings"
+
+msgid "提交信息无效。"
+msgstr "Invalid submission information."
+
+msgid "提交审核"
+msgstr "Submit for review"
+
+msgid "提交编号已用于另一份说明。"
+msgstr "This submission ID was already used for another note."
+
+msgid "提交记录不存在。"
+msgstr "Submission not found."
+
+msgid "提交记录不完整，未能审核。"
+msgstr "Incomplete submission cannot be reviewed."
+
+msgid "提交说明后审核"
+msgstr "Submit a note for review"
+
+msgid "提交说明并通过审核"
+msgstr "Submit a note and receive approval"
+
+msgid "插件不会自动创建或公开榜单页面。榜单按本期活动净经验排序，扣回会影响本期结果；不使用历史余额，不包含人工调分，同分并列。"
+msgstr "The plugin does not create or publish a standings page automatically. Standings use current-period net activity XP, including deductions, rather than historical balances. Manual adjustments are excluded; equal scores share ranks."
+
+msgid "插件信息与帮助"
+msgstr "Plugin information and help"
+
+msgid "撤销人工成就"
+msgstr "Manual achievement revocation"
+
+msgid "撤销人工调整"
+msgstr "Manual adjustment reversal"
+
+msgid "撤销原因"
+msgstr "Revocation reason"
+
+msgid "撤销已获成就"
+msgstr "Revoke earned achievement"
+
+msgid "撤销成就并扣回原经验"
+msgstr "Revoke achievement and reclaim original XP"
+
+msgid "操作"
+msgstr "Action"
+
+msgid "操作已记录。"
+msgstr "Action recorded."
+
+msgid "操作未能完成，请保留请求编号后重试。"
+msgstr "The action could not finish. Keep the request ID and retry."
+
+msgid "操作编号已用于其他内容。"
+msgstr "This operation ID was used for different content."
+
+msgid "操作需要填写原因并检查目标用户权限。人工授予可确认自动步骤以外的完成依据，仍需满足任务日期与前置条件；其经验不进入活动榜。"
+msgstr "A reason and target-user permissions are required. Manual grants may accept evidence beyond automatic steps, but still require task dates and prerequisites. Manual XP is excluded from public standings."
+
+msgid "收起其余任务"
+msgstr "Collapse remaining tasks"
+
+msgid "收起最近成就"
+msgstr "Collapse recent achievements"
+
+msgid "放置周榜与月榜"
+msgstr "Add weekly and monthly standings"
+
+msgid "数值可以设置多大？"
+msgstr "What are the numeric limits?"
+
+msgid "文章与页面 ID"
+msgstr "Post and page IDs"
+
+msgid "文章分类 ID"
+msgstr "Post category IDs"
+
+msgid "文章／页面 ID"
+msgstr "Post / page IDs"
+
+msgid "新值"
+msgstr "New value"
+
+msgid "新建"
+msgstr "New"
+
+msgid "新建任务"
+msgstr "New task"
+
+msgid "方式"
+msgstr "Method"
+
+msgid "无"
+msgstr "None"
+
+msgid "无起点证据"
+msgstr "No origin evidence"
+
+msgid "日常活动"
+msgstr "Daily activity"
+
+msgid "日期与依据"
+msgstr "Dates and evidence"
+
+msgid "日期包含首尾，使用经验规则的时区；留空表示不限。前置任务全部完成后可领取或提交，本任务仍从本版创建后的有效活动累计。"
+msgstr "Dates are inclusive in the XP time zone; blank means unlimited. All prerequisites must be met to claim or submit. This task counts eligible activity after this version was created."
+
+msgid "日期格式无效。"
+msgstr "Invalid date format."
+
+msgid "日期范围须为截至今日的连续 1–366 天。"
+msgstr "The date range must contain 1–366 consecutive days ending no later than today."
+
+msgid "日期须为有效的 YYYY-MM-DD。"
+msgstr "Dates must use a valid YYYY-MM-DD format."
+
+msgid "是"
+msgstr "Yes"
+
+msgid "显示当前登录用户的私人成长面板；访客看到登录入口。"
+msgstr "Show the signed-in user’s private growth panel. Visitors see a sign-in link."
+
+msgid "显示本期公开活动榜；退出或被排除的账号不会展示。"
+msgstr "Show current-period public standings, excluding opted-out or excluded accounts."
+
+msgid "暂不指定"
+msgstr "Not selected"
+
+msgid "暂无这类站内通知。"
+msgstr "No notifications of this type yet."
+
+msgid "暂时无法记录"
+msgstr "Could not record this now"
+
+msgid "暂时无法记录任务，请重试。"
+msgstr "Could not record the task. Please retry."
+
+msgid "暂时无法记录，请稍后重试。"
+msgstr "Could not record this now. Please retry later."
+
+msgid "暂时无法读取个人位置。"
+msgstr "Your position is temporarily unavailable."
+
+msgid "暂时无法读取任务完成率。"
+msgstr "Task completion rates are temporarily unavailable."
+
+msgid "暂时无法读取任务版本统计。"
+msgstr "Task version statistics are temporarily unavailable."
+
+msgid "暂时无法读取成长记录，请稍后重试。"
+msgstr "Growth records are temporarily unavailable. Please retry."
+
+msgid "暂时无法读取期间趋势。"
+msgstr "Period trends are temporarily unavailable."
+
+msgid "暂时无法读取未完成记录。"
+msgstr "Incomplete records are temporarily unavailable."
+
+msgid "暂时无法读取来源分析。"
+msgstr "Source analysis is temporarily unavailable."
+
+msgid "暂时无法读取活动线索。"
+msgstr "Activity clues are temporarily unavailable."
+
+msgid "暂时无法读取经验榜。"
+msgstr "Standings are temporarily unavailable."
+
+msgid "暂时无法读取经验记录。"
+msgstr "XP history is temporarily unavailable."
+
+msgid "暂时无法读取规则修改记录。"
+msgstr "Rule change records are temporarily unavailable."
+
+msgid "暂时无法读取，请稍后重试。"
+msgstr "Temporarily unavailable. Please retry later."
+
+msgid "暂时没有开放的任务，日常参与仍可获得经验。"
+msgstr "No open tasks yet. Daily participation can still earn XP."
+
+msgid "更新偏好已保存。"
+msgstr "Update preferences saved."
+
+msgid "更新设置已变化，请刷新。"
+msgstr "Update settings changed. Refresh the page."
+
+msgid "更新设置无效。"
+msgstr "Invalid update settings."
+
+msgid "更新设置未能保存。"
+msgstr "Could not save update settings."
+
+msgid "更早的待审核说明"
+msgstr "Older pending submissions"
+
+msgid "更早的通知"
+msgstr "Older notifications"
+
+msgid "最低经验在“经验规则”中设置。这里可修改每级的名称、图标字符、颜色和说明。"
+msgstr "Set minimum XP under XP rules. Edit level names, character icons, colors and descriptions here."
+
+msgid "最多保留五十个任务，可先停用不再使用的任务。"
+msgstr "At most 50 tasks can be retained. Disable unused tasks instead."
+
+msgid "最多八个前置任务。"
+msgstr "At most eight prerequisites."
+
+msgid "最多排除一千个账号。"
+msgstr "At most 1000 accounts can be excluded."
+
+msgid "最近三十五天签到"
+msgstr "Check-ins in the last 35 days"
+
+msgid "最近获得的成就"
+msgstr "Recently earned achievements"
+
+msgid "有效浏览累计与奖励"
+msgstr "Eligible view totals and rewards"
+
+msgid "有效点赞累计与奖励"
+msgstr "Eligible like totals and rewards"
+
+msgid "有效评论"
+msgstr "Eligible comments"
+
+msgid "有效阅读"
+msgstr "Eligible reading"
+
+msgid "有效阅读停留时间"
+msgstr "Reading dwell time"
+
+msgid "有起点的样本／平均秒"
+msgstr "Timed samples / mean seconds"
+
+msgid "未启用点赞服务：需要 PageNest Companion 及其点赞功能。此组暂不可编辑和发奖，已有设置会保留。"
+msgstr "Like service is unavailable. PageNest Companion with likes enabled is required. This group cannot be edited or issue rewards; saved settings are preserved."
+
+msgid "未启用额外签到阶段奖励。"
+msgstr "Additional check-in stage rewards are disabled."
+
+msgid "未完成的奖励记录"
+msgstr "Incomplete reward records"
+
+msgid "未完成记录编号无效。"
+msgstr "Invalid incomplete-record ID."
+
+msgid "未找到原评论奖励。"
+msgstr "Original comment reward not found."
+
+msgid "未找到可重试的记录。"
+msgstr "Retryable record not found."
+
+msgid "未找到用户。"
+msgstr "User not found."
+
+msgid "未改变"
+msgstr "Unchanged"
+
+msgid "未知操作。"
+msgstr "Unknown action."
+
+msgid "未知模板。"
+msgstr "Unknown template."
+
+msgid "未签到"
+msgstr "Not checked in"
+
+msgid "本周"
+msgstr "This week"
+
+msgid "本周在三个不同自然日签到。"
+msgstr "Check in on three different calendar days this week."
+
+msgid "本周经验榜"
+msgstr "Weekly XP standings"
+
+msgid "本月"
+msgstr "This month"
+
+msgid "本月经验榜"
+msgstr "Monthly XP standings"
+
+msgid "本期净经验"
+msgstr "Net XP this period"
+
+msgid "本期尚无符合条件的活动记录。"
+msgstr "No eligible activity records this period."
+
+msgid "本期已完成 ✓"
+msgstr "Completed this period ✓"
+
+msgid "本期成就已撤销，不能再次授予。"
+msgstr "This period’s achievement was revoked and cannot be granted again."
+
+msgid "本期成就已撤销，不能再次领取。"
+msgstr "This period’s achievement was revoked and cannot be claimed again."
+
+msgid "本期成就已撤销，不能重复授予。"
+msgstr "This period’s achievement was revoked and cannot be granted twice."
+
+msgid "本期成就已经获得。"
+msgstr "This period’s achievement has already been earned."
+
+msgid "本期提交次数已达上限，请联系管理员。"
+msgstr "Submission limit reached this period. Contact an administrator."
+
+msgid "本期撤销次数"
+msgstr "Revocations this period"
+
+msgid "本期没有符合上述条件的线索。"
+msgstr "No matching clues in this period."
+
+msgid "本期活动位置"
+msgstr "Activity position this period"
+
+msgid "本期还没有计入榜单的活动净经验。"
+msgstr "No eligible net activity XP in these standings this period."
+
+msgid "本版%1$s签到 %2$s 天，达到 %3$s 天可获 %4$s 阶段经验。"
+msgstr "This version: %1$s check-ins on %2$s days; reach %3$s days for %4$s stage XP."
+
+msgid "本版签到阶段目标已达到。"
+msgstr "This version’s check-in stage goals are complete."
+
+msgid "本站使用高级接入配置；面板页与短代码名称由现有配置提供。"
+msgstr "This site uses advanced integration. The panel and shortcode names come from its existing configuration."
+
+msgid "本级成长进度"
+msgstr "Progress within this level"
+
+msgid "本页暂无符合条件的活动记录。"
+msgstr "No eligible activity records on this page."
+
+msgid "来源"
+msgstr "Source"
+
+msgid "查找用户"
+msgstr "Find user"
+
+msgid "查清奖励来源，保留每一次调整的依据。"
+msgstr "Identify reward sources and retain the basis for every adjustment."
+
+msgid "查看任务"
+msgstr "View task"
+
+msgid "查看依据"
+msgstr "View evidence"
+
+msgid "查看经验与签到"
+msgstr "View XP and check-in"
+
+msgid "查看统计"
+msgstr "View statistics"
+
+msgid "查看项目文档、更新记录与贡献方式。"
+msgstr "Read project documentation, changes and contribution instructions."
+
+msgid "查询"
+msgstr "Search"
+
+msgid "查询事件"
+msgstr "Find events"
+
+msgid "查询条件无效。"
+msgstr "Invalid search filters."
+
+msgid "查询范围无效。"
+msgstr "Invalid query range."
+
+msgid "标为已读"
+msgstr "Mark read"
+
+msgid "档位已移除，保存后永久停用；重新添加会创建新档位。"
+msgstr "Milestone removed. Saving retires it permanently; adding creates a new identity."
+
+msgid "榜单偏好已更新，请刷新后再修改。"
+msgstr "Standings preferences changed. Refresh before editing."
+
+msgid "榜单偏好未能保存，请重试。"
+msgstr "Could not save standings preferences. Please retry."
+
+msgid "榜单分页"
+msgstr "Standings pagination"
+
+msgid "榜单分页参数无效。"
+msgstr "Invalid standings pagination."
+
+msgid "榜单参与设置无效。"
+msgstr "Invalid standings participation settings."
+
+msgid "榜单排除列表已更新。"
+msgstr "Standings exclusion list changed."
+
+msgid "榜单排除设置无效。"
+msgstr "Invalid standings exclusion settings."
+
+msgid "榜单排除设置未能保存。"
+msgstr "Could not save standings exclusions."
+
+msgid "榜单设置"
+msgstr "Standings settings"
+
+msgid "榜单账号排除"
+msgstr "Standings account exclusions"
+
+msgid "模板只供预览，不会自动创建任务。重复使用同一模板更新其已导入任务，不重新发放已领取奖励。"
+msgstr "Templates are previews only and never create tasks automatically. Reusing a template updates its imported task without repeating earned rewards."
+
+msgid "次"
+msgstr "events"
+
+msgid "次 / 日"
+msgstr "times / day"
+
+msgid "次数"
+msgstr "Count"
+
+msgid "次有效活动"
+msgstr "eligible events"
+
+msgid "次活动"
+msgstr "activities"
+
+msgid "正在读取本期位置…"
+msgstr "Loading your position…"
+
+msgid "正数增加，负数扣减。不会覆盖旧记录；扣减不能超过当前经验。"
+msgstr "Positive adds XP; negative deducts it. Old records remain intact. A deduction cannot exceed the current balance."
+
+msgid "此时段没有任务授予或撤销记录。"
+msgstr "No task grants or revocations in this range."
+
+msgid "此账号由管理员排除榜单；个人经验仍照常记录。"
+msgstr "An administrator excluded this account from standings. Personal XP is still recorded."
+
+msgid "每个任务最多八个步骤。"
+msgstr "At most eight steps per task."
+
+msgid "每周"
+msgstr "Weekly"
+
+msgid "每周参与"
+msgstr "Weekly participation"
+
+msgid "每周活动经验上限"
+msgstr "Weekly activity XP cap"
+
+msgid "每日"
+msgstr "Daily"
+
+msgid "每日奖励次数"
+msgstr "Daily reward count"
+
+msgid "每日活动经验上限"
+msgstr "Daily activity XP cap"
+
+msgid "每日签到"
+msgstr "Daily check-in"
+
+msgid "每日签到 +"
+msgstr "Daily check-in +"
+
+msgid "每日签到 +%1$s"
+msgstr "Daily check-in +%1$s"
+
+msgid "每日统计时区"
+msgstr "Daily statistics time zone"
+
+msgid "每月"
+msgstr "Monthly"
+
+msgid "每次最多标记五十条通知。"
+msgstr "At most 50 notifications can be marked in one request."
+
+msgid "每篇作品每档仅奖励一次，修改次数不会重置已领取档位。移除后保存，该档位会永久停用；新增档位使用独立标识。保存规则不补发历史奖励，之后的有效活动会按累计次数判断。"
+msgstr "Each content item and milestone is rewarded only once. Editing thresholds never resets claims. Saving a removed milestone retires it permanently; new milestones have independent IDs. Saving rules never backfills rewards; future eligible activity evaluates cumulative counts."
+
+msgid "每组可设置 0–20 档，次数须从小到大排列。"
+msgstr "Set 0–20 milestones per group with strictly increasing counts."
+
+msgid "每组最多设置 20 档里程碑。"
+msgstr "At most 20 milestones per group."
+
+msgid "每组适用范围最多填写 200 个 ID。"
+msgstr "At most 200 IDs per scope."
+
+msgid "每组里程碑次数必须严格递增。"
+msgstr "Milestone counts must be strictly increasing."
+
+msgid "每页人数"
+msgstr "Users per page"
+
+msgid "每项任务按当前版本、当前周期单独统计，不随上方来源日期切换。参与者是有相关活动或提交记录的用户，包含已经获得成就的用户；这不是曝光转化率或全站注册用户完成比例。"
+msgstr "Tasks are evaluated for the current version and period, independently of the source-analysis date range. Participants have matching activity, submissions or earned achievements. This is neither an exposure conversion rate nor the share of registered users completing tasks."
+
+msgid "比较当前日期范围与紧邻的前一等长时段；这是活动观察，不能证明任务带来了变化。"
+msgstr "Compare this date range with the immediately preceding equal-length range. This describes activity and does not establish causation."
+
+msgid "没有审核成就的权限。"
+msgstr "You cannot review achievements."
+
+msgid "没有导出经验记录的权限。"
+msgstr "You cannot export XP records."
+
+msgid "没有查看审核记录的权限。"
+msgstr "You cannot view review records."
+
+msgid "没有查看激励效果的权限。"
+msgstr "You cannot view incentive insights."
+
+msgid "没有查看经验管理的权限。"
+msgstr "You cannot view XP management."
+
+msgid "没有查看统计的权限。"
+msgstr "You cannot view statistics."
+
+msgid "没有符合条件的事件。"
+msgstr "No eligible events."
+
+msgid "没有符合条件的经验记录。"
+msgstr "No matching XP records."
+
+msgid "没有等待处理的失败记录。"
+msgstr "No pending failures."
+
+msgid "没有管理任务的权限。"
+msgstr "You cannot manage tasks."
+
+msgid "没有管理成长中心的权限。"
+msgstr "You cannot manage the growth center."
+
+msgid "没有管理成长设置的权限。"
+msgstr "You cannot manage growth settings."
+
+msgid "没有管理榜单的权限。"
+msgstr "You cannot manage standings."
+
+msgid "没有管理经验的权限。"
+msgstr "You cannot manage XP."
+
+msgid "没有管理经验面板的权限。"
+msgstr "You cannot manage the XP panel."
+
+msgid "没有管理设置的权限。"
+msgstr "You cannot manage settings."
+
+msgid "没有管理该用户经验的权限。"
+msgstr "You cannot manage this user’s XP."
+
+msgid "活动奖励未启用。"
+msgstr "Activity rewards are disabled."
+
+msgid "活动开关不完整。"
+msgstr "Incomplete activity switches."
+
+msgid "活动开关无效。"
+msgstr "Invalid activity switch."
+
+msgid "活动提供者或目标无效。"
+msgstr "Invalid activity provider or recipient."
+
+msgid "活动提供者设置无效。"
+msgstr "Invalid activity provider settings."
+
+msgid "活动未能记录，请重试。"
+msgstr "Could not record activity. Please retry."
+
+msgid "活动未通过服务端资格检查。"
+msgstr "Activity failed the server-side eligibility check."
+
+msgid "活动次数"
+msgstr "Event count"
+
+msgid "活动经验上限无效。"
+msgstr "Invalid activity XP caps."
+
+msgid "活动编号归属冲突。"
+msgstr "Activity ID ownership conflict."
+
+msgid "浏览里程碑"
+msgstr "View milestone"
+
+msgid "添加 "
+msgstr "Add "
+
+msgid "添加档位"
+msgstr "Add milestone"
+
+msgid "添加步骤"
+msgstr "Add step"
+
+msgid "添加等级"
+msgstr "Add level"
+
+msgid "添加签到阶段"
+msgstr "Add check-in stage"
+
+msgid "添加经验面板"
+msgstr "Add XP panel"
+
+msgid "清除筛选"
+msgstr "Clear filters"
+
+msgid "渠道 "
+msgstr "Channel "
+
+msgid "源码与使用说明 "
+msgstr "Source and instructions "
+
+msgid "激励效果"
+msgstr "Incentive insights"
+
+msgid "点赞服务不可用。"
+msgstr "Like service unavailable."
+
+msgid "点赞服务已启用，按经验账本记录的有效点赞累计。"
+msgstr "Like service is enabled, using eligible likes recorded in the XP ledger."
+
+msgid "点赞计数"
+msgstr "Like count"
+
+msgid "点赞里程碑"
+msgstr "Like milestone"
+
+msgid "版本"
+msgstr "Version"
+
+msgid "状态"
+msgstr "Status"
+
+msgid "独立的 WordPress 经验与等级系统。"
+msgstr "An independent WordPress XP and level system."
+
+msgid "生成配置 JSON"
+msgstr "Generate configuration JSON"
+
+msgid "用户"
+msgstr "User"
+
+msgid "用户、页码或每页数量无效。"
+msgstr "Invalid user, page or page size."
+
+msgid "用户不存在。"
+msgstr "User does not exist."
+
+msgid "用户名／显示名称"
+msgstr "Username / display name"
+
+msgid "用户经验与人工调整"
+msgstr "User XP and manual adjustments"
+
+msgid "用户编号"
+msgstr "User ID"
+
+msgid "用逗号分隔，可在文章或页面编辑地址中找到 ID。"
+msgstr "Separate with commas. Find IDs in post or page edit URLs."
+
+msgid "用逗号分隔，页面不按文章分类匹配。"
+msgstr "Separate with commas. Pages do not match post categories."
+
+msgid "留空不限，逗号分隔"
+msgstr "Blank for all; separate with commas"
+
+msgid "登录"
+msgstr "Sign in"
+
+msgid "登录后查看自己的等级、签到和任务进度。"
+msgstr "Sign in to view your level, check-ins and task progress."
+
+msgid "登录验证已过期，请刷新页面。"
+msgstr "Authentication expired. Refresh the page."
+
+msgid "目前没有等待审核的说明。"
+msgstr "No submissions awaiting review."
+
+msgid "短代码"
+msgstr "Shortcode"
+
+msgid "确认完成"
+msgstr "Confirm completion"
+
+msgid "秒"
+msgstr "seconds"
+
+msgid "移除"
+msgstr "Remove"
+
+msgid "移除 Level %1$s"
+msgstr "Remove Level %1$s"
+
+msgid "移除第 %1$s 档"
+msgstr "Remove milestone %1$s"
+
+msgid "稳定版"
+msgstr "Stable"
+
+msgid "稳定版与预发布"
+msgstr "Stable and prerelease"
+
+msgid "站内通知"
+msgstr "Site notifications"
+
+msgid "第 %1$s 档"
+msgstr "Milestone %1$s"
+
+msgid "等待审核"
+msgstr "Awaiting review"
+
+msgid "等级已移除，后续等级已重新编号；保存后生效。"
+msgstr "Level removed and subsequent levels renumbered. Save to apply."
+
+msgid "等级成长"
+msgstr "Level growth"
+
+msgid "等级提升"
+msgstr "Level increase"
+
+msgid "等级资料"
+msgstr "Level profiles"
+
+msgid "等级资料只影响展示；阶段奖励用于新签到。"
+msgstr "Level profiles affect display only; stage rewards apply to new check-ins."
+
+msgid "等级资料无效。"
+msgstr "Invalid level profile."
+
+msgid "等级门槛必须从 0 开始、严格递增，且不超过 1000000000。"
+msgstr "Level thresholds must start at 0, increase strictly and not exceed 1000000000."
+
+msgid "签到"
+msgstr "Check-in"
+
+msgid "签到不支持内容范围或不同内容计数。"
+msgstr "Check-in does not support content scopes or different-content counting."
+
+msgid "签到天数"
+msgstr "Check-in days"
+
+msgid "签到奖励天数必须严格递增。"
+msgstr "Check-in reward day thresholds must increase strictly."
+
+msgid "签到奖励已关闭"
+msgstr "Check-in rewards are disabled"
+
+msgid "签到奖励无效。"
+msgstr "Invalid check-in reward."
+
+msgid "签到奖励编号无效或重复。"
+msgstr "Invalid or duplicate check-in reward ID."
+
+msgid "签到成长奖励"
+msgstr "Check-in growth rewards"
+
+msgid "签到成长设置无效。"
+msgstr "Invalid check-in growth settings."
+
+msgid "签到日历"
+msgstr "Check-in calendar"
+
+msgid "签到每日奖励一次；阅读须满足停留时间。关闭活动或将次数设为 0 后停止发放新奖励，已发评论的撤销与恢复继续按原金额处理。"
+msgstr "Check-in rewards once daily; reading requires dwell time. Disabling an activity or setting its count to 0 stops new rewards. Existing comment reversals and restorations continue using the original actual amount."
+
+msgid "签到阶段奖励"
+msgstr "Check-in stage reward"
+
+msgid "简短说明"
+msgstr "Short description"
+
+msgid "管理员可以排除测试账号等不应进入公开榜的用户。不会删除经验、活动或私人任务。"
+msgstr "Administrators can exclude test accounts or other users from public standings. XP, activity and private tasks remain intact."
+
+msgid "系列"
+msgstr "Series"
+
+msgid "累计"
+msgstr "cumulative"
+
+msgid "累计方式"
+msgstr "Counting mode"
+
+msgid "累计签到"
+msgstr "Cumulative check-ins"
+
+msgid "终身荣誉（含旧版本）"
+msgstr "Lifetime honors (including old versions)"
+
+msgid "终身（含旧版本荣誉）"
+msgstr "Lifetime (including old versions)"
+
+msgid "经验"
+msgstr "XP"
+
+msgid "经验 %1$s · Level %2$s"
+msgstr "XP %1$s · Level %2$s"
+
+msgid "经验与成长"
+msgstr "Experience and growth"
+
+msgid "经验与等级"
+msgstr "Experience and levels"
+
+msgid "经验事件表"
+msgstr "Experience event table"
+
+msgid "经验余额超出可用范围。"
+msgstr "XP balance exceeds the supported range."
+
+msgid "经验变化"
+msgstr "XP change"
+
+msgid "经验来源"
+msgstr "XP source"
+
+msgid "经验来源统计"
+msgstr "XP source statistics"
+
+msgid "经验活动榜"
+msgstr "XP activity standings"
+
+msgid "经验由发表、签到、访问、评论和文章里程碑获得，不能购买或转让。"
+msgstr "XP comes from posts, check-ins, visits, comments and post milestones. It cannot be purchased or transferred."
+
+msgid "经验签到"
+msgstr "XP check-in"
+
+msgid "经验系统"
+msgstr "XP system"
+
+msgid "经验系统尚未就绪，请先检查插件安装与配置。"
+msgstr "The XP system is not ready. Check installation and configuration."
+
+msgid "经验系统维护中。"
+msgstr "The XP system is under maintenance."
+
+msgid "经验系统维护中，请稍后再试。"
+msgstr "The XP system is under maintenance. Please retry later."
+
+msgid "经验系统维护中，请稍后重试。"
+msgstr "The XP system is under maintenance. Please try again later."
+
+msgid "经验规则"
+msgstr "XP rules"
+
+msgid "经验规则 · 让每一次参与都有积累"
+msgstr "XP rules · Make participation count"
+
+msgid "经验记录"
+msgstr "XP history"
+
+msgid "经验账本"
+msgstr "XP ledger"
+
+msgid "经验面板放在普通 WordPress 页面中，无需已有账户插件。"
+msgstr "The XP panel lives on a regular WordPress page and requires no account plugin."
+
+msgid "经验／等级"
+msgstr "XP / level"
+
+msgid "结束"
+msgstr "To"
+
+msgid "结束日期"
+msgstr "End date"
+
+msgid "结束日期不得早于开始日期。"
+msgstr "The end date cannot precede the start date."
+
+msgid "结束："
+msgstr "To: "
+
+msgid "统计参数无效。"
+msgstr "Invalid statistics parameters."
+
+msgid "统计周期"
+msgstr "Statistics period"
+
+msgid "统计时段"
+msgstr "Statistics range"
+
+msgid "继续核对"
+msgstr "Continue checking"
+
+msgid "编辑"
+msgstr "Edit"
+
+msgid "编辑任务"
+msgstr "Edit task"
+
+msgid "自动任务按有效活动完成，审核任务由用户提交说明。经验奖励默认关闭，可为任务单独设置。"
+msgstr "Automatic tasks use eligible activity; reviewed tasks use completion notes. XP rewards default to zero and can be enabled per task."
+
+msgid "自动任务至少需要一个步骤。"
+msgstr "Automatic tasks require at least one step."
+
+msgid "自动完成"
+msgstr "Automatic completion"
+
+msgid "自选日期"
+msgstr "Custom dates"
+
+msgid "自选日期最多 366 天，截至今日。这里包含人工调整；公开活动榜只统计活动净经验。"
+msgstr "Choose up to 366 days ending no later than today. Manual adjustments are included here; public standings use only net activity XP."
+
+msgid "荣誉任务"
+msgstr "Honor task"
+
+msgid "获得成就"
+msgstr "Achievement earned"
+
+msgid "获得条件"
+msgstr "Earned for"
+
+msgid "规则修改记录"
+msgstr "Rule change history"
+
+msgid "规则变化："
+msgstr "Rule changes: "
+
+msgid "规则说明"
+msgstr "Rule notes"
+
+msgid "计数方式"
+msgstr "Counting mode"
+
+msgid "让参与有明确目标，为完成的事情留下荣誉。"
+msgstr "Give participation clear goals and recognize completed work."
+
+msgid "记录撤销"
+msgstr "Record revocation"
+
+msgid "记录未完成"
+msgstr "Record incomplete"
+
+msgid "记录经验调整"
+msgstr "Record XP adjustment"
+
+msgid "记录编号无效。"
+msgstr "Invalid record ID."
+
+msgid "许可证"
+msgstr "License"
+
+msgid "设置"
+msgstr "Settings"
+
+msgid "设置字段不完整或包含未知字段。"
+msgstr "Settings are incomplete or contain unknown fields."
+
+msgid "设置已保存。"
+msgstr "Settings saved."
+
+msgid "设置已被其他管理员更新，请刷新后重新修改。"
+msgstr "Another administrator changed these settings. Refresh before editing."
+
+msgid "设置未能保存，请重试。"
+msgstr "Could not save settings. Please retry."
+
+msgid "设置正被修改。"
+msgstr "Settings are being modified."
+
+msgid "设置正被其他管理员修改，请重试。"
+msgstr "Another administrator is editing settings. Please retry."
+
+msgid "设置每次参与的奖励，以及每日可获得奖励的次数。"
+msgstr "Set rewards for each activity and the daily reward counts."
+
+msgid "访问网页"
+msgstr "Visit a page"
+
+msgid "评论"
+msgstr "Comments"
+
+msgid "评论奖励 %1$s / %2$s 次"
+msgstr "Comment rewards %1$s / %2$s"
+
+msgid "评论奖励净额异常，请先检查账本。"
+msgstr "Unexpected comment reward subtotal. Check the ledger first."
+
+msgid "评论奖励已关闭"
+msgstr "Comment rewards are disabled"
+
+msgid "评论状态调整"
+msgstr "Comment status adjustment"
+
+msgid "该文章或评论目前不符合奖励条件。"
+msgstr "This post or comment is no longer eligible for rewards."
+
+msgid "该用户已经不存在。"
+msgstr "This user no longer exists."
+
+msgid "该用户的经验不足，无法完成扣减。"
+msgstr "Insufficient user XP for the deduction."
+
+msgid "该请求编号已用于另一项操作，请刷新后重试。"
+msgstr "This request ID was used for a different action. Refresh and retry."
+
+msgid "说明已提交，等待审核。"
+msgstr "Note submitted and awaiting review."
+
+msgid "说明未能提交，请重试。"
+msgstr "Could not submit the note. Please retry."
+
+msgid "请先将当前通知全部标为已读。"
+msgstr "Mark current notifications read first."
+
+msgid "请先登录。"
+msgstr "Please sign in first."
+
+msgid "请先预览本次配置。"
+msgstr "Preview this configuration first."
+
+msgid "请刷新页面并登录后点赞。"
+msgstr "Refresh and sign in before liking."
+
+msgid "请在页面停留后再记录访问。"
+msgstr "Stay on this page before recording a visit."
+
+msgid "请填写 1–100 个等级门槛。"
+msgstr "Provide 1–100 level thresholds."
+
+msgid "请填写 1–300 字的原因。"
+msgstr "Provide a reason of 1–300 characters."
+
+msgid "请填写任务名称。"
+msgstr "Enter a task title."
+
+msgid "请填写操作原因。"
+msgstr "Enter a reason for this action."
+
+msgid "请填写有效的整数。"
+msgstr "Enter a valid integer."
+
+msgid "请填写有效的次数。"
+msgstr "Enter a valid count."
+
+msgid "请填写至少五个字的完成说明。"
+msgstr "Provide a completion note of at least five characters."
+
+msgid "请填写范围内的整数。"
+msgstr "Enter an integer within the allowed range."
+
+msgid "请填写退回原因。"
+msgstr "Enter a reason for returning the submission."
+
+msgid "请求包含无效字段。"
+msgstr "The request contains invalid fields."
+
+msgid "请求参数无效。"
+msgstr "Invalid request parameters."
+
+msgid "请求格式无效。"
+msgstr "Invalid request format."
+
+msgid "请求编号或操作参数无效。"
+msgstr "Invalid request ID or action parameters."
+
+msgid "请选择任务类型、周期和启用状态。"
+msgstr "Choose a task type, period and activation state."
+
+msgid "请选择可公开展示的媒体库图片。"
+msgstr "Choose a publicly accessible media-library image."
+
+msgid "请选择已读操作或通知偏好。"
+msgstr "Choose a read action or notification preferences."
+
+msgid "请选择有效操作。"
+msgstr "Choose a valid action."
+
+msgid "请选择有效日期。"
+msgstr "Choose a valid date."
+
+msgid "请选择有效时区。"
+msgstr "Choose a valid time zone."
+
+msgid "请选择有效的任务步骤。"
+msgstr "Choose a valid task step."
+
+msgid "请选择有效的已发布页面。"
+msgstr "Choose a valid published page."
+
+msgid "请选择有效的等级颜色。"
+msgstr "Choose a valid level color."
+
+msgid "请选择有效计数方式。"
+msgstr "Choose a valid counting mode."
+
+msgid "请选择本周或本月。"
+msgstr "Choose this week or this month."
+
+msgid "请选择没有密码保护的已发布页面。"
+msgstr "Choose a published page without password protection."
+
+msgid "请选择用户并填写非零整数经验，单次最多 1000000。"
+msgstr "Choose a user and a nonzero integer XP change, up to 1000000 per action."
+
+msgid "调整原因"
+msgstr "Adjustment reason"
+
+msgid "账本与余额核对"
+msgstr "Ledger and balance check"
+
+msgid "账本合计"
+msgstr "Ledger total"
+
+msgid "输入用户编号查看详情，或按用户名查找。"
+msgstr "Enter a user ID or search by username."
+
+msgid "运行诊断"
+msgstr "Diagnostics"
+
+msgid "还没有任务。可以先创建一个简单的签到任务。"
+msgstr "No tasks yet. Start with a simple check-in task."
+
+msgid "还没有启用的任务。可以从“任务与成就”创建一个目标。"
+msgstr "No enabled tasks yet. Create a goal under Tasks and achievements."
+
+msgid "这份说明已被审核，请刷新页面。"
+msgstr "This submission has already been reviewed. Refresh the page."
+
+msgid "这项人工调整已经撤销。"
+msgstr "This manual adjustment has already been reversed."
+
+msgid "这项任务已有一份说明等待审核。"
+msgstr "This task already has a pending submission."
+
+msgid "这项操作已经记录，没有再次发放。"
+msgstr "This action was already recorded; no additional reward was issued."
+
+msgid "进入 "
+msgstr "Go to "
+
+msgid "连续"
+msgstr "consecutive"
+
+msgid "连续 %1$s 天 · 累计 %2$s 天"
+msgstr "Consecutive %1$s days · Total %2$s days"
+
+msgid "连续签到"
+msgstr "Consecutive check-ins"
+
+msgid "连续签到断开后重新累计，不扣除已获得经验。每档奖励在这一版规则下只领取一次。"
+msgstr "A missed check-in restarts the consecutive count without reclaiming XP. Each stage is claimable once in this rule generation."
+
+msgid "退回说明"
+msgstr "Return submission"
+
+msgid "适用内容与每日统计时区"
+msgstr "Eligible content and daily statistics time zone"
+
+msgid "适用内容设置无效。"
+msgstr "Invalid content scope."
+
+msgid "选择后，顶栏“经验签到”和登录返回链接会指向此页。请先按上方步骤加入短代码；保存不会创建或发布页面。"
+msgstr "The top-bar check-in and login return links will point here. Add the shortcode first; saving never creates or publishes a page."
+
+msgid "选择已发布的经验页面"
+msgstr "Choose a published XP page"
+
+msgid "选择徽章图片"
+msgstr "Choose badge image"
+
+msgid "选择模板 "
+msgstr "Choose template "
+
+msgid "逐级设置最低经验，当前共 "
+msgstr "Set minimum XP for each level. Current count: "
+
+msgid "逐页读取现有记录并比较，不修改经验。差异需要先查清原因。"
+msgstr "Read existing records page by page and compare without changing XP. Investigate differences before taking action."
+
+msgid "通知不存在。"
+msgstr "Notification not found."
+
+msgid "通知偏好"
+msgstr "Notification preferences"
+
+msgid "通知偏好须为布尔值。"
+msgstr "Notification preferences must be booleans."
+
+msgid "通知分页或编号无效。"
+msgstr "Invalid notification pagination or ID."
+
+msgid "通知暂时无法读取，请重试。"
+msgstr "Notifications are temporarily unavailable. Please retry."
+
+msgid "通知查询字段无效。"
+msgstr "Invalid notification query fields."
+
+msgid "通知类型偏好无效。"
+msgstr "Invalid notification type preferences."
+
+msgid "通知编号无效。"
+msgstr "Invalid notification ID."
+
+msgid "通知设置字段无效。"
+msgstr "Invalid notification settings fields."
+
+msgid "通知设置已更新，请重新读取后操作。"
+msgstr "Notification settings changed. Refresh before acting."
+
+msgid "通知设置未能保存，请重试。"
+msgstr "Could not save notification settings. Please retry."
+
+msgid "通过并授予成就"
+msgstr "Approve and grant achievement"
+
+msgid "配置 JSON"
+msgstr "Configuration JSON"
+
+msgid "配置大小或导入方式无效。"
+msgstr "Invalid configuration size or import mode."
+
+msgid "配置导出与导入"
+msgstr "Configuration export and import"
+
+msgid "配置工具"
+msgstr "Configuration tools"
+
+msgid "配置已应用。"
+msgstr "Configuration applied."
+
+msgid "配置已更新，请重新预览。"
+msgstr "Configuration changed. Preview again."
+
+msgid "配置未能应用，请重新预览。"
+msgstr "Could not apply configuration. Preview again."
+
+msgid "配置格式无效。"
+msgstr "Invalid configuration format."
+
+msgid "配置超过任务或导入映射上限。"
+msgstr "Configuration exceeds task or import-mapping limits."
+
+msgid "配置预览失败。"
+msgstr "Could not preview configuration."
+
+msgid "里程碑变更"
+msgstr "Milestone changes"
+
+msgid "里程碑标识重复、无效或已经停用。"
+msgstr "Duplicate, invalid or retired milestone ID."
+
+msgid "里程碑次数设置不完整。"
+msgstr "Incomplete milestone thresholds."
+
+msgid "里程碑设置无效。"
+msgstr "Invalid milestone settings."
+
+msgid "重新检查并重试"
+msgstr "Recheck and retry"
+
+msgid "阅读三篇不同的公开内容。"
+msgstr "Read three different public content items."
+
+msgid "阅读奖励 %1$s / %2$s 次；有效停留 %3$s 秒"
+msgstr "Reading rewards %1$s / %2$s; required dwell %3$s seconds"
+
+msgid "阅读奖励已关闭"
+msgstr "Reading rewards are disabled"
+
+msgid "阅读起步"
+msgstr "Reading starter"
+
+msgid "阶段经验"
+msgstr "Stage XP"
+
+msgid "限定内容（可选）"
+msgstr "Content scope (optional)"
+
+msgid "需要核对"
+msgstr "Needs review"
+
+msgid "面板设置已更新，请刷新页面。"
+msgstr "Panel settings changed. Refresh the page."
+
+msgid "面板设置未能保存，请重试。"
+msgstr "Could not save panel settings. Please retry."
+
+msgid "面板设置正被修改，请重试。"
+msgstr "Panel settings are being modified. Please retry."
+
+msgid "页面 → 新建页面"
+msgstr "Pages → Add New"
+
+msgid "页面不可用。"
+msgstr "Page unavailable."
+
+msgid "项不同内容"
+msgstr "different content items"
+
+msgid "预览"
+msgstr "Preview"
+
+msgid "预览内容"
+msgstr "Preview content"
+
+msgid "预览模板"
+msgstr "Preview template"
+
+msgid "预览配置"
+msgstr "Preview configuration"
+
+msgid "颜色"
+msgstr "Color"
+
+msgid "首次发表文章"
+msgstr "First post publication"
+
+msgid "首级固定为 0，门槛须严格递增，最多 100 级。修改门槛会立即影响等级展示，不改变经验余额。"
+msgstr "The first threshold is fixed at 0; values must increase strictly, up to 100 levels. Threshold edits immediately affect level display without changing XP balances."
+
+msgid "验证已过期，请刷新设置页。"
+msgstr "Verification expired. Refresh the settings page."
+
+msgid "验证已过期，请刷新页面。"
+msgstr "Verification expired. Refresh the page."
+
+msgid "默认 Asia/Shanghai。已有经验记录后不能修改，以免同一天重复领取奖励。"
+msgstr "Default: Asia/Shanghai. The time zone cannot change after XP is recorded, to avoid duplicate daily claims."
+
+msgid "默认关闭。仅检查 wzf2000/wp-xp-core 官方安装 ZIP；稳定渠道忽略预发布，预发布渠道同时接受更新的稳定版。不会降级，不新增定时任务。缓存最多六小时。"
+msgstr "Disabled by default. Checks only official installation ZIPs from wzf2000/wp-xp-core. Stable ignores prereleases; the prerelease channel also accepts newer stable releases. Never downgrades or adds scheduled tasks. Cache lasts up to six hours."
+
+msgid "（分类）"
+msgstr "(category)"
+
+msgid "（指定内容范围）"
+msgstr "(specified content scope)"
+
+msgid "（经验 +"
+msgstr "(XP +"
+
+msgid "（账号已删除）"
+msgstr "(account deleted)"
+
+msgid "，发布后即可公开展示。可用 "
+msgstr ", then publish to display publicly. Use "
+
+msgid "，标题可填“我的经验”。"
+msgstr ", with a title such as “My XP”."
+
+msgid "；成长变化："
+msgstr "; Growth changes: "
+

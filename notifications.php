@@ -16,14 +16,14 @@ final class WP_XP_Core_Notifications
     private static function permission($nonce)
     {
         if (!is_user_logged_in() || !current_user_can('read')) {
-            return self::error('login_required', '请先登录。', 401);
+            return self::error('login_required', wp_xp_core_t('请先登录。'), 401);
         }
         if (!is_string($nonce) || !wp_verify_nonce($nonce, 'wp_rest')) {
-            return self::error('nonce', '验证已过期，请刷新页面。', 403);
+            return self::error('nonce', wp_xp_core_t('验证已过期，请刷新页面。'), 403);
         }
         return Reader_Experience::ready()
             ? true
-            : self::error('maintenance', '经验系统维护中。', 503);
+            : self::error('maintenance', wp_xp_core_t('经验系统维护中。'), 503);
     }
     private static function integer($value, int $min, int $max): int
     {
@@ -36,14 +36,14 @@ final class WP_XP_Core_Notifications
             (int) $value < $min ||
             (int) $value > $max
         ) {
-            throw new InvalidArgumentException('通知分页或编号无效。');
+            throw new InvalidArgumentException(wp_xp_core_t('通知分页或编号无效。'));
         }
         return (int) $value;
     }
     private static function identifier($id): array
     {
         if (!is_string($id) || !preg_match('/^([1-9][0-9]*):(task|review|level)$/D', $id, $m)) {
-            throw new InvalidArgumentException('通知编号无效。');
+            throw new InvalidArgumentException(wp_xp_core_t('通知编号无效。'));
         }
         return [self::integer($m[1], 1, PHP_INT_MAX), array_search($m[2], self::TYPES, true)];
     }
@@ -105,28 +105,33 @@ final class WP_XP_Core_Notifications
             is_string($detail['title'] ?? null)
         ) {
             $messages['task'] = [
-                'title' => '获得成就',
+                'title' => wp_xp_core_t('获得成就'),
                 'message' =>
                     $detail['title'] .
-                    ((int) $event['xp'] > 0 ? ' · +' . (int) $event['xp'] . ' 经验' : ''),
+                    ((int) $event['xp'] > 0
+                        ? ' · +' . (int) $event['xp'] . wp_xp_core_t(' 经验')
+                        : ''),
             ];
         } elseif (in_array($event['kind'], ['task_revoke', 'task_grant_revoke'], true)) {
             $messages['task'] = [
-                'title' => '成就已撤销',
+                'title' => wp_xp_core_t('成就已撤销'),
                 'message' => is_string($detail['title'] ?? null)
                     ? $detail['title']
-                    : '一项成就已撤销，详情可查看个人经验记录。',
+                    : wp_xp_core_t('一项成就已撤销，详情可查看个人经验记录。'),
             ];
         } elseif (
             $event['kind'] === 'achievement_review' &&
             in_array($detail['decision'] ?? '', ['approve', 'reject'], true)
         ) {
             $messages['review'] = [
-                'title' => $detail['decision'] === 'approve' ? '审核已通过' : '完成说明已退回',
+                'title' =>
+                    $detail['decision'] === 'approve'
+                        ? wp_xp_core_t('审核已通过')
+                        : wp_xp_core_t('完成说明已退回'),
                 'message' =>
                     is_string($detail['feedback'] ?? null) && $detail['feedback'] !== ''
                         ? $detail['feedback']
-                        : '可在任务与成就中查看审核结果。',
+                        : wp_xp_core_t('可在任务与成就中查看审核结果。'),
             ];
         }
         $transition = $detail['level_transition'] ?? null;
@@ -137,8 +142,8 @@ final class WP_XP_Core_Notifications
             $transition['after'] > $transition['before']
         ) {
             $messages['level'] = [
-                'title' => '等级提升',
-                'message' => '已升至 Level ' . $transition['after'] . '。',
+                'title' => wp_xp_core_t('等级提升'),
+                'message' => wp_xp_core_t('已升至 Level ') . $transition['after'] . '。',
             ];
         }
         $out = [];
@@ -163,7 +168,7 @@ final class WP_XP_Core_Notifications
         }
         try {
             if (array_diff(array_keys($input), ['cursor', 'limit'])) {
-                return self::error('input', '通知查询字段无效。');
+                return self::error('input', wp_xp_core_t('通知查询字段无效。'));
             }
             $limit = self::integer($input['limit'] ?? 20, 1, 50);
             $cursor = isset($input['cursor']) ? self::identifier($input['cursor']) : null;
@@ -230,7 +235,7 @@ final class WP_XP_Core_Notifications
         } catch (InvalidArgumentException $e) {
             return self::error('input', $e->getMessage());
         } catch (Throwable $e) {
-            return self::error('storage', '通知暂时无法读取，请重试。', 503);
+            return self::error('storage', wp_xp_core_t('通知暂时无法读取，请重试。'), 503);
         }
     }
     public static function save(array $input, $nonce)
@@ -246,14 +251,14 @@ final class WP_XP_Core_Notifications
                 strlen($input['revision']) !== 64 ||
                 (isset($input['preferences']) && (isset($input['ids']) || isset($input['through'])))
             ) {
-                return self::error('input', '通知设置字段无效。');
+                return self::error('input', wp_xp_core_t('通知设置字段无效。'));
             }
             if (
                 !isset($input['preferences']) &&
                 !isset($input['ids']) &&
                 !isset($input['through'])
             ) {
-                return self::error('input', '请选择已读操作或通知偏好。');
+                return self::error('input', wp_xp_core_t('请选择已读操作或通知偏好。'));
             }
             if (isset($input['preferences'])) {
                 if (
@@ -261,11 +266,11 @@ final class WP_XP_Core_Notifications
                     array_diff(array_keys($input['preferences']), self::TYPES) ||
                     count($input['preferences']) !== count(self::TYPES)
                 ) {
-                    return self::error('input', '通知类型偏好无效。');
+                    return self::error('input', wp_xp_core_t('通知类型偏好无效。'));
                 }
                 foreach ($input['preferences'] as $v) {
                     if (!is_bool($v)) {
-                        return self::error('input', '通知偏好须为布尔值。');
+                        return self::error('input', wp_xp_core_t('通知偏好须为布尔值。'));
                     }
                 }
             }
@@ -273,7 +278,7 @@ final class WP_XP_Core_Notifications
                 isset($input['ids']) &&
                 (!is_array($input['ids']) || count($input['ids']) > 50 || isset($input['through']))
             ) {
-                return self::error('input', '每次最多标记五十条通知。');
+                return self::error('input', wp_xp_core_t('每次最多标记五十条通知。'));
             }
             $ids = [];
             foreach ($input['ids'] ?? [] as $id) {
@@ -285,20 +290,24 @@ final class WP_XP_Core_Notifications
                 : null;
             return Reader_Experience::transaction(function () use ($input, $ids, $through) {
                 if (!Reader_Experience::ready()) {
-                    return self::error('maintenance', '经验系统维护中。', 503);
+                    return self::error('maintenance', wp_xp_core_t('经验系统维护中。'), 503);
                 }
                 $uid = get_current_user_id();
                 $raw = self::raw($uid);
                 $state = self::state($raw);
                 if (!hash_equals(WP_XP_Core_Settings::revision($raw), $input['revision'])) {
-                    return self::error('conflict', '通知设置已更新，请重新读取后操作。', 409);
+                    return self::error(
+                        'conflict',
+                        wp_xp_core_t('通知设置已更新，请重新读取后操作。'),
+                        409,
+                    );
                 }
                 if (isset($input['preferences'])) {
                     $state['preferences'] = $input['preferences'];
                 }
                 if ($through !== null) {
                     if ($through > self::maximum($uid)) {
-                        return self::error('input', '已读范围超过当前通知。');
+                        return self::error('input', wp_xp_core_t('已读范围超过当前通知。'));
                     }
                     $state['read_until'] = max($state['read_until'], $through);
                     $state['read_ids'] = array_values(
@@ -324,7 +333,7 @@ final class WP_XP_Core_Notifications
                         throw new RuntimeException('Notification ownership unavailable');
                     }
                     if (!$row || !in_array($id, array_column(self::messages($row), 'id'), true)) {
-                        return self::error('missing', '通知不存在。', 404);
+                        return self::error('missing', wp_xp_core_t('通知不存在。'), 404);
                     }
                     if (
                         $event_id > $state['read_until'] &&
@@ -334,7 +343,7 @@ final class WP_XP_Core_Notifications
                     }
                 }
                 if (count($state['read_ids']) > 2000) {
-                    return self::error('limit', '请先将当前通知全部标为已读。', 409);
+                    return self::error('limit', wp_xp_core_t('请先将当前通知全部标为已读。'), 409);
                 }
                 sort($state['read_ids'], SORT_STRING);
                 if ($state !== self::state($raw) || $raw === null) {
@@ -351,7 +360,7 @@ final class WP_XP_Core_Notifications
         } catch (InvalidArgumentException $e) {
             return self::error('input', $e->getMessage());
         } catch (Throwable $e) {
-            return self::error('storage', '通知设置未能保存，请重试。', 503);
+            return self::error('storage', wp_xp_core_t('通知设置未能保存，请重试。'), 503);
         }
     }
 }

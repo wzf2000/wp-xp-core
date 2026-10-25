@@ -49,6 +49,7 @@ final class WP_XP_Core_Settings
                 true,
             ),
             'activity_caps' => ['day' => 0, 'week' => 0],
+            'providers' => [],
             'dwell_seconds' => 15,
             'timezone' => 'Asia/Shanghai',
             'scope' => ['post_ids' => [], 'category_ids' => []],
@@ -80,7 +81,7 @@ final class WP_XP_Core_Settings
             (int) $value < $min ||
             (int) $value > $max
         ) {
-            throw new InvalidArgumentException('请填写范围内的整数。');
+            throw new InvalidArgumentException(wp_xp_core_t('请填写范围内的整数。'));
         }
         return (int) $value;
     }
@@ -90,7 +91,7 @@ final class WP_XP_Core_Settings
             $value = trim($value) === '' ? [] : preg_split('/[\s,，]+/u', trim($value));
         }
         if (!is_array($value) || count($value) > 200) {
-            throw new InvalidArgumentException('每组适用范围最多填写 200 个 ID。');
+            throw new InvalidArgumentException(wp_xp_core_t('每组适用范围最多填写 200 个 ID。'));
         }
         $ids = array_values(
             array_unique(array_map(fn($id) => self::number($id, 1, PHP_INT_MAX), $value)),
@@ -112,12 +113,12 @@ final class WP_XP_Core_Settings
             array_diff(array_keys($input), array_keys($defaults)) ||
             array_diff(array_keys($legacy), array_keys($input))
         ) {
-            throw new InvalidArgumentException('设置字段不完整或包含未知字段。');
+            throw new InvalidArgumentException(wp_xp_core_t('设置字段不完整或包含未知字段。'));
         }
         $thresholds = array_diff_key($flat, $legacy);
         $provided = array_intersect_key($input, $thresholds);
         if ($provided && count($provided) !== count($thresholds)) {
-            throw new InvalidArgumentException('里程碑次数设置不完整。');
+            throw new InvalidArgumentException(wp_xp_core_t('里程碑次数设置不完整。'));
         }
         $input += $thresholds;
         $out = [];
@@ -143,14 +144,14 @@ final class WP_XP_Core_Settings
             count($levels) < 1 ||
             count($levels) > 100
         ) {
-            throw new InvalidArgumentException('请填写 1–100 个等级门槛。');
+            throw new InvalidArgumentException(wp_xp_core_t('请填写 1–100 个等级门槛。'));
         }
         $previous = -1;
         foreach ($levels as $i => $level) {
             $level = self::number($level, 0, 1000000000);
             if ($level <= $previous || ($i === 0 && $level !== 0)) {
                 throw new InvalidArgumentException(
-                    '等级门槛必须从 0 开始、严格递增，且不超过 1000000000。',
+                    wp_xp_core_t('等级门槛必须从 0 开始、严格递增，且不超过 1000000000。'),
                 );
             }
             $levels[$i] = $previous = $level;
@@ -162,11 +163,11 @@ final class WP_XP_Core_Settings
             array_diff(array_keys($activities), array_keys($defaults['activities'])) ||
             array_diff(array_keys($defaults['activities']), array_keys($activities))
         ) {
-            throw new InvalidArgumentException('活动开关不完整。');
+            throw new InvalidArgumentException(wp_xp_core_t('活动开关不完整。'));
         }
         foreach ($activities as $key => $value) {
             if (!in_array($value, [true, false, 0, 1, '0', '1'], true)) {
-                throw new InvalidArgumentException('活动开关无效。');
+                throw new InvalidArgumentException(wp_xp_core_t('活动开关无效。'));
             }
             $activities[$key] = (bool) $value;
         }
@@ -177,19 +178,39 @@ final class WP_XP_Core_Settings
             array_diff(array_keys($caps), ['day', 'week']) ||
             count($caps) !== 2
         ) {
-            throw new InvalidArgumentException('活动经验上限无效。');
+            throw new InvalidArgumentException(wp_xp_core_t('活动经验上限无效。'));
         }
         $out['activity_caps'] = [
             'day' => self::number($caps['day'], 0, 1000000000),
             'week' => self::number($caps['week'], 0, 1000000000),
         ];
+        $providers = $input['providers'] ?? [];
+        if (!is_array($providers) || count($providers) > 20) {
+            throw new InvalidArgumentException(wp_xp_core_t('活动提供者设置无效。'));
+        }
+        $out['providers'] = [];
+        foreach ($providers as $id => $provider) {
+            if (
+                !is_string($id) ||
+                !preg_match('/^[a-z][a-z0-9_]{0,31}$/D', $id) ||
+                !is_array($provider) ||
+                array_diff(array_keys($provider), ['enabled', 'xp']) ||
+                !in_array($provider['enabled'] ?? null, [true, false, 0, 1, '0', '1'], true)
+            ) {
+                throw new InvalidArgumentException(wp_xp_core_t('活动提供者设置无效。'));
+            }
+            $out['providers'][$id] = [
+                'enabled' => (bool) $provider['enabled'],
+                'xp' => self::number($provider['xp'] ?? null, 0, 1000000),
+            ];
+        }
         $out['dwell_seconds'] = self::number($input['dwell_seconds'] ?? 15, 5, 3600);
         $timezone = $input['timezone'] ?? 'Asia/Shanghai';
         if (
             !is_string($timezone) ||
             !in_array($timezone, DateTimeZone::listIdentifiers(DateTimeZone::ALL_WITH_BC), true)
         ) {
-            throw new InvalidArgumentException('请选择有效时区。');
+            throw new InvalidArgumentException(wp_xp_core_t('请选择有效时区。'));
         }
         $out['timezone'] = $timezone;
         $scope = $input['scope'] ?? $defaults['scope'];
@@ -199,7 +220,7 @@ final class WP_XP_Core_Settings
             !array_key_exists('post_ids', $scope) ||
             !array_key_exists('category_ids', $scope)
         ) {
-            throw new InvalidArgumentException('适用内容设置无效。');
+            throw new InvalidArgumentException(wp_xp_core_t('适用内容设置无效。'));
         }
         $out['scope'] = [
             'post_ids' => self::ids($scope['post_ids']),
@@ -213,7 +234,7 @@ final class WP_XP_Core_Settings
             array_diff(array_keys($milestones), ['view', 'like']) ||
             array_diff(array_keys($retired), ['view', 'like'])
         ) {
-            throw new InvalidArgumentException('里程碑设置无效。');
+            throw new InvalidArgumentException(wp_xp_core_t('里程碑设置无效。'));
         }
         $out['milestones'] = [];
         $out['retired_milestones'] = [];
@@ -224,12 +245,12 @@ final class WP_XP_Core_Settings
                 !is_array($retired[$kind]) ||
                 count($milestones[$kind]) > 20
             ) {
-                throw new InvalidArgumentException('每组最多设置 20 档里程碑。');
+                throw new InvalidArgumentException(wp_xp_core_t('每组最多设置 20 档里程碑。'));
             }
             $retired_ids = array_values(array_unique($retired[$kind]));
             foreach ($retired_ids as $id) {
                 if (!is_string($id) || !preg_match('/^[a-z0-9_]{1,48}$/D', $id)) {
-                    throw new InvalidArgumentException('停用里程碑标识无效。');
+                    throw new InvalidArgumentException(wp_xp_core_t('停用里程碑标识无效。'));
                 }
             }
             $out['retired_milestones'][$kind] = $retired_ids;
@@ -246,7 +267,9 @@ final class WP_XP_Core_Settings
                     isset($seen[$row['id']]) ||
                     in_array($row['id'], $retired_ids, true)
                 ) {
-                    throw new InvalidArgumentException('里程碑标识重复、无效或已经停用。');
+                    throw new InvalidArgumentException(
+                        wp_xp_core_t('里程碑标识重复、无效或已经停用。'),
+                    );
                 }
                 $id = $row['id'];
                 $seen[$id] = true;
@@ -256,7 +279,9 @@ final class WP_XP_Core_Settings
                     : self::number($row['threshold'], 1, 1000000000);
                 $xp = $old ? $out[$kind . '_' . $id] : self::number($row['xp'], 0, 1000000);
                 if ($threshold <= $previous) {
-                    throw new InvalidArgumentException('每组里程碑次数必须严格递增。');
+                    throw new InvalidArgumentException(
+                        wp_xp_core_t('每组里程碑次数必须严格递增。'),
+                    );
                 }
                 $previous = $threshold;
                 $out['milestones'][$kind][] = ['id' => $id, 'threshold' => $threshold, 'xp' => $xp];
@@ -305,17 +330,23 @@ final class WP_XP_Core_Settings
     public static function save($input, $nonce, $revision)
     {
         if (!current_user_can('manage_options')) {
-            return new WP_Error('forbidden', '没有管理设置的权限。', ['status' => 403]);
+            return new WP_Error('forbidden', wp_xp_core_t('没有管理设置的权限。'), [
+                'status' => 403,
+            ]);
         }
         if (!is_string($nonce) || !wp_verify_nonce($nonce, 'wp_xp_core_settings')) {
-            return new WP_Error('nonce', '验证已过期，请刷新设置页。', ['status' => 403]);
+            return new WP_Error('nonce', wp_xp_core_t('验证已过期，请刷新设置页。'), [
+                'status' => 403,
+            ]);
         }
         global $wpdb;
         $lock = 'wp_xp_rules:' . hash('sha256', DB_NAME . ':' . $wpdb->prefix);
         // Serialize administrators, then compare against the exact value shown by their form.
         $lock = substr($lock, 0, 64);
         if ((int) $wpdb->get_var($wpdb->prepare('SELECT GET_LOCK(%s,10)', $lock)) !== 1) {
-            return new WP_Error('busy', '设置正被其他管理员修改，请重试。', ['status' => 409]);
+            return new WP_Error('busy', wp_xp_core_t('设置正被其他管理员修改，请重试。'), [
+                'status' => 409,
+            ]);
         }
         try {
             wp_cache_delete(self::OPTION, 'options');
@@ -323,9 +354,13 @@ final class WP_XP_Core_Settings
             wp_cache_delete('notoptions', 'options');
             $old = get_option(self::OPTION, null);
             if (!is_string($revision) || !hash_equals(self::revision($old), $revision)) {
-                return new WP_Error('conflict', '设置已被其他管理员更新，请刷新后重新修改。', [
-                    'status' => 409,
-                ]);
+                return new WP_Error(
+                    'conflict',
+                    wp_xp_core_t('设置已被其他管理员更新，请刷新后重新修改。'),
+                    [
+                        'status' => 409,
+                    ],
+                );
             }
             try {
                 $saved = self::validate($old);
@@ -355,6 +390,9 @@ final class WP_XP_Core_Settings
                     if (($input['milestones'][$kind] ?? null) === '') {
                         $input['milestones'][$kind] = [];
                     }
+                }
+                if (isset($input['providers']) && is_array($input['providers'])) {
+                    $input['providers'] = array_replace($saved['providers'], $input['providers']);
                 }
                 // Retirement is server-owned and survives old forms and forged submissions.
                 $input['retired_milestones'] = $saved['retired_milestones'];
@@ -400,12 +438,16 @@ final class WP_XP_Core_Settings
             return Reader_Experience::transaction(function () use ($old, $rules, $saved) {
                 if ($rules['timezone'] !== $saved['timezone']) {
                     global $wpdb;
-                    if (
-                        $wpdb->get_var('SELECT id FROM ' . Reader_Experience::table() . ' LIMIT 1')
-                    ) {
+                    $first = $wpdb->get_var(
+                        'SELECT id FROM ' . Reader_Experience::table() . ' LIMIT 1',
+                    );
+                    if ($wpdb->last_error !== '') {
+                        throw new RuntimeException('Timezone evidence unavailable');
+                    }
+                    if ($first) {
                         return new WP_Error(
                             'timezone_locked',
-                            '已有经验记录，不能修改时区，以免重复领取每日奖励。',
+                            wp_xp_core_t('已有经验记录，不能修改时区，以免重复领取每日奖励。'),
                             ['status' => 409],
                         );
                     }
@@ -420,7 +462,9 @@ final class WP_XP_Core_Settings
             });
         } catch (Throwable $e) {
             WP_XP_Core_Management::clear_option_cache();
-            return new WP_Error('storage', '设置未能保存，请重试。', ['status' => 503]);
+            return new WP_Error('storage', wp_xp_core_t('设置未能保存，请重试。'), [
+                'status' => 503,
+            ]);
         } finally {
             $wpdb->get_var($wpdb->prepare('SELECT RELEASE_LOCK(%s)', $lock));
         }
@@ -434,10 +478,14 @@ final class WP_XP_Core_Settings
     public static function save_panel_page($input, $nonce, $revision)
     {
         if (!current_user_can('manage_options') || !reader_experience_native()) {
-            return new WP_Error('forbidden', '没有管理经验面板的权限。', ['status' => 403]);
+            return new WP_Error('forbidden', wp_xp_core_t('没有管理经验面板的权限。'), [
+                'status' => 403,
+            ]);
         }
         if (!is_string($nonce) || !wp_verify_nonce($nonce, 'wp_xp_core_panel')) {
-            return new WP_Error('nonce', '验证已过期，请刷新设置页。', ['status' => 403]);
+            return new WP_Error('nonce', wp_xp_core_t('验证已过期，请刷新设置页。'), [
+                'status' => 403,
+            ]);
         }
         if (
             (!is_int($input) && !is_string($input)) ||
@@ -445,7 +493,9 @@ final class WP_XP_Core_Settings
             strlen((string) $input) > 10 ||
             (int) $input > 2147483647
         ) {
-            return new WP_Error('input', '请选择有效的已发布页面。', ['status' => 400]);
+            return new WP_Error('input', wp_xp_core_t('请选择有效的已发布页面。'), [
+                'status' => 400,
+            ]);
         }
         $id = (int) $input;
         $page = $id ? get_post($id) : null;
@@ -456,12 +506,16 @@ final class WP_XP_Core_Settings
                 $page->post_status !== 'publish' ||
                 $page->post_password !== '')
         ) {
-            return new WP_Error('input', '请选择没有密码保护的已发布页面。', ['status' => 400]);
+            return new WP_Error('input', wp_xp_core_t('请选择没有密码保护的已发布页面。'), [
+                'status' => 400,
+            ]);
         }
         global $wpdb;
         $lock = substr('wp_xp_panel:' . hash('sha256', DB_NAME . ':' . $wpdb->prefix), 0, 64);
         if ((int) $wpdb->get_var($wpdb->prepare('SELECT GET_LOCK(%s,10)', $lock)) !== 1) {
-            return new WP_Error('busy', '面板设置正被修改，请重试。', ['status' => 409]);
+            return new WP_Error('busy', wp_xp_core_t('面板设置正被修改，请重试。'), [
+                'status' => 409,
+            ]);
         }
         try {
             wp_cache_delete(self::PANEL_OPTION, 'options');
@@ -469,41 +523,73 @@ final class WP_XP_Core_Settings
             wp_cache_delete('notoptions', 'options');
             $old = get_option(self::PANEL_OPTION, null);
             if (!is_string($revision) || !hash_equals(self::panel_revision($old), $revision)) {
-                return new WP_Error('conflict', '面板设置已更新，请刷新页面。', ['status' => 409]);
+                return new WP_Error('conflict', wp_xp_core_t('面板设置已更新，请刷新页面。'), [
+                    'status' => 409,
+                ]);
             }
             if ((is_int($old) || is_string($old)) && (string) $old === (string) $id) {
                 return true;
             }
             return update_option(self::PANEL_OPTION, $id, false)
                 ? true
-                : new WP_Error('storage', '面板设置未能保存，请重试。', ['status' => 503]);
+                : new WP_Error('storage', wp_xp_core_t('面板设置未能保存，请重试。'), [
+                    'status' => 503,
+                ]);
         } finally {
             $wpdb->get_var($wpdb->prepare('SELECT RELEASE_LOCK(%s)', $lock));
         }
     }
     private static function panel_help(): void
     {
-        echo '<section class="xp-card xp-panel-help"><h2>添加经验面板</h2><p>经验面板放在普通 WordPress 页面中，无需已有账户插件。</p><ol><li>进入 <strong>页面 → 新建页面</strong>，标题可填“我的经验”。</li><li>添加 <strong>短代码</strong> 区块，填入 <code>[reader_experience]</code>。</li><li>发布页面，登录后即可查看经验与签到。</li></ol>';
+        echo '<section class="xp-card xp-panel-help"><h2>' .
+            esc_html(wp_xp_core_t('添加经验面板')) .
+            '</h2><p>' .
+            esc_html(wp_xp_core_t('经验面板放在普通 WordPress 页面中，无需已有账户插件。')) .
+            '</p><ol><li>' .
+            esc_html(wp_xp_core_t('进入 ')) .
+            '<strong>' .
+            esc_html(wp_xp_core_t('页面 → 新建页面')) .
+            '</strong>' .
+            esc_html(wp_xp_core_t('，标题可填“我的经验”。')) .
+            '</li><li>' .
+            esc_html(wp_xp_core_t('添加 ')) .
+            '<strong>' .
+            esc_html(wp_xp_core_t('短代码')) .
+            '</strong>' .
+            esc_html(wp_xp_core_t(' 区块，填入 ')) .
+            '<code>[reader_experience]</code>。</li><li>' .
+            esc_html(wp_xp_core_t('发布页面，登录后即可查看经验与签到。')) .
+            '</li></ol>';
         if (reader_experience_native()) {
             $raw = get_option(self::PANEL_OPTION, null);
             echo '<form method="post"><input type="hidden" name="wp_xp_core_action" value="panel">';
             wp_nonce_field('wp_xp_core_panel');
             echo '<input type="hidden" name="panel_revision" value="' .
                 esc_attr(self::panel_revision($raw)) .
-                '"><label class="xp-label" for="xp-panel-page">选择已发布的经验页面</label>';
+                '"><label class="xp-label" for="xp-panel-page">' .
+                esc_html(wp_xp_core_t('选择已发布的经验页面')) .
+                '</label>';
             wp_dropdown_pages([
                 'name' => 'panel_page_id',
                 'id' => 'xp-panel-page',
                 'selected' => (int) $raw,
-                'show_option_none' => '暂不指定',
+                'show_option_none' => wp_xp_core_t('暂不指定'),
                 'option_none_value' => 0,
                 'post_status' => 'publish',
             ]);
-            echo '<p class="xp-help">选择后，顶栏“经验签到”和登录返回链接会指向此页。请先按上方步骤加入短代码；保存不会创建或发布页面。</p>';
-            submit_button('保存面板页面', 'secondary', 'save_panel', false);
+            echo '<p class="xp-help">' .
+                esc_html(
+                    wp_xp_core_t(
+                        '选择后，顶栏“经验签到”和登录返回链接会指向此页。请先按上方步骤加入短代码；保存不会创建或发布页面。',
+                    ),
+                ) .
+                '</p>';
+            submit_button(wp_xp_core_t('保存面板页面'), 'secondary', 'save_panel', false);
             echo '</form>';
         } else {
-            echo '<p class="xp-help">本站使用高级接入配置；面板页与短代码名称由现有配置提供。</p>';
+            echo '<p class="xp-help">' .
+                esc_html(wp_xp_core_t('本站使用高级接入配置；面板页与短代码名称由现有配置提供。')) .
+                '</p>';
         }
         echo '</section>';
     }
@@ -543,6 +629,9 @@ final class WP_XP_Core_Settings
             Reader_Experience::VERSION,
             true,
         );
+        if (class_exists('WP_XP_Core_I18n')) {
+            WP_XP_Core_I18n::script('wp-xp-core-admin');
+        }
     }
     private static function field(string $key, string $label, array $rules): void
     {
@@ -560,7 +649,7 @@ final class WP_XP_Core_Settings
             ']" value="' .
             esc_attr((string) $rules[$key]) .
             '"><span>' .
-            ($limit ? '次 / 日' : '经验') .
+            ($limit ? wp_xp_core_t('次 / 日') : wp_xp_core_t('经验')) .
             '</span></div></div>';
     }
     private static function activity(string $kind, string $label, array $rules): void
@@ -587,28 +676,38 @@ final class WP_XP_Core_Settings
             ($index + 1) .
             ' 档</span><div class="xp-field"><label data-for="threshold" for="xp-' .
             esc_attr($id) .
-            '-threshold">所需次数</label><div class="xp-input-unit"><input type="number" data-field="threshold" id="xp-' .
+            '-threshold">' .
+            esc_html(wp_xp_core_t('所需次数')) .
+            '</label><div class="xp-input-unit"><input type="number" data-field="threshold" id="xp-' .
             esc_attr($id) .
             '-threshold" name="' .
             esc_attr($prefix . '[threshold]') .
             '" value="' .
             (int) $row['threshold'] .
-            '" min="1" max="1000000000" step="1" required><span>次</span></div></div><div class="xp-field"><label data-for="xp" for="xp-' .
+            '" min="1" max="1000000000" step="1" required><span>' .
+            esc_html(wp_xp_core_t('次')) .
+            '</span></div></div><div class="xp-field"><label data-for="xp" for="xp-' .
             esc_attr($id) .
-            '">奖励经验</label><div class="xp-input-unit"><input type="number" data-field="xp" id="xp-' .
+            '">' .
+            esc_html(wp_xp_core_t('奖励经验')) .
+            '</label><div class="xp-input-unit"><input type="number" data-field="xp" id="xp-' .
             esc_attr($id) .
             '" name="' .
             esc_attr($prefix . '[xp]') .
             '" value="' .
             (int) $row['xp'] .
-            '" min="0" max="1000000" step="1" required><span>经验</span></div></div><button type="button" class="button xp-milestone-remove" aria-label="移除第 ' .
+            '" min="0" max="1000000" step="1" required><span>' .
+            esc_html(wp_xp_core_t('经验')) .
+            '</span></div></div><button type="button" class="button xp-milestone-remove" aria-label="移除第 ' .
             ($index + 1) .
-            ' 档">移除</button></div>';
+            ' 档">' .
+            esc_html(wp_xp_core_t('移除')) .
+            '</button></div>';
     }
     public static function page(): void
     {
         if (!current_user_can('manage_options')) {
-            wp_die('没有管理设置的权限。');
+            wp_die(wp_xp_core_t('没有管理设置的权限。'));
         }
         $result = null;
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -627,12 +726,18 @@ final class WP_XP_Core_Settings
         }
         echo '<div class="wrap wp-xp-core-admin"><header class="xp-header"><span class="xp-mark" aria-hidden="true">XP</span><div><h1>WP XP Core <span class="xp-version">' .
             esc_html(Reader_Experience::VERSION) .
-            '</span></h1><p>经验规则 · 让每一次参与都有积累</p></div></header>';
+            '</span></h1><p>' .
+            esc_html(wp_xp_core_t('经验规则 · 让每一次参与都有积累')) .
+            '</p></div></header>';
         if ($result !== null) {
             echo '<div class="notice ' .
                 (is_wp_error($result) ? 'notice-error' : 'notice-success') .
                 '"><p>' .
-                esc_html(is_wp_error($result) ? $result->get_error_message() : '设置已保存。') .
+                esc_html(
+                    is_wp_error($result)
+                        ? $result->get_error_message()
+                        : wp_xp_core_t('设置已保存。'),
+                ) .
                 '</p></div>';
         }
         if (class_exists('WP_XP_Core_Management_UI')) {
@@ -643,49 +748,129 @@ final class WP_XP_Core_Settings
             try {
                 self::validate($raw);
             } catch (InvalidArgumentException $e) {
-                echo '<div class="notice notice-warning"><p>已保存的设置无效，当前使用默认规则；请检查并重新保存。</p></div>';
+                echo '<div class="notice notice-warning"><p>' .
+                    esc_html(
+                        wp_xp_core_t('已保存的设置无效，当前使用默认规则；请检查并重新保存。'),
+                    ) .
+                    '</p></div>';
             }
         }
         $rules = self::rules();
         echo '<div class="xp-layout"><form method="post" class="xp-form">';
         wp_nonce_field('wp_xp_core_settings');
         echo '<input type="hidden" name="revision" value="' . esc_attr(self::revision($raw)) . '">';
-        echo '<section class="xp-card" aria-labelledby="xp-activity-title"><div class="xp-card-heading"><span class="xp-step" aria-hidden="true">01</span><div><h2 id="xp-activity-title">日常活动</h2><p>设置每次参与的奖励，以及每日可获得奖励的次数。</p></div></div><div class="xp-fields">';
+        echo '<section class="xp-card" aria-labelledby="xp-activity-title"><div class="xp-card-heading"><span class="xp-step" aria-hidden="true">01</span><div><h2 id="xp-activity-title">' .
+            esc_html(wp_xp_core_t('日常活动')) .
+            '</h2><p>' .
+            esc_html(wp_xp_core_t('设置每次参与的奖励，以及每日可获得奖励的次数。')) .
+            '</p></div></div><div class="xp-fields">';
         foreach (
             [
-                'checkin' => '每日签到',
-                'article' => '首次发表文章',
-                'visit' => '有效阅读',
-                'comment' => '有效评论',
+                'checkin' => wp_xp_core_t('每日签到'),
+                'article' => wp_xp_core_t('首次发表文章'),
+                'visit' => wp_xp_core_t('有效阅读'),
+                'comment' => wp_xp_core_t('有效评论'),
             ]
             as $kind => $label
         ) {
             echo '<div class="xp-activity-group">';
-            self::activity($kind, '启用' . $label, $rules);
-            self::field($kind . '_xp', $label . '奖励', $rules);
+            self::activity($kind, wp_xp_core_t('启用') . $label, $rules);
+            self::field($kind . '_xp', $label . wp_xp_core_t('奖励'), $rules);
             if (in_array($kind, ['visit', 'comment'], true)) {
-                self::field($kind . '_limit', '每日奖励次数', $rules);
+                self::field($kind . '_limit', wp_xp_core_t('每日奖励次数'), $rules);
             }
             echo '</div>';
         }
-        echo '</div><div class="xp-field"><label>每日活动经验上限<input type="number" min="0" max="1000000000" name="rules[activity_caps][day]" value="' .
+        if (class_exists('WP_XP_Core_Providers')) {
+            foreach (WP_XP_Core_Providers::definitions() as $provider => $definition) {
+                $policy = $rules['providers'][$provider] ?? ['enabled' => false, 'xp' => 0];
+                echo '<div class="xp-field"><label><input type="hidden" name="rules[providers][' .
+                    esc_attr($provider) .
+                    '][enabled]" value="0"><input type="checkbox" name="rules[providers][' .
+                    esc_attr($provider) .
+                    '][enabled]" value="1"' .
+                    checked($policy['enabled'], true, false) .
+                    '>' .
+                    esc_html($definition['label']) .
+                    '</label><label>' .
+                    esc_html(wp_xp_core_t('奖励经验')) .
+                    '<input type="number" min="0" max="1000000" name="rules[providers][' .
+                    esc_attr($provider) .
+                    '][xp]" value="' .
+                    (int) $policy['xp'] .
+                    '"></label></div>';
+            }
+        }
+        echo '</div><div class="xp-field"><label>' .
+            esc_html(wp_xp_core_t('每日活动经验上限')) .
+            '<input type="number" min="0" max="1000000000" name="rules[activity_caps][day]" value="' .
             $rules['activity_caps']['day'] .
-            '"></label><label>每周活动经验上限<input type="number" min="0" max="1000000000" name="rules[activity_caps][week]" value="' .
+            '"></label><label>' .
+            esc_html(wp_xp_core_t('每周活动经验上限')) .
+            '<input type="number" min="0" max="1000000000" name="rules[activity_caps][week]" value="' .
             $rules['activity_caps']['week'] .
-            '"></label><p class="xp-help">0 表示不限。仅累计首次活动实际发放的正向经验；扣回不恢复额度，剩余额度不足时只发剩余部分，不补发差额。人工与原金额补偿不受限。</p></div><div class="xp-field"><label for="xp-dwell">有效阅读停留时间</label><div class="xp-input-unit"><input type="number" id="xp-dwell" name="rules[dwell_seconds]" min="5" max="3600" required value="' .
+            '"></label><p class="xp-help">' .
+            esc_html(
+                wp_xp_core_t(
+                    '0 表示不限。仅累计首次活动实际发放的正向经验；扣回不恢复额度，剩余额度不足时只发剩余部分，不补发差额。人工与原金额补偿不受限。',
+                ),
+            ) .
+            '</p></div><div class="xp-field"><label for="xp-dwell">' .
+            esc_html(wp_xp_core_t('有效阅读停留时间')) .
+            '</label><div class="xp-input-unit"><input type="number" id="xp-dwell" name="rules[dwell_seconds]" min="5" max="3600" required value="' .
             $rules['dwell_seconds'] .
-            '"><span>秒</span></div></div><p class="xp-footnote">签到每日奖励一次；阅读须满足停留时间。关闭活动或将次数设为 0 后停止发放新奖励，已发评论的撤销与恢复继续按原金额处理。</p><details class="xp-scope"><summary>适用内容与每日统计时区</summary><p class="xp-help">以下范围用于阅读、文章、评论与作者里程碑。两项都留空表示全部；填写后，只要内容 ID 或所属分类命中一项即可。不会开放原本无权访问的内容。</p><div class="xp-field"><label for="xp-scope-posts">文章与页面 ID</label><input id="xp-scope-posts" name="rules[scope][post_ids]" value="' .
+            '"><span>' .
+            esc_html(wp_xp_core_t('秒')) .
+            '</span></div></div><p class="xp-footnote">' .
+            esc_html(
+                wp_xp_core_t(
+                    '签到每日奖励一次；阅读须满足停留时间。关闭活动或将次数设为 0 后停止发放新奖励，已发评论的撤销与恢复继续按原金额处理。',
+                ),
+            ) .
+            '</p><details class="xp-scope"><summary>' .
+            esc_html(wp_xp_core_t('适用内容与每日统计时区')) .
+            '</summary><p class="xp-help">' .
+            esc_html(
+                wp_xp_core_t(
+                    '以下范围用于阅读、文章、评论与作者里程碑。两项都留空表示全部；填写后，只要内容 ID 或所属分类命中一项即可。不会开放原本无权访问的内容。',
+                ),
+            ) .
+            '</p><div class="xp-field"><label for="xp-scope-posts">' .
+            esc_html(wp_xp_core_t('文章与页面 ID')) .
+            '</label><input id="xp-scope-posts" name="rules[scope][post_ids]" value="' .
             esc_attr(implode(', ', $rules['scope']['post_ids'])) .
-            '" placeholder="例如 12, 35"><p class="xp-help">用逗号分隔，可在文章或页面编辑地址中找到 ID。</p></div><div class="xp-field"><label for="xp-scope-categories">文章分类 ID</label><input id="xp-scope-categories" name="rules[scope][category_ids]" value="' .
+            '" placeholder="' .
+            esc_attr(wp_xp_core_t('例如 12, 35')) .
+            '"><p class="xp-help">' .
+            esc_html(wp_xp_core_t('用逗号分隔，可在文章或页面编辑地址中找到 ID。')) .
+            '</p></div><div class="xp-field"><label for="xp-scope-categories">' .
+            esc_html(wp_xp_core_t('文章分类 ID')) .
+            '</label><input id="xp-scope-categories" name="rules[scope][category_ids]" value="' .
             esc_attr(implode(', ', $rules['scope']['category_ids'])) .
-            '" placeholder="例如 3, 8"><p class="xp-help">用逗号分隔，页面不按文章分类匹配。</p></div><div class="xp-field"><label for="xp-timezone">每日统计时区</label><input id="xp-timezone" name="rules[timezone]" value="' .
+            '" placeholder="' .
+            esc_attr(wp_xp_core_t('例如 3, 8')) .
+            '"><p class="xp-help">' .
+            esc_html(wp_xp_core_t('用逗号分隔，页面不按文章分类匹配。')) .
+            '</p></div><div class="xp-field"><label for="xp-timezone">' .
+            esc_html(wp_xp_core_t('每日统计时区')) .
+            '</label><input id="xp-timezone" name="rules[timezone]" value="' .
             esc_attr($rules['timezone']) .
             '" list="xp-timezones" required><datalist id="xp-timezones">';
         foreach (DateTimeZone::listIdentifiers() as $zone) {
             echo '<option value="' . esc_attr($zone) . '"></option>';
         }
-        echo '</datalist><p class="xp-help">默认 Asia/Shanghai。已有经验记录后不能修改，以免同一天重复领取奖励。</p></div></details></section>';
-        echo '<section class="xp-card" aria-labelledby="xp-milestones-title"><div class="xp-card-heading"><span class="xp-step" aria-hidden="true">02</span><div><h2 id="xp-milestones-title">作者里程碑</h2><p>每组可设置 0–20 档，次数须从小到大排列。</p></div></div>';
+        echo '</datalist><p class="xp-help">' .
+            esc_html(
+                wp_xp_core_t(
+                    '默认 Asia/Shanghai。已有经验记录后不能修改，以免同一天重复领取奖励。',
+                ),
+            ) .
+            '</p></div></details></section>';
+        echo '<section class="xp-card" aria-labelledby="xp-milestones-title"><div class="xp-card-heading"><span class="xp-step" aria-hidden="true">02</span><div><h2 id="xp-milestones-title">' .
+            esc_html(wp_xp_core_t('作者里程碑')) .
+            '</h2><p>' .
+            esc_html(wp_xp_core_t('每组可设置 0–20 档，次数须从小到大排列。')) .
+            '</p></div></div>';
         // Keep original flat values for older integrations; nested rows are the current form controls.
         foreach (self::tiers() as $kind => $slots) {
             foreach ($slots as $slot) {
@@ -705,18 +890,23 @@ final class WP_XP_Core_Settings
                 '"' .
                 ($disabled ? ' disabled' : '') .
                 '><legend>' .
-                ($kind === 'view' ? '浏览里程碑' : '点赞里程碑') .
+                ($kind === 'view' ? wp_xp_core_t('浏览里程碑') : wp_xp_core_t('点赞里程碑')) .
                 '</legend>';
             self::activity(
                 $kind,
-                '启用' . ($kind === 'view' ? '有效浏览累计与奖励' : '有效点赞累计与奖励'),
+                wp_xp_core_t('启用') .
+                    ($kind === 'view'
+                        ? wp_xp_core_t('有效浏览累计与奖励')
+                        : wp_xp_core_t('有效点赞累计与奖励')),
                 $rules,
             );
             if ($kind === 'like') {
                 echo '<p class="xp-help">' .
                     ($disabled
-                        ? '未启用点赞服务：需要 PageNest Companion 及其点赞功能。此组暂不可编辑和发奖，已有设置会保留。'
-                        : '点赞服务已启用，按经验账本记录的有效点赞累计。') .
+                        ? wp_xp_core_t(
+                            '未启用点赞服务：需要 PageNest Companion 及其点赞功能。此组暂不可编辑和发奖，已有设置会保留。',
+                        )
+                        : wp_xp_core_t('点赞服务已启用，按经验账本记录的有效点赞累计。')) .
                     '</p>';
             }
             echo '<input type="hidden" name="rules[milestones][' .
@@ -727,12 +917,26 @@ final class WP_XP_Core_Settings
             }
             echo '</div><template class="xp-milestone-template">';
             self::milestone_row($kind, ['id' => '', 'threshold' => 1, 'xp' => 0], 0);
-            echo '</template><button type="button" class="button xp-milestone-add" hidden>添加档位</button><p class="xp-milestone-message" role="status" aria-live="polite"></p></fieldset>';
+            echo '</template><button type="button" class="button xp-milestone-add" hidden>' .
+                esc_html(wp_xp_core_t('添加档位')) .
+                '</button><p class="xp-milestone-message" role="status" aria-live="polite"></p></fieldset>';
         }
-        echo '<p class="xp-footnote">每篇作品每档仅奖励一次，修改次数不会重置已领取档位。移除后保存，该档位会永久停用；新增档位使用独立标识。保存规则不补发历史奖励，之后的有效活动会按累计次数判断。</p></section>';
-        echo '<section class="xp-card" aria-labelledby="xp-levels-title"><div class="xp-card-heading"><span class="xp-step" aria-hidden="true">03</span><div><h2 id="xp-levels-title">等级成长</h2><p>逐级设置最低经验，当前共 <span id="xp-level-count">' .
+        echo '<p class="xp-footnote">' .
+            esc_html(
+                wp_xp_core_t(
+                    '每篇作品每档仅奖励一次，修改次数不会重置已领取档位。移除后保存，该档位会永久停用；新增档位使用独立标识。保存规则不补发历史奖励，之后的有效活动会按累计次数判断。',
+                ),
+            ) .
+            '</p></section>';
+        echo '<section class="xp-card" aria-labelledby="xp-levels-title"><div class="xp-card-heading"><span class="xp-step" aria-hidden="true">03</span><div><h2 id="xp-levels-title">' .
+            esc_html(wp_xp_core_t('等级成长')) .
+            '</h2><p>' .
+            esc_html(wp_xp_core_t('逐级设置最低经验，当前共 ')) .
+            '<span id="xp-level-count">' .
             count($rules['levels']) .
-            '</span> 级。</p></div></div><div id="xp-levels" aria-describedby="xp-levels-help">';
+            '</span>' .
+            esc_html(wp_xp_core_t(' 级。')) .
+            '</p></div></div><div id="xp-levels" aria-describedby="xp-levels-help">';
         foreach ($rules['levels'] as $i => $level) {
             echo '<div class="xp-level-row"><label for="xp-level-' .
                 $i .
@@ -746,20 +950,72 @@ final class WP_XP_Core_Settings
                 esc_attr((string) $level) .
                 '"' .
                 ($i === 0 ? ' readonly' : '') .
-                '><span>经验</span></div><button type="button" class="button xp-level-remove" aria-label="移除 Level ' .
+                '><span>' .
+                esc_html(wp_xp_core_t('经验')) .
+                '</span></div><button type="button" class="button xp-level-remove" aria-label="移除 Level ' .
                 ($i + 1) .
                 '"' .
                 ($i === 0 ? ' disabled' : '') .
-                '>移除</button></div>';
+                '>' .
+                esc_html(wp_xp_core_t('移除')) .
+                '</button></div>';
         }
-        echo '</div><button type="button" class="button xp-level-add" hidden>添加等级</button><p class="xp-level-message" role="status" aria-live="polite"></p><noscript><p>启用 JavaScript 后可添加或移除等级；现有门槛仍可编辑保存。</p></noscript><p id="xp-levels-help" class="xp-help">首级固定为 0，门槛须严格递增，最多 100 级。修改门槛会立即影响等级展示，不改变经验余额。</p></section>';
-        echo '<div class="xp-save"><p>奖励调整仅影响之后首次记账的事件。</p>';
-        submit_button('保存经验规则', 'primary', 'submit', false);
-        echo '</div></form><aside class="xp-sidebar" aria-label="插件信息与帮助"><section class="xp-card xp-about"><span class="xp-eyebrow">关于插件</span><h2>WP XP Core</h2><p>独立的 WordPress 经验与等级系统。</p><dl><div><dt>版本</dt><dd>' .
+        echo '</div><button type="button" class="button xp-level-add" hidden>' .
+            esc_html(wp_xp_core_t('添加等级')) .
+            '</button><p class="xp-level-message" role="status" aria-live="polite"></p><noscript><p>' .
+            esc_html(wp_xp_core_t('启用 JavaScript 后可添加或移除等级；现有门槛仍可编辑保存。')) .
+            '</p></noscript><p id="xp-levels-help" class="xp-help">' .
+            esc_html(
+                wp_xp_core_t(
+                    '首级固定为 0，门槛须严格递增，最多 100 级。修改门槛会立即影响等级展示，不改变经验余额。',
+                ),
+            ) .
+            '</p></section>';
+        echo '<div class="xp-save"><p>' .
+            esc_html(wp_xp_core_t('奖励调整仅影响之后首次记账的事件。')) .
+            '</p>';
+        submit_button(wp_xp_core_t('保存经验规则'), 'primary', 'submit', false);
+        echo '</div></form><aside class="xp-sidebar" aria-label="' .
+            esc_attr(wp_xp_core_t('插件信息与帮助')) .
+            '"><section class="xp-card xp-about"><span class="xp-eyebrow">' .
+            esc_html(wp_xp_core_t('关于插件')) .
+            '</span><h2>WP XP Core</h2><p>' .
+            esc_html(wp_xp_core_t('独立的 WordPress 经验与等级系统。')) .
+            '</p><dl><div><dt>' .
+            esc_html(wp_xp_core_t('版本')) .
+            '</dt><dd>' .
             esc_html(Reader_Experience::VERSION) .
-            '</dd></div><div><dt>作者</dt><dd><a href="https://github.com/wzf2000">wzf2000</a></dd></div><div><dt>许可证</dt><dd><a href="https://www.gnu.org/licenses/old-licenses/gpl-2.0.html">GPL-2.0-or-later</a></dd></div></dl><a class="xp-repo-link" href="https://github.com/wzf2000/wp-xp-core">源码与使用说明 <span aria-hidden="true">↗</span></a><p class="xp-help">查看项目文档、更新记录与贡献方式。</p></section>';
+            '</dd></div><div><dt>' .
+            esc_html(wp_xp_core_t('作者')) .
+            '</dt><dd><a href="https://github.com/wzf2000">wzf2000</a></dd></div><div><dt>' .
+            esc_html(wp_xp_core_t('许可证')) .
+            '</dt><dd><a href="https://www.gnu.org/licenses/old-licenses/gpl-2.0.html">GPL-2.0-or-later</a></dd></div></dl><a class="xp-repo-link" href="https://github.com/wzf2000/wp-xp-core">' .
+            esc_html(wp_xp_core_t('源码与使用说明 ')) .
+            '<span aria-hidden="true">↗</span></a><p class="xp-help">' .
+            esc_html(wp_xp_core_t('查看项目文档、更新记录与贡献方式。')) .
+            '</p></section>';
         self::panel_help();
-        echo '<section class="xp-card xp-guide"><h2>规则说明</h2><p>保存全站规则前，可先了解生效范围。</p><details><summary>奖励如何生效？</summary><p>不重算或补发历史经验。0 经验仍记录事件，避免日后重复领取；评论撤销与恢复使用首次奖励数值。</p></details><details><summary>数值可以设置多大？</summary><p>奖励为 0–1000000 的整数，每日次数为 0–1000。等级门槛最高为 1000000000。</p></details></section></aside></div></div>';
+        echo '<section class="xp-card xp-guide"><h2>' .
+            esc_html(wp_xp_core_t('规则说明')) .
+            '</h2><p>' .
+            esc_html(wp_xp_core_t('保存全站规则前，可先了解生效范围。')) .
+            '</p><details><summary>' .
+            esc_html(wp_xp_core_t('奖励如何生效？')) .
+            '</summary><p>' .
+            esc_html(
+                wp_xp_core_t(
+                    '不重算或补发历史经验。0 经验仍记录事件，避免日后重复领取；评论撤销与恢复使用首次奖励数值。',
+                ),
+            ) .
+            '</p></details><details><summary>' .
+            esc_html(wp_xp_core_t('数值可以设置多大？')) .
+            '</summary><p>' .
+            esc_html(
+                wp_xp_core_t(
+                    '奖励为 0–1000000 的整数，每日次数为 0–1000。等级门槛最高为 1000000000。',
+                ),
+            ) .
+            '</p></details></section></aside></div></div>';
     }
 }
 add_action('admin_menu', [WP_XP_Core_Settings::class, 'menu']);

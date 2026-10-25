@@ -1,0 +1,2229 @@
+msgid ""
+msgstr "Project-Id-Version: WP XP Core 2.0.0-rc.3\nContent-Type: text/plain; charset=UTF-8\n"
+
+msgid " · +%1$s 经验"
+msgstr ""
+
+msgid " · 净经验 "
+msgstr ""
+
+msgid " · 对象 #"
+msgstr ""
+
+msgid " · 已读"
+msgstr ""
+
+msgid " · 已达最高等级"
+msgstr ""
+
+msgid " · 操作者 #"
+msgstr ""
+
+msgid " · 活动 "
+msgstr ""
+
+msgid " · 版本 "
+msgstr ""
+
+msgid " · 用户 #"
+msgstr ""
+
+msgid " · 管理员授予"
+msgstr ""
+
+msgid " · 距下一级 "
+msgstr ""
+
+msgid " · 距下一级 %1$s"
+msgstr ""
+
+msgid " · 还需 %1$s %2$s"
+msgstr ""
+
+msgid " 区块，填入 "
+msgstr ""
+
+msgid " 可稍后重新打开面板。"
+msgstr ""
+
+msgid " 天"
+msgstr ""
+
+msgid " 天 · 累计 "
+msgstr ""
+
+msgid " 或 "
+msgstr ""
+
+msgid " 次 · 参与 "
+msgstr ""
+
+msgid " 点击周期可重试。"
+msgstr ""
+
+msgid " 级。"
+msgstr ""
+
+msgid " 经验"
+msgstr ""
+
+msgid " 至 "
+msgstr ""
+
+msgid " 设置每页人数，最多 50 人。"
+msgstr ""
+
+msgid " 页 · "
+msgstr ""
+
+msgid "%1$s第 %2$s 名 · 活动净经验 +%3$s"
+msgstr ""
+
+msgid "0 表示不限。仅累计首次活动实际发放的正向经验；扣回不恢复额度，剩余额度不足时只发剩余部分，不补发差额。人工与原金额补偿不受限。"
+msgstr ""
+
+msgid "0 表示只授予荣誉。修改奖励会建立新版本，已有成就不补发奖励。"
+msgstr ""
+
+msgid "<p>WP XP Core records account-linked activity, XP, task submissions and achievement snapshots, plus private notification preferences/read state. Public standings show participating accounts. Administrators can export personal experience data through WordPress privacy tools. Deactivation, updates and deletion of plugin files retain the ledger, balances and settings. No automatic expiry or personal-data eraser is provided: deleting append-only records without a reviewed accounting and identity policy could break balances and audit evidence. Site administrators determine legal retention and respond to erasure requests using their site policy.</p>"
+msgstr ""
+
+msgid "Balance"
+msgstr ""
+
+msgid "Content ID"
+msgstr ""
+
+msgid "Date"
+msgstr ""
+
+msgid "Event"
+msgstr ""
+
+msgid "Experience and growth"
+msgstr ""
+
+msgid "GitHub 更新检查"
+msgstr ""
+
+msgid "Independent experience and levels with configurable activity rewards, private growth and achievements."
+msgstr ""
+
+msgid "Notification preferences and read state"
+msgstr ""
+
+msgid "Public standings"
+msgstr ""
+
+msgid "Recorded at (UTC timestamp)"
+msgstr ""
+
+msgid "Snapshot"
+msgstr ""
+
+msgid "Source"
+msgstr ""
+
+msgid "WP XP Core experience"
+msgstr ""
+
+msgid "XP"
+msgstr ""
+
+msgid "一次性"
+msgstr ""
+
+msgid "一致"
+msgstr ""
+
+msgid "一项成就已撤销，详情可查看个人经验记录。"
+msgstr ""
+
+msgid "上一页"
+msgstr ""
+
+msgid "下一步：%1$s"
+msgstr ""
+
+msgid "下一页"
+msgstr ""
+
+msgid "不同内容"
+msgstr ""
+
+msgid "不同自然日"
+msgstr ""
+
+msgid "不能导入内部状态。"
+msgstr ""
+
+msgid "不重算或补发历史经验。0 经验仍记录事件，避免日后重复领取；评论撤销与恢复使用首次奖励数值。"
+msgstr ""
+
+msgid "与内容 ID 任意命中"
+msgstr ""
+
+msgid "个不同自然日"
+msgstr ""
+
+msgid "个自然日"
+msgstr ""
+
+msgid "为等级赋予名称，让签到进度清楚可见。"
+msgstr ""
+
+msgid "了解参与来源，观察当前任务的完成情况。"
+msgstr ""
+
+msgid "事件"
+msgstr ""
+
+msgid "事件类型无效。"
+msgstr ""
+
+msgid "事件账本"
+msgstr ""
+
+msgid "人工授予与撤销"
+msgstr ""
+
+msgid "人工授予成就"
+msgstr ""
+
+msgid "人工调整"
+msgstr ""
+
+msgid "仅使用可公开展示的图片。图片删除或不再公开时回退图标字符；修改展示资料不改变旧成就快照。"
+msgstr ""
+
+msgid "仅展示本次接口返回的最近成就，不代表全部历史。"
+msgstr ""
+
+msgid "仅显示最近一百个任务版本，可缩短日期范围。"
+msgstr ""
+
+msgid "仅自选时段可指定日期。"
+msgstr ""
+
+msgid "今日参与"
+msgstr ""
+
+msgid "今日已签到"
+msgstr ""
+
+msgid "今日签到已记录。"
+msgstr ""
+
+msgid "从媒体库选择图片"
+msgstr ""
+
+msgid "从本版创建起"
+msgstr ""
+
+msgid "以下范围用于阅读、文章、评论与作者里程碑。两项都留空表示全部；填写后，只要内容 ID 或所属分类命中一项即可。不会开放原本无权访问的内容。"
+msgstr ""
+
+msgid "任务"
+msgstr ""
+
+msgid "任务不存在。"
+msgstr ""
+
+msgid "任务与成就"
+msgstr ""
+
+msgid "任务信息无效。"
+msgstr ""
+
+msgid "任务列表"
+msgstr ""
+
+msgid "任务列表已更新，请刷新后再修改。"
+msgstr ""
+
+msgid "任务名称"
+msgstr ""
+
+msgid "任务奖励撤销"
+msgstr ""
+
+msgid "任务字段无效。"
+msgstr ""
+
+msgid "任务完成奖励"
+msgstr ""
+
+msgid "任务尚未开放、已结束或前置任务尚未完成。"
+msgstr ""
+
+msgid "任务已修改、停用或本期已结束，可退回说明并告知用户。"
+msgstr ""
+
+msgid "任务当前不可领取。"
+msgstr ""
+
+msgid "任务文字无效或过长。"
+msgstr ""
+
+msgid "任务日期或前置条件尚未满足。"
+msgstr ""
+
+msgid "任务未能保存，请重试。"
+msgstr ""
+
+msgid "任务模板"
+msgstr ""
+
+msgid "任务步骤尚未完成。"
+msgstr ""
+
+msgid "任务版本"
+msgstr ""
+
+msgid "任务版本、周期或启用状态已改变，请刷新页面。"
+msgstr ""
+
+msgid "任务版本完成记录"
+msgstr ""
+
+msgid "任务编号无效。"
+msgstr ""
+
+msgid "任务说明"
+msgstr ""
+
+msgid "余额"
+msgstr ""
+
+msgid "作者"
+msgstr ""
+
+msgid "作者浏览计数"
+msgstr ""
+
+msgid "作者里程碑"
+msgstr ""
+
+msgid "使用图标字符"
+msgstr ""
+
+msgid "例如 10 或 -5"
+msgstr ""
+
+msgid "例如 12, 35"
+msgstr ""
+
+msgid "例如 3, 8"
+msgstr ""
+
+msgid "例如 checkin"
+msgstr ""
+
+msgid "例如 ★"
+msgstr ""
+
+msgid "保存任务"
+msgstr ""
+
+msgid "保存全站规则前，可先了解生效范围。"
+msgstr ""
+
+msgid "保存后在前台查看；编辑器不读取私人经验。"
+msgstr ""
+
+msgid "保存成长设置"
+msgstr ""
+
+msgid "保存更新偏好"
+msgstr ""
+
+msgid "保存榜单偏好"
+msgstr ""
+
+msgid "保存榜单排除"
+msgstr ""
+
+msgid "保存经验规则"
+msgstr ""
+
+msgid "保存通知偏好"
+msgstr ""
+
+msgid "保存面板页面"
+msgstr ""
+
+msgid "保留"
+msgstr ""
+
+msgid "修改名称、说明、徽章图片、分类或系列会保留进度；修改条件、周期、开放日期、前置任务或启用状态会建立新版本，从之后的新活动累计。旧成就保留。每周从周一开始，每月从一日开始。"
+msgstr ""
+
+msgid "修改展示"
+msgstr ""
+
+msgid "停用里程碑标识无效。"
+msgstr ""
+
+msgid "全部完成以下步骤"
+msgstr ""
+
+msgid "全部来源"
+msgstr ""
+
+msgid "全部标为已读"
+msgstr ""
+
+msgid "关于插件"
+msgstr ""
+
+msgid "内容范围最多一百个编号。"
+msgstr ""
+
+msgid "净经验"
+msgstr ""
+
+msgid "出现活动上限截断"
+msgstr ""
+
+msgid "分类"
+msgstr ""
+
+msgid "分类 ID"
+msgstr ""
+
+msgid "分页参数无效。"
+msgstr ""
+
+msgid "列出同日首次活动至少二十次或发生上限截断的账号，供人工核对；不自动处罚或排除。"
+msgstr ""
+
+msgid "刷新通知"
+msgstr ""
+
+msgid "前一时段"
+msgstr ""
+
+msgid "前一等长时段对比"
+msgstr ""
+
+msgid "前置任务不存在。"
+msgstr ""
+
+msgid "前置任务不能形成循环。"
+msgstr ""
+
+msgid "前置任务当前未开放"
+msgstr ""
+
+msgid "前置任务或完成范围无效。"
+msgstr ""
+
+msgid "前置任务（可选）"
+msgstr ""
+
+msgid "加载更早记录"
+msgstr ""
+
+msgid "历史初始化"
+msgstr ""
+
+msgid "历史校准"
+msgstr ""
+
+msgid "历史经验重算"
+msgstr ""
+
+msgid "历史账本校准"
+msgstr ""
+
+msgid "原事件编号"
+msgstr ""
+
+msgid "原值"
+msgstr ""
+
+msgid "原成就记录无效，未执行撤销。"
+msgstr ""
+
+msgid "原授予事件编号"
+msgstr ""
+
+msgid "参与人数"
+msgstr ""
+
+msgid "参与公开活动榜"
+msgstr ""
+
+msgid "参与活动"
+msgstr ""
+
+msgid "参与者"
+msgstr ""
+
+msgid "发布页面，登录后即可查看经验与签到。"
+msgstr ""
+
+msgid "发放"
+msgstr ""
+
+msgid "发放经验"
+msgstr ""
+
+msgid "发表文章"
+msgstr ""
+
+msgid "只包含规则、成长与任务。不会导出账号、通知、审计、余额、账本或存储配置。导入保留未列出的任务，不删除历史；先预览，再显式应用。跨站内容 ID 和图片 ID 需要先核对。"
+msgstr ""
+
+msgid "只处理服务端已记录的首次奖励或评论状态补偿失败，并重新检查原事件和当前状态；不会扫描历史。评论补偿余额不足时不部分扣减，可补足后带原因重试。失败列表最多保留二百项，不是永久日志。"
+msgstr ""
+
+msgid "只汇总有可靠事件快照的授予与撤销，不补造旧版本参与分母。耗时从任务版本定义创建开始，包含等待和未参与的时间；旧记录没有此证据时留空。"
+msgstr ""
+
+msgid "只能撤销人工调整记录。"
+msgstr ""
+
+msgid "只能查看自己的经验记录。"
+msgstr ""
+
+msgid "可前往："
+msgstr ""
+
+msgid "可在任务与成就中查看审核结果。"
+msgstr ""
+
+msgid "可在每日签到之外设置阶段奖励。默认关闭；启用或修改规则后，从下一次新签到开始累计，不补发旧签到。"
+msgstr ""
+
+msgid "同日首次活动至少二十次"
+msgstr ""
+
+msgid "同站更新（匹配已保存 ID）"
+msgstr ""
+
+msgid "名次"
+msgstr ""
+
+msgid "名称"
+msgstr ""
+
+msgid "名称或说明包含无效内容。"
+msgstr ""
+
+msgid "否"
+msgstr ""
+
+msgid "启用"
+msgstr ""
+
+msgid "启用 JavaScript 后可添加或移除等级；现有门槛仍可编辑保存。"
+msgstr ""
+
+msgid "启用任务"
+msgstr ""
+
+msgid "启用官方更新检查"
+msgstr ""
+
+msgid "启用阶段奖励"
+msgstr ""
+
+msgid "周期"
+msgstr ""
+
+msgid "图标字符"
+msgstr ""
+
+msgid "在事件账本中查找“完成任务”或“人工授予成就”的事件编号。撤销会扣回原经验，余额不足时整项拒绝；同一版本与周期不能再次授予。"
+msgstr ""
+
+msgid "在普通页面添加短代码区块，分别填入 "
+msgstr ""
+
+msgid "填写人工调整的事件编号，追加一条反向记录。每条调整只能撤销一次。"
+msgstr ""
+
+msgid "增减经验"
+msgstr ""
+
+msgid "处理原因"
+msgstr ""
+
+msgid "处理方式"
+msgstr ""
+
+msgid "外站模板（重新映射 ID）"
+msgstr ""
+
+msgid "外部活动奖励"
+msgstr ""
+
+msgid "多站点网络请由网络管理员手动更新；本站不提供共享更新器设置。"
+msgstr ""
+
+msgid "失败事件重试"
+msgstr ""
+
+msgid "失败记录与原评论奖励归属不符。"
+msgstr ""
+
+msgid "奖励"
+msgstr ""
+
+msgid "奖励为 0 的有效活动也计入事件和参与人数。总参与人数已跨来源去重，不能把每行人数相加；任务完成及其撤销计入活动来源；人工授予及其撤销单列，不进入活动榜。历史初始化、校准和管理操作回执不计入这里。"
+msgstr ""
+
+msgid "奖励为 0–1000000 的整数，每日次数为 0–1000。等级门槛最高为 1000000000。"
+msgstr ""
+
+msgid "奖励如何生效？"
+msgstr ""
+
+msgid "奖励经验"
+msgstr ""
+
+msgid "奖励调整仅影响之后首次记账的事件。"
+msgstr ""
+
+msgid "媒体库徽章图片 ID"
+msgstr ""
+
+msgid "存在差异"
+msgstr ""
+
+msgid "完成人数"
+msgstr ""
+
+msgid "完成任务"
+msgstr ""
+
+msgid "完成全部前置任务"
+msgstr ""
+
+msgid "完成奖励 +%1$s 经验"
+msgstr ""
+
+msgid "完成方式"
+msgstr ""
+
+msgid "完成率"
+msgstr ""
+
+msgid "完成经验"
+msgstr ""
+
+msgid "完成范围"
+msgstr ""
+
+msgid "完成说明"
+msgstr ""
+
+msgid "完成说明已退回"
+msgstr ""
+
+msgid "审核任务不使用自动步骤。用户可填写完成说明，管理员通过后按本版奖励授予成就；退回时需要说明原因。"
+msgstr ""
+
+msgid "审核任务当前不可用。"
+msgstr ""
+
+msgid "审核任务通过提交说明完成，无需自动步骤。"
+msgstr ""
+
+msgid "审核内容无效。"
+msgstr ""
+
+msgid "审核分页无效。"
+msgstr ""
+
+msgid "审核已通过"
+msgstr ""
+
+msgid "审核意见"
+msgstr ""
+
+msgid "审核未能保存，请重试。"
+msgstr ""
+
+msgid "审核结果"
+msgstr ""
+
+msgid "审核记录暂不可读。"
+msgstr ""
+
+msgid "导入任务必须有唯一编号。"
+msgstr ""
+
+msgid "导入任务编号冲突。"
+msgstr ""
+
+msgid "导入方式 "
+msgstr ""
+
+msgid "导入配置缺少前置任务。"
+msgstr ""
+
+msgid "导出当前页 CSV"
+msgstr ""
+
+msgid "尚无参与"
+msgstr ""
+
+msgid "尚无经验记录。"
+msgstr ""
+
+msgid "尚无规则修改记录。"
+msgstr ""
+
+msgid "尚未开放、已结束或前置任务尚未完成。"
+msgstr ""
+
+msgid "展开其余任务（%1$s）"
+msgstr ""
+
+msgid "展开其余最近记录（%1$s）"
+msgstr ""
+
+msgid "已保存。"
+msgstr ""
+
+msgid "已保存的设置无效，当前使用默认规则；请检查并重新保存。"
+msgstr ""
+
+msgid "已停用"
+msgstr ""
+
+msgid "已升至 %1$s！"
+msgstr ""
+
+msgid "已升至 Level "
+msgstr ""
+
+msgid "已参与公开榜单。"
+msgstr ""
+
+msgid "已启用"
+msgstr ""
+
+msgid "已提交说明，等待管理员审核。"
+msgstr ""
+
+msgid "已有经验记录，不能修改时区。"
+msgstr ""
+
+msgid "已有经验记录，不能修改时区，以免重复领取每日奖励。"
+msgstr ""
+
+msgid "已添加 Level %1$s，请设置最低经验。"
+msgstr ""
+
+msgid "已添加新档位，请设置次数和经验，保存后生效。"
+msgstr ""
+
+msgid "已签到"
+msgstr ""
+
+msgid "已获成就"
+msgstr ""
+
+msgid "已读范围超过当前通知。"
+msgstr ""
+
+msgid "已退回"
+msgstr ""
+
+msgid "已通过"
+msgstr ""
+
+msgid "应用已预览配置"
+msgstr ""
+
+msgid "建立新版本"
+msgstr ""
+
+msgid "开始"
+msgstr ""
+
+msgid "开始日期"
+msgstr ""
+
+msgid "开始日期不能晚于结束日期。"
+msgstr ""
+
+msgid "开始："
+msgstr ""
+
+msgid "开放日期与前置任务"
+msgstr ""
+
+msgid "当前任务完成情况"
+msgstr ""
+
+msgid "当前任务完成率"
+msgstr ""
+
+msgid "当前可用任务已完成，或正在等待开放／前置任务。"
+msgstr ""
+
+msgid "当前时段"
+msgstr ""
+
+msgid "当前未参与公开榜单。"
+msgstr ""
+
+msgid "当前未参与公开榜单；经验和私人任务照常保留。"
+msgstr ""
+
+msgid "当前版本与当前周期"
+msgstr ""
+
+msgid "当前经验不足以扣回原奖励，成就与经验均未改变。"
+msgstr ""
+
+msgid "当前经验不足，原评论奖励尚未扣回。"
+msgstr ""
+
+msgid "待完成"
+msgstr ""
+
+msgid "待审核说明"
+msgstr ""
+
+msgid "待核对的活动线索"
+msgstr ""
+
+msgid "恢复榜单资格"
+msgstr ""
+
+msgid "成就审核"
+msgstr ""
+
+msgid "成就展示与可选奖励"
+msgstr ""
+
+msgid "成就已撤销"
+msgstr ""
+
+msgid "成就已记录。"
+msgstr ""
+
+msgid "成就授予与撤销"
+msgstr ""
+
+msgid "成就授予记录不存在。"
+msgstr ""
+
+msgid "成就操作未能保存，请重试。"
+msgstr ""
+
+msgid "成就申请"
+msgstr ""
+
+msgid "成就管理操作"
+msgstr ""
+
+msgid "成长中心"
+msgstr ""
+
+msgid "成长中心设置"
+msgstr ""
+
+msgid "成长设置不完整。"
+msgstr ""
+
+msgid "成长设置已更新，请刷新页面。"
+msgstr ""
+
+msgid "成长设置无效。"
+msgstr ""
+
+msgid "成长设置未能保存，请重试。"
+msgstr ""
+
+msgid "我的审核记录"
+msgstr ""
+
+msgid "我的成长"
+msgstr ""
+
+msgid "我的本期位置"
+msgstr ""
+
+msgid "所需次数"
+msgstr ""
+
+msgid "扣回"
+msgstr ""
+
+msgid "扣回经验"
+msgstr ""
+
+msgid "指定内容暂未公开，请选择其他可用目标或等待开放。"
+msgstr ""
+
+msgid "按活动净经验统计，同分并列，不含人工调分与历史初始化。结果实时更新，翻页时名次可能变化。"
+msgstr ""
+
+msgid "授予中仍有效"
+msgstr ""
+
+msgid "授予原因"
+msgstr ""
+
+msgid "授予当前周期成就"
+msgstr ""
+
+msgid "授予成就"
+msgstr ""
+
+msgid "授予或撤销请求无效。"
+msgstr ""
+
+msgid "授予次数"
+msgstr ""
+
+msgid "排除公开榜单"
+msgstr ""
+
+msgid "提交信息无效。"
+msgstr ""
+
+msgid "提交审核"
+msgstr ""
+
+msgid "提交编号已用于另一份说明。"
+msgstr ""
+
+msgid "提交记录不存在。"
+msgstr ""
+
+msgid "提交记录不完整，未能审核。"
+msgstr ""
+
+msgid "提交说明后审核"
+msgstr ""
+
+msgid "提交说明并通过审核"
+msgstr ""
+
+msgid "插件不会自动创建或公开榜单页面。榜单按本期活动净经验排序，扣回会影响本期结果；不使用历史余额，不包含人工调分，同分并列。"
+msgstr ""
+
+msgid "插件信息与帮助"
+msgstr ""
+
+msgid "撤销人工成就"
+msgstr ""
+
+msgid "撤销人工调整"
+msgstr ""
+
+msgid "撤销原因"
+msgstr ""
+
+msgid "撤销已获成就"
+msgstr ""
+
+msgid "撤销成就并扣回原经验"
+msgstr ""
+
+msgid "操作"
+msgstr ""
+
+msgid "操作已记录。"
+msgstr ""
+
+msgid "操作未能完成，请保留请求编号后重试。"
+msgstr ""
+
+msgid "操作编号已用于其他内容。"
+msgstr ""
+
+msgid "操作需要填写原因并检查目标用户权限。人工授予可确认自动步骤以外的完成依据，仍需满足任务日期与前置条件；其经验不进入活动榜。"
+msgstr ""
+
+msgid "收起其余任务"
+msgstr ""
+
+msgid "收起最近成就"
+msgstr ""
+
+msgid "放置周榜与月榜"
+msgstr ""
+
+msgid "数值可以设置多大？"
+msgstr ""
+
+msgid "文章与页面 ID"
+msgstr ""
+
+msgid "文章分类 ID"
+msgstr ""
+
+msgid "文章／页面 ID"
+msgstr ""
+
+msgid "新值"
+msgstr ""
+
+msgid "新建"
+msgstr ""
+
+msgid "新建任务"
+msgstr ""
+
+msgid "方式"
+msgstr ""
+
+msgid "无"
+msgstr ""
+
+msgid "无起点证据"
+msgstr ""
+
+msgid "日常活动"
+msgstr ""
+
+msgid "日期与依据"
+msgstr ""
+
+msgid "日期包含首尾，使用经验规则的时区；留空表示不限。前置任务全部完成后可领取或提交，本任务仍从本版创建后的有效活动累计。"
+msgstr ""
+
+msgid "日期格式无效。"
+msgstr ""
+
+msgid "日期范围须为截至今日的连续 1–366 天。"
+msgstr ""
+
+msgid "日期须为有效的 YYYY-MM-DD。"
+msgstr ""
+
+msgid "是"
+msgstr ""
+
+msgid "显示当前登录用户的私人成长面板；访客看到登录入口。"
+msgstr ""
+
+msgid "显示本期公开活动榜；退出或被排除的账号不会展示。"
+msgstr ""
+
+msgid "暂不指定"
+msgstr ""
+
+msgid "暂无这类站内通知。"
+msgstr ""
+
+msgid "暂时无法记录"
+msgstr ""
+
+msgid "暂时无法记录任务，请重试。"
+msgstr ""
+
+msgid "暂时无法记录，请稍后重试。"
+msgstr ""
+
+msgid "暂时无法读取个人位置。"
+msgstr ""
+
+msgid "暂时无法读取任务完成率。"
+msgstr ""
+
+msgid "暂时无法读取任务版本统计。"
+msgstr ""
+
+msgid "暂时无法读取成长记录，请稍后重试。"
+msgstr ""
+
+msgid "暂时无法读取期间趋势。"
+msgstr ""
+
+msgid "暂时无法读取未完成记录。"
+msgstr ""
+
+msgid "暂时无法读取来源分析。"
+msgstr ""
+
+msgid "暂时无法读取活动线索。"
+msgstr ""
+
+msgid "暂时无法读取经验榜。"
+msgstr ""
+
+msgid "暂时无法读取经验记录。"
+msgstr ""
+
+msgid "暂时无法读取规则修改记录。"
+msgstr ""
+
+msgid "暂时无法读取，请稍后重试。"
+msgstr ""
+
+msgid "暂时没有开放的任务，日常参与仍可获得经验。"
+msgstr ""
+
+msgid "更新偏好已保存。"
+msgstr ""
+
+msgid "更新设置已变化，请刷新。"
+msgstr ""
+
+msgid "更新设置无效。"
+msgstr ""
+
+msgid "更新设置未能保存。"
+msgstr ""
+
+msgid "更早的待审核说明"
+msgstr ""
+
+msgid "更早的通知"
+msgstr ""
+
+msgid "最低经验在“经验规则”中设置。这里可修改每级的名称、图标字符、颜色和说明。"
+msgstr ""
+
+msgid "最多保留五十个任务，可先停用不再使用的任务。"
+msgstr ""
+
+msgid "最多八个前置任务。"
+msgstr ""
+
+msgid "最多排除一千个账号。"
+msgstr ""
+
+msgid "最近三十五天签到"
+msgstr ""
+
+msgid "最近获得的成就"
+msgstr ""
+
+msgid "有效浏览累计与奖励"
+msgstr ""
+
+msgid "有效点赞累计与奖励"
+msgstr ""
+
+msgid "有效评论"
+msgstr ""
+
+msgid "有效阅读"
+msgstr ""
+
+msgid "有效阅读停留时间"
+msgstr ""
+
+msgid "有起点的样本／平均秒"
+msgstr ""
+
+msgid "未启用点赞服务：需要 PageNest Companion 及其点赞功能。此组暂不可编辑和发奖，已有设置会保留。"
+msgstr ""
+
+msgid "未启用额外签到阶段奖励。"
+msgstr ""
+
+msgid "未完成的奖励记录"
+msgstr ""
+
+msgid "未完成记录编号无效。"
+msgstr ""
+
+msgid "未找到原评论奖励。"
+msgstr ""
+
+msgid "未找到可重试的记录。"
+msgstr ""
+
+msgid "未找到用户。"
+msgstr ""
+
+msgid "未改变"
+msgstr ""
+
+msgid "未知操作。"
+msgstr ""
+
+msgid "未知模板。"
+msgstr ""
+
+msgid "未签到"
+msgstr ""
+
+msgid "本周"
+msgstr ""
+
+msgid "本周在三个不同自然日签到。"
+msgstr ""
+
+msgid "本周经验榜"
+msgstr ""
+
+msgid "本月"
+msgstr ""
+
+msgid "本月经验榜"
+msgstr ""
+
+msgid "本期净经验"
+msgstr ""
+
+msgid "本期尚无符合条件的活动记录。"
+msgstr ""
+
+msgid "本期已完成 ✓"
+msgstr ""
+
+msgid "本期成就已撤销，不能再次授予。"
+msgstr ""
+
+msgid "本期成就已撤销，不能再次领取。"
+msgstr ""
+
+msgid "本期成就已撤销，不能重复授予。"
+msgstr ""
+
+msgid "本期成就已经获得。"
+msgstr ""
+
+msgid "本期提交次数已达上限，请联系管理员。"
+msgstr ""
+
+msgid "本期撤销次数"
+msgstr ""
+
+msgid "本期没有符合上述条件的线索。"
+msgstr ""
+
+msgid "本期活动位置"
+msgstr ""
+
+msgid "本期还没有计入榜单的活动净经验。"
+msgstr ""
+
+msgid "本版%1$s签到 %2$s 天，达到 %3$s 天可获 %4$s 阶段经验。"
+msgstr ""
+
+msgid "本版签到阶段目标已达到。"
+msgstr ""
+
+msgid "本站使用高级接入配置；面板页与短代码名称由现有配置提供。"
+msgstr ""
+
+msgid "本级成长进度"
+msgstr ""
+
+msgid "本页暂无符合条件的活动记录。"
+msgstr ""
+
+msgid "来源"
+msgstr ""
+
+msgid "查找用户"
+msgstr ""
+
+msgid "查清奖励来源，保留每一次调整的依据。"
+msgstr ""
+
+msgid "查看任务"
+msgstr ""
+
+msgid "查看依据"
+msgstr ""
+
+msgid "查看经验与签到"
+msgstr ""
+
+msgid "查看统计"
+msgstr ""
+
+msgid "查看项目文档、更新记录与贡献方式。"
+msgstr ""
+
+msgid "查询"
+msgstr ""
+
+msgid "查询事件"
+msgstr ""
+
+msgid "查询条件无效。"
+msgstr ""
+
+msgid "查询范围无效。"
+msgstr ""
+
+msgid "标为已读"
+msgstr ""
+
+msgid "档位已移除，保存后永久停用；重新添加会创建新档位。"
+msgstr ""
+
+msgid "榜单偏好已更新，请刷新后再修改。"
+msgstr ""
+
+msgid "榜单偏好未能保存，请重试。"
+msgstr ""
+
+msgid "榜单分页"
+msgstr ""
+
+msgid "榜单分页参数无效。"
+msgstr ""
+
+msgid "榜单参与设置无效。"
+msgstr ""
+
+msgid "榜单排除列表已更新。"
+msgstr ""
+
+msgid "榜单排除设置无效。"
+msgstr ""
+
+msgid "榜单排除设置未能保存。"
+msgstr ""
+
+msgid "榜单设置"
+msgstr ""
+
+msgid "榜单账号排除"
+msgstr ""
+
+msgid "模板只供预览，不会自动创建任务。重复使用同一模板更新其已导入任务，不重新发放已领取奖励。"
+msgstr ""
+
+msgid "次"
+msgstr ""
+
+msgid "次 / 日"
+msgstr ""
+
+msgid "次数"
+msgstr ""
+
+msgid "次有效活动"
+msgstr ""
+
+msgid "次活动"
+msgstr ""
+
+msgid "正在读取本期位置…"
+msgstr ""
+
+msgid "正数增加，负数扣减。不会覆盖旧记录；扣减不能超过当前经验。"
+msgstr ""
+
+msgid "此时段没有任务授予或撤销记录。"
+msgstr ""
+
+msgid "此账号由管理员排除榜单；个人经验仍照常记录。"
+msgstr ""
+
+msgid "每个任务最多八个步骤。"
+msgstr ""
+
+msgid "每周"
+msgstr ""
+
+msgid "每周参与"
+msgstr ""
+
+msgid "每周活动经验上限"
+msgstr ""
+
+msgid "每日"
+msgstr ""
+
+msgid "每日奖励次数"
+msgstr ""
+
+msgid "每日活动经验上限"
+msgstr ""
+
+msgid "每日签到"
+msgstr ""
+
+msgid "每日签到 +"
+msgstr ""
+
+msgid "每日签到 +%1$s"
+msgstr ""
+
+msgid "每日统计时区"
+msgstr ""
+
+msgid "每月"
+msgstr ""
+
+msgid "每次最多标记五十条通知。"
+msgstr ""
+
+msgid "每篇作品每档仅奖励一次，修改次数不会重置已领取档位。移除后保存，该档位会永久停用；新增档位使用独立标识。保存规则不补发历史奖励，之后的有效活动会按累计次数判断。"
+msgstr ""
+
+msgid "每组可设置 0–20 档，次数须从小到大排列。"
+msgstr ""
+
+msgid "每组最多设置 20 档里程碑。"
+msgstr ""
+
+msgid "每组适用范围最多填写 200 个 ID。"
+msgstr ""
+
+msgid "每组里程碑次数必须严格递增。"
+msgstr ""
+
+msgid "每页人数"
+msgstr ""
+
+msgid "每项任务按当前版本、当前周期单独统计，不随上方来源日期切换。参与者是有相关活动或提交记录的用户，包含已经获得成就的用户；这不是曝光转化率或全站注册用户完成比例。"
+msgstr ""
+
+msgid "比较当前日期范围与紧邻的前一等长时段；这是活动观察，不能证明任务带来了变化。"
+msgstr ""
+
+msgid "没有审核成就的权限。"
+msgstr ""
+
+msgid "没有导出经验记录的权限。"
+msgstr ""
+
+msgid "没有查看审核记录的权限。"
+msgstr ""
+
+msgid "没有查看激励效果的权限。"
+msgstr ""
+
+msgid "没有查看经验管理的权限。"
+msgstr ""
+
+msgid "没有查看统计的权限。"
+msgstr ""
+
+msgid "没有符合条件的事件。"
+msgstr ""
+
+msgid "没有符合条件的经验记录。"
+msgstr ""
+
+msgid "没有等待处理的失败记录。"
+msgstr ""
+
+msgid "没有管理任务的权限。"
+msgstr ""
+
+msgid "没有管理成长中心的权限。"
+msgstr ""
+
+msgid "没有管理成长设置的权限。"
+msgstr ""
+
+msgid "没有管理榜单的权限。"
+msgstr ""
+
+msgid "没有管理经验的权限。"
+msgstr ""
+
+msgid "没有管理经验面板的权限。"
+msgstr ""
+
+msgid "没有管理设置的权限。"
+msgstr ""
+
+msgid "没有管理该用户经验的权限。"
+msgstr ""
+
+msgid "活动奖励未启用。"
+msgstr ""
+
+msgid "活动开关不完整。"
+msgstr ""
+
+msgid "活动开关无效。"
+msgstr ""
+
+msgid "活动提供者或目标无效。"
+msgstr ""
+
+msgid "活动提供者设置无效。"
+msgstr ""
+
+msgid "活动未能记录，请重试。"
+msgstr ""
+
+msgid "活动未通过服务端资格检查。"
+msgstr ""
+
+msgid "活动次数"
+msgstr ""
+
+msgid "活动经验上限无效。"
+msgstr ""
+
+msgid "活动编号归属冲突。"
+msgstr ""
+
+msgid "浏览里程碑"
+msgstr ""
+
+msgid "添加 "
+msgstr ""
+
+msgid "添加档位"
+msgstr ""
+
+msgid "添加步骤"
+msgstr ""
+
+msgid "添加等级"
+msgstr ""
+
+msgid "添加签到阶段"
+msgstr ""
+
+msgid "添加经验面板"
+msgstr ""
+
+msgid "清除筛选"
+msgstr ""
+
+msgid "渠道 "
+msgstr ""
+
+msgid "源码与使用说明 "
+msgstr ""
+
+msgid "激励效果"
+msgstr ""
+
+msgid "点赞服务不可用。"
+msgstr ""
+
+msgid "点赞服务已启用，按经验账本记录的有效点赞累计。"
+msgstr ""
+
+msgid "点赞计数"
+msgstr ""
+
+msgid "点赞里程碑"
+msgstr ""
+
+msgid "版本"
+msgstr ""
+
+msgid "状态"
+msgstr ""
+
+msgid "独立的 WordPress 经验与等级系统。"
+msgstr ""
+
+msgid "生成配置 JSON"
+msgstr ""
+
+msgid "用户"
+msgstr ""
+
+msgid "用户、页码或每页数量无效。"
+msgstr ""
+
+msgid "用户不存在。"
+msgstr ""
+
+msgid "用户名／显示名称"
+msgstr ""
+
+msgid "用户经验与人工调整"
+msgstr ""
+
+msgid "用户编号"
+msgstr ""
+
+msgid "用逗号分隔，可在文章或页面编辑地址中找到 ID。"
+msgstr ""
+
+msgid "用逗号分隔，页面不按文章分类匹配。"
+msgstr ""
+
+msgid "留空不限，逗号分隔"
+msgstr ""
+
+msgid "登录"
+msgstr ""
+
+msgid "登录后查看自己的等级、签到和任务进度。"
+msgstr ""
+
+msgid "登录验证已过期，请刷新页面。"
+msgstr ""
+
+msgid "目前没有等待审核的说明。"
+msgstr ""
+
+msgid "短代码"
+msgstr ""
+
+msgid "确认完成"
+msgstr ""
+
+msgid "秒"
+msgstr ""
+
+msgid "移除"
+msgstr ""
+
+msgid "移除 Level %1$s"
+msgstr ""
+
+msgid "移除第 %1$s 档"
+msgstr ""
+
+msgid "稳定版"
+msgstr ""
+
+msgid "稳定版与预发布"
+msgstr ""
+
+msgid "站内通知"
+msgstr ""
+
+msgid "第 %1$s 档"
+msgstr ""
+
+msgid "等待审核"
+msgstr ""
+
+msgid "等级已移除，后续等级已重新编号；保存后生效。"
+msgstr ""
+
+msgid "等级成长"
+msgstr ""
+
+msgid "等级提升"
+msgstr ""
+
+msgid "等级资料"
+msgstr ""
+
+msgid "等级资料只影响展示；阶段奖励用于新签到。"
+msgstr ""
+
+msgid "等级资料无效。"
+msgstr ""
+
+msgid "等级门槛必须从 0 开始、严格递增，且不超过 1000000000。"
+msgstr ""
+
+msgid "签到"
+msgstr ""
+
+msgid "签到不支持内容范围或不同内容计数。"
+msgstr ""
+
+msgid "签到天数"
+msgstr ""
+
+msgid "签到奖励天数必须严格递增。"
+msgstr ""
+
+msgid "签到奖励已关闭"
+msgstr ""
+
+msgid "签到奖励无效。"
+msgstr ""
+
+msgid "签到奖励编号无效或重复。"
+msgstr ""
+
+msgid "签到成长奖励"
+msgstr ""
+
+msgid "签到成长设置无效。"
+msgstr ""
+
+msgid "签到日历"
+msgstr ""
+
+msgid "签到每日奖励一次；阅读须满足停留时间。关闭活动或将次数设为 0 后停止发放新奖励，已发评论的撤销与恢复继续按原金额处理。"
+msgstr ""
+
+msgid "签到阶段奖励"
+msgstr ""
+
+msgid "简短说明"
+msgstr ""
+
+msgid "管理员可以排除测试账号等不应进入公开榜的用户。不会删除经验、活动或私人任务。"
+msgstr ""
+
+msgid "系列"
+msgstr ""
+
+msgid "累计"
+msgstr ""
+
+msgid "累计方式"
+msgstr ""
+
+msgid "累计签到"
+msgstr ""
+
+msgid "终身荣誉（含旧版本）"
+msgstr ""
+
+msgid "终身（含旧版本荣誉）"
+msgstr ""
+
+msgid "经验"
+msgstr ""
+
+msgid "经验 %1$s · Level %2$s"
+msgstr ""
+
+msgid "经验与成长"
+msgstr ""
+
+msgid "经验与等级"
+msgstr ""
+
+msgid "经验事件表"
+msgstr ""
+
+msgid "经验余额超出可用范围。"
+msgstr ""
+
+msgid "经验变化"
+msgstr ""
+
+msgid "经验来源"
+msgstr ""
+
+msgid "经验来源统计"
+msgstr ""
+
+msgid "经验活动榜"
+msgstr ""
+
+msgid "经验由发表、签到、访问、评论和文章里程碑获得，不能购买或转让。"
+msgstr ""
+
+msgid "经验签到"
+msgstr ""
+
+msgid "经验系统"
+msgstr ""
+
+msgid "经验系统尚未就绪，请先检查插件安装与配置。"
+msgstr ""
+
+msgid "经验系统维护中。"
+msgstr ""
+
+msgid "经验系统维护中，请稍后再试。"
+msgstr ""
+
+msgid "经验系统维护中，请稍后重试。"
+msgstr ""
+
+msgid "经验规则"
+msgstr ""
+
+msgid "经验规则 · 让每一次参与都有积累"
+msgstr ""
+
+msgid "经验记录"
+msgstr ""
+
+msgid "经验账本"
+msgstr ""
+
+msgid "经验面板放在普通 WordPress 页面中，无需已有账户插件。"
+msgstr ""
+
+msgid "经验／等级"
+msgstr ""
+
+msgid "结束"
+msgstr ""
+
+msgid "结束日期"
+msgstr ""
+
+msgid "结束日期不得早于开始日期。"
+msgstr ""
+
+msgid "结束："
+msgstr ""
+
+msgid "统计参数无效。"
+msgstr ""
+
+msgid "统计周期"
+msgstr ""
+
+msgid "统计时段"
+msgstr ""
+
+msgid "继续核对"
+msgstr ""
+
+msgid "编辑"
+msgstr ""
+
+msgid "编辑任务"
+msgstr ""
+
+msgid "自动任务按有效活动完成，审核任务由用户提交说明。经验奖励默认关闭，可为任务单独设置。"
+msgstr ""
+
+msgid "自动任务至少需要一个步骤。"
+msgstr ""
+
+msgid "自动完成"
+msgstr ""
+
+msgid "自选日期"
+msgstr ""
+
+msgid "自选日期最多 366 天，截至今日。这里包含人工调整；公开活动榜只统计活动净经验。"
+msgstr ""
+
+msgid "荣誉任务"
+msgstr ""
+
+msgid "获得成就"
+msgstr ""
+
+msgid "获得条件"
+msgstr ""
+
+msgid "规则修改记录"
+msgstr ""
+
+msgid "规则变化："
+msgstr ""
+
+msgid "规则说明"
+msgstr ""
+
+msgid "计数方式"
+msgstr ""
+
+msgid "让参与有明确目标，为完成的事情留下荣誉。"
+msgstr ""
+
+msgid "记录撤销"
+msgstr ""
+
+msgid "记录未完成"
+msgstr ""
+
+msgid "记录经验调整"
+msgstr ""
+
+msgid "记录编号无效。"
+msgstr ""
+
+msgid "许可证"
+msgstr ""
+
+msgid "设置"
+msgstr ""
+
+msgid "设置字段不完整或包含未知字段。"
+msgstr ""
+
+msgid "设置已保存。"
+msgstr ""
+
+msgid "设置已被其他管理员更新，请刷新后重新修改。"
+msgstr ""
+
+msgid "设置未能保存，请重试。"
+msgstr ""
+
+msgid "设置正被修改。"
+msgstr ""
+
+msgid "设置正被其他管理员修改，请重试。"
+msgstr ""
+
+msgid "设置每次参与的奖励，以及每日可获得奖励的次数。"
+msgstr ""
+
+msgid "访问网页"
+msgstr ""
+
+msgid "评论"
+msgstr ""
+
+msgid "评论奖励 %1$s / %2$s 次"
+msgstr ""
+
+msgid "评论奖励净额异常，请先检查账本。"
+msgstr ""
+
+msgid "评论奖励已关闭"
+msgstr ""
+
+msgid "评论状态调整"
+msgstr ""
+
+msgid "该文章或评论目前不符合奖励条件。"
+msgstr ""
+
+msgid "该用户已经不存在。"
+msgstr ""
+
+msgid "该用户的经验不足，无法完成扣减。"
+msgstr ""
+
+msgid "该请求编号已用于另一项操作，请刷新后重试。"
+msgstr ""
+
+msgid "说明已提交，等待审核。"
+msgstr ""
+
+msgid "说明未能提交，请重试。"
+msgstr ""
+
+msgid "请先将当前通知全部标为已读。"
+msgstr ""
+
+msgid "请先登录。"
+msgstr ""
+
+msgid "请先预览本次配置。"
+msgstr ""
+
+msgid "请刷新页面并登录后点赞。"
+msgstr ""
+
+msgid "请在页面停留后再记录访问。"
+msgstr ""
+
+msgid "请填写 1–100 个等级门槛。"
+msgstr ""
+
+msgid "请填写 1–300 字的原因。"
+msgstr ""
+
+msgid "请填写任务名称。"
+msgstr ""
+
+msgid "请填写操作原因。"
+msgstr ""
+
+msgid "请填写有效的整数。"
+msgstr ""
+
+msgid "请填写有效的次数。"
+msgstr ""
+
+msgid "请填写至少五个字的完成说明。"
+msgstr ""
+
+msgid "请填写范围内的整数。"
+msgstr ""
+
+msgid "请填写退回原因。"
+msgstr ""
+
+msgid "请求包含无效字段。"
+msgstr ""
+
+msgid "请求参数无效。"
+msgstr ""
+
+msgid "请求格式无效。"
+msgstr ""
+
+msgid "请求编号或操作参数无效。"
+msgstr ""
+
+msgid "请选择任务类型、周期和启用状态。"
+msgstr ""
+
+msgid "请选择可公开展示的媒体库图片。"
+msgstr ""
+
+msgid "请选择已读操作或通知偏好。"
+msgstr ""
+
+msgid "请选择有效操作。"
+msgstr ""
+
+msgid "请选择有效日期。"
+msgstr ""
+
+msgid "请选择有效时区。"
+msgstr ""
+
+msgid "请选择有效的任务步骤。"
+msgstr ""
+
+msgid "请选择有效的已发布页面。"
+msgstr ""
+
+msgid "请选择有效的等级颜色。"
+msgstr ""
+
+msgid "请选择有效计数方式。"
+msgstr ""
+
+msgid "请选择本周或本月。"
+msgstr ""
+
+msgid "请选择没有密码保护的已发布页面。"
+msgstr ""
+
+msgid "请选择用户并填写非零整数经验，单次最多 1000000。"
+msgstr ""
+
+msgid "调整原因"
+msgstr ""
+
+msgid "账本与余额核对"
+msgstr ""
+
+msgid "账本合计"
+msgstr ""
+
+msgid "输入用户编号查看详情，或按用户名查找。"
+msgstr ""
+
+msgid "运行诊断"
+msgstr ""
+
+msgid "还没有任务。可以先创建一个简单的签到任务。"
+msgstr ""
+
+msgid "还没有启用的任务。可以从“任务与成就”创建一个目标。"
+msgstr ""
+
+msgid "这份说明已被审核，请刷新页面。"
+msgstr ""
+
+msgid "这项人工调整已经撤销。"
+msgstr ""
+
+msgid "这项任务已有一份说明等待审核。"
+msgstr ""
+
+msgid "这项操作已经记录，没有再次发放。"
+msgstr ""
+
+msgid "进入 "
+msgstr ""
+
+msgid "连续"
+msgstr ""
+
+msgid "连续 %1$s 天 · 累计 %2$s 天"
+msgstr ""
+
+msgid "连续签到"
+msgstr ""
+
+msgid "连续签到断开后重新累计，不扣除已获得经验。每档奖励在这一版规则下只领取一次。"
+msgstr ""
+
+msgid "退回说明"
+msgstr ""
+
+msgid "适用内容与每日统计时区"
+msgstr ""
+
+msgid "适用内容设置无效。"
+msgstr ""
+
+msgid "选择后，顶栏“经验签到”和登录返回链接会指向此页。请先按上方步骤加入短代码；保存不会创建或发布页面。"
+msgstr ""
+
+msgid "选择已发布的经验页面"
+msgstr ""
+
+msgid "选择徽章图片"
+msgstr ""
+
+msgid "选择模板 "
+msgstr ""
+
+msgid "逐级设置最低经验，当前共 "
+msgstr ""
+
+msgid "逐页读取现有记录并比较，不修改经验。差异需要先查清原因。"
+msgstr ""
+
+msgid "通知不存在。"
+msgstr ""
+
+msgid "通知偏好"
+msgstr ""
+
+msgid "通知偏好须为布尔值。"
+msgstr ""
+
+msgid "通知分页或编号无效。"
+msgstr ""
+
+msgid "通知暂时无法读取，请重试。"
+msgstr ""
+
+msgid "通知查询字段无效。"
+msgstr ""
+
+msgid "通知类型偏好无效。"
+msgstr ""
+
+msgid "通知编号无效。"
+msgstr ""
+
+msgid "通知设置字段无效。"
+msgstr ""
+
+msgid "通知设置已更新，请重新读取后操作。"
+msgstr ""
+
+msgid "通知设置未能保存，请重试。"
+msgstr ""
+
+msgid "通过并授予成就"
+msgstr ""
+
+msgid "配置 JSON"
+msgstr ""
+
+msgid "配置大小或导入方式无效。"
+msgstr ""
+
+msgid "配置导出与导入"
+msgstr ""
+
+msgid "配置工具"
+msgstr ""
+
+msgid "配置已应用。"
+msgstr ""
+
+msgid "配置已更新，请重新预览。"
+msgstr ""
+
+msgid "配置未能应用，请重新预览。"
+msgstr ""
+
+msgid "配置格式无效。"
+msgstr ""
+
+msgid "配置超过任务或导入映射上限。"
+msgstr ""
+
+msgid "配置预览失败。"
+msgstr ""
+
+msgid "里程碑变更"
+msgstr ""
+
+msgid "里程碑标识重复、无效或已经停用。"
+msgstr ""
+
+msgid "里程碑次数设置不完整。"
+msgstr ""
+
+msgid "里程碑设置无效。"
+msgstr ""
+
+msgid "重新检查并重试"
+msgstr ""
+
+msgid "阅读三篇不同的公开内容。"
+msgstr ""
+
+msgid "阅读奖励 %1$s / %2$s 次；有效停留 %3$s 秒"
+msgstr ""
+
+msgid "阅读奖励已关闭"
+msgstr ""
+
+msgid "阅读起步"
+msgstr ""
+
+msgid "阶段经验"
+msgstr ""
+
+msgid "限定内容（可选）"
+msgstr ""
+
+msgid "需要核对"
+msgstr ""
+
+msgid "面板设置已更新，请刷新页面。"
+msgstr ""
+
+msgid "面板设置未能保存，请重试。"
+msgstr ""
+
+msgid "面板设置正被修改，请重试。"
+msgstr ""
+
+msgid "页面 → 新建页面"
+msgstr ""
+
+msgid "页面不可用。"
+msgstr ""
+
+msgid "项不同内容"
+msgstr ""
+
+msgid "预览"
+msgstr ""
+
+msgid "预览内容"
+msgstr ""
+
+msgid "预览模板"
+msgstr ""
+
+msgid "预览配置"
+msgstr ""
+
+msgid "颜色"
+msgstr ""
+
+msgid "首次发表文章"
+msgstr ""
+
+msgid "首级固定为 0，门槛须严格递增，最多 100 级。修改门槛会立即影响等级展示，不改变经验余额。"
+msgstr ""
+
+msgid "验证已过期，请刷新设置页。"
+msgstr ""
+
+msgid "验证已过期，请刷新页面。"
+msgstr ""
+
+msgid "默认 Asia/Shanghai。已有经验记录后不能修改，以免同一天重复领取奖励。"
+msgstr ""
+
+msgid "默认关闭。仅检查 wzf2000/wp-xp-core 官方安装 ZIP；稳定渠道忽略预发布，预发布渠道同时接受更新的稳定版。不会降级，不新增定时任务。缓存最多六小时。"
+msgstr ""
+
+msgid "（分类）"
+msgstr ""
+
+msgid "（指定内容范围）"
+msgstr ""
+
+msgid "（经验 +"
+msgstr ""
+
+msgid "（账号已删除）"
+msgstr ""
+
+msgid "，发布后即可公开展示。可用 "
+msgstr ""
+
+msgid "，标题可填“我的经验”。"
+msgstr ""
+
+msgid "；成长变化："
+msgstr ""
+

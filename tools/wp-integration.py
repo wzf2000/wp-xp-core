@@ -188,11 +188,16 @@ try {
         )
     plugin = site / "wp-content/plugins/wp-xp-core"
     plugin.mkdir(parents=True)
-    for path in ROOT.glob("*.php"):
+    import release
+
+    for name in release.source_files():
+        path = ROOT / name
         if path.is_symlink():
-            raise ValueError("Plugin PHP source must contain no symlinks")
-        shutil.copy2(path, plugin / path.name)
-    copy_directory(ROOT / "assets", plugin / "assets")
+            raise ValueError("Installation source must contain no symlinks")
+        target = plugin / name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(path, target)
+    wp("option", "update", "WPLANG", "zh_CN")
     results = {"wordpress": {"version": wp("core", "version").strip()}}
     fixture = str(ROOT / "tests/wordpress-install.php")
     for mode in ["install", "verify"]:
@@ -234,6 +239,8 @@ try {
         "growth",
         "achievement-rewards",
         "notifications",
+        "fairness",
+        "product",
         "insights",
     ):
         results[stage] = json.loads(
@@ -300,6 +307,41 @@ try {
                 process.wait(timeout=10)
     results["comment-retry-concurrency"] = json.loads(wp("eval-file", retry_fixture, mode="verify"))
     results["comment-retry-concurrency"]["clients"] = clients
+    configuration_fixture = str(ROOT / "tests/wordpress-configuration-concurrent.php")
+    wp("eval-file", configuration_fixture, mode="prepare")
+    parallel_env = dict(env, WP_XP_TEST_BARRIER=str(time.time() + 1.0))
+    processes = [
+        subprocess.Popen(
+            command + ["eval-file", configuration_fixture],
+            env=parallel_env,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        for _ in range(2)
+    ]
+    clients = []
+    try:
+        for process in processes:
+            output, errors = process.communicate(timeout=60)
+            if process.returncode:
+                failure(
+                    "Concurrent configuration",
+                    subprocess.CompletedProcess([], process.returncode, output, errors),
+                )
+            clients.append(json.loads(output))
+    finally:
+        for process in processes:
+            if process.poll() is None:
+                process.terminate()
+                process.wait(timeout=10)
+    if sorted(client["result"] for client in clients) != ["applied", "conflict"]:
+        raise RuntimeError("Concurrent preview must apply once and reject one stale revision")
+    results["configuration-concurrency"] = json.loads(
+        wp("eval-file", configuration_fixture, mode="verify")
+    )
+    results["configuration-concurrency"]["clients"] = clients
+    (lab / "results.json").write_text(json.dumps(results, indent=2) + "\n")
     if args.scale:
         scale_env = dict(env, WP_XP_SCALE_TEST="1", WP_XP_TEST_OWNER_FILE=str(owner_file))
         scale = subprocess.run(

@@ -12,7 +12,7 @@ function api(page, handler) {
     expect(route.request().headers()['x-wp-nonce']).toBe('synthetic-nonce');
     const action = route.request().url().split('/').pop();
     const reply = await handler(action, route.request().postDataJSON());
-    await route.fulfill(reply?.status ? reply : { json: reply ?? {} });
+    await route.fulfill(typeof reply?.status === 'number' ? reply : { json: reply ?? {} });
   });
 }
 const emptyTasks = { tasks: [], badges: [], submissions: [] };
@@ -307,4 +307,90 @@ test('public-board opt-out reports nonparticipation while private XP remains vis
   await expect(page.locator('.xp-personal-position')).toContainText('当前未参与公开榜单');
   await expect(page.locator('.xp-level-name')).toBeVisible();
   expect(participating).toBe(false);
+});
+
+test('phone tasks and recent achievements collapse, keyboard controls and refresh preserve expansion', async ({
+  page,
+}) => {
+  const tasks = Array.from({ length: 8 }, (_, i) => ({
+    id: 't_' + String(i).padStart(16, '0'),
+    title: `合成目标${i}`,
+    description: '合成说明',
+    type: 'automatic',
+    period: 'once',
+    available: true,
+    earned: false,
+    steps: [{ kind: 'visit', mode: 'objects', current: 0, count: 3, scope_links: [] }],
+  }));
+  const badges = Array.from({ length: 8 }, (_, i) => ({
+    title: `合成历史${i}`,
+    day: '2026-10-24',
+    icon: '★',
+    condition_text: '用户原始说明',
+  }));
+  await api(page, (action) => {
+    if (action === 'growth') return state;
+    if (action === 'tasks') return { ...emptyTasks, tasks, badges };
+    if (action === 'history') return { items: [], next_cursor: null };
+  });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/growth.html');
+  await expect(page.locator('.xp-personal-task:visible')).toHaveCount(3);
+  await expect(page.locator('.xp-badges li:visible')).toHaveCount(3);
+  const taskToggle = page.locator('.xp-tasks-toggle');
+  await expect(taskToggle).toHaveAttribute('aria-expanded', 'false');
+  await taskToggle.focus();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('.xp-personal-task:visible')).toHaveCount(8);
+  await page.locator('.xp-badges-toggle').click();
+  await expect(page.locator('.xp-badges li:visible')).toHaveCount(8);
+  await expect(page.locator('.xp-badges')).toContainText('不代表全部历史');
+  await page.locator('.reader-experience-checkin').click();
+  await expect(page.locator('.xp-personal-task:visible')).toHaveCount(8);
+  await expect(page.locator('.xp-badges li:visible')).toHaveCount(8);
+  await page.locator('.xp-tasks-toggle').click();
+  await page.getByRole('link', { name: '查看任务' }).click();
+  await expect(page.locator('#xp-task-' + tasks[0].id)).toBeFocused();
+  await expect(page.locator('.xp-tasks-toggle')).toHaveAttribute('aria-expanded', 'true');
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});
+
+test('English JS catalog translates fixed labels and preserves Chinese user snapshots', async ({
+  page,
+}) => {
+  const catalog = JSON.parse(fs.readFileSync('languages/wp-xp-core-en_US.json', 'utf8')).locale_data
+    .messages;
+  const dictionary = Object.fromEntries(
+    Object.entries(catalog)
+      .filter(([key]) => key)
+      .map(([key, value]) => [key, value[0]]),
+  );
+  await page.addInitScript((map) => {
+    window.WPXPI18n = map;
+    window.WPXPLocale = 'en-US';
+  }, dictionary);
+  await api(page, (action) => {
+    if (action === 'growth') return state;
+    if (action === 'history') return { items: [], next_cursor: null };
+    if (action === 'tasks')
+      return {
+        ...emptyTasks,
+        tasks: [
+          {
+            id: 't_1212121212121212',
+            title: '经验规则',
+            description: '我的成长',
+            type: 'automatic',
+            period: 'once',
+            available: true,
+            steps: [{ kind: 'visit', count: 2, current: 1, mode: 'objects' }],
+          },
+        ],
+      };
+  });
+  await page.goto('/growth.html');
+  await expect(page.locator('.reader-experience-state')).toContainText('XP 5 · Level 2');
+  await expect(page.locator('.xp-personal-task h4')).toContainText('经验规则');
+  await expect(page.locator('.xp-personal-task')).toContainText('Different content');
+  await expect(page.locator('.xp-personal-task p').first()).toHaveText('我的成长');
 });

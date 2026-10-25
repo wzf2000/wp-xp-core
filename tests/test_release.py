@@ -128,6 +128,9 @@ class ReleaseGuards(unittest.TestCase):
             "modules/feature.php": "<?php // synthetic module\n",
             "assets/feature.js": "void 0;\n",
             "assets/development.txt": "excluded\n",
+            "languages/wp-xp-core-en_US.po": 'msgid ""\nmsgstr ""\n',
+            "languages/wp-xp-core-en_US.mo": "synthetic binary catalog",
+            "languages/wp-xp-core-en_US.json": "{}\n",
             "docs/USAGE.md": "Synthetic usage\n",
             "docs/assets/overview.svg": "<svg/>\n",
         }.items():
@@ -148,6 +151,8 @@ class ReleaseGuards(unittest.TestCase):
         slug = json.loads((self.root / "package.json").read_text())["name"]
         with zipfile.ZipFile(self.root / f"dist/{slug}-1.0.0.zip") as archive:
             self.assertIn(f"{slug}/modules/feature.php", archive.namelist())
+            for suffix in ["po", "mo", "json"]:
+                self.assertIn(f"{slug}/languages/wp-xp-core-en_US.{suffix}", archive.namelist())
             self.assertIn(f"{slug}/assets/feature.js", archive.namelist())
             self.assertIn(f"{slug}/docs/assets/overview.svg", archive.namelist())
             self.assertNotIn(f"{slug}/assets/development.txt", archive.namelist())

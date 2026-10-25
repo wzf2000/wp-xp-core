@@ -6,7 +6,8 @@ const prettier = require('prettier');
 const beautify = require('js-beautify').html;
 const root = path.resolve(__dirname, '..');
 const write = process.argv.includes('--write');
-const generated = /assets\/[^/]+-[a-f0-9]{12}\.(css|js)$/;
+const generated =
+  /(?:assets\/[^/]+-[a-f0-9]{12}\.(css|js)|languages\/wp-xp-core-(?:en_US|zh_CN)\.json)$/;
 const htmlOptions = {
   indent_size: 4,
   wrap_line_length: 0,
@@ -72,6 +73,7 @@ async function format() {
   if (!write && changed.length) throw new Error(`Run npm run format for:\n${changed.join('\n')}`);
   for (const file of python)
     run('python3', ['-m', 'black', '--workers', '1', ...(write ? [] : ['--check']), file]);
+  run('python3', ['tools/languages.py', ...(write ? [] : ['--check'])]);
   if (write && fs.existsSync(path.join(root, 'build-assets.py')))
     run('python3', ['build-assets.py']);
   const assets = path.join(root, 'assets');
@@ -81,6 +83,9 @@ async function format() {
     css: 'app.css',
     admin_css: 'admin.css',
     admin_js: 'admin.js',
+    growth_js: 'growth.js',
+    growth_admin_js: 'growth-admin.js',
+    blocks_js: 'blocks.js',
   })) {
     const content = fs.readFileSync(path.join(assets, name));
     const hash = crypto.createHash('sha256').update(content).digest('hex').slice(0, 12);

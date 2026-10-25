@@ -38,14 +38,24 @@ Pull Requests and pushes share read-only CI. `Required checks` aggregates all ve
 维护者发布见 [发布流程](docs/RELEASING.md)。贡献者不需要创建标签；手动 GitHub 发布工作流会安全地创建新标签和附件。发布与站点部署相互独立。
 See [Releasing](docs/RELEASING.md) for maintainer steps. Contributors need not create tags; the manual release workflow creates new tags and verified attachments. Publishing does not deploy to a site.
 
-## Growth preview / 成长功能预览
+## Growth and accounting changes / 成长与记账改动
 
-`feature/xp-growth-rounds-1-4` prepares the unreleased `2.0.0-rc.1` candidate. Keep both READMEs and both GUIDE/CONFIGURATION language versions synchronized. Validate management permissions, append-only corrections, duplicate/rollback behavior, rule and task version boundaries, private response isolation and atomic derived rewards in isolated fixtures. Do not use real accounts to exercise adjustments, retries or review awards. Preparing this branch does not authorize a release or site deployment.
+Validate target permissions, append-only corrections, duplicate/rollback behavior, rule and task version boundaries, private response isolation and atomic rewards in isolated fixtures. Use synthetic accounts for adjustments, retries and review grants. Preparing a candidate does not authorize publication or site deployment.
 
-本分支准备尚未发行的 `2.0.0-rc.1` 候选。同步维护中英文 README、使用指南和配置文档；在隔离环境检查管理权限、追加式撤销、重复／回滚行为、规则与任务版本边界、私人响应隔离及派生奖励的原子性。不要用真实账号测试调分、重试或审核授予；准备候选不等于发行或部署授权。
+规则与任务修改须验证权限、追加式补偿、幂等与回滚、版本边界、私人响应隔离和奖励原子性。只用合成账号测试调分、重试和审核，不对真实账户补奖；准备候选不代表发布或部署授权。
 
 ## Optional synthetic scale workload / 可选合成规模检查
 
 `tools/wp-integration.py --scale` adds bounded 10,000/50,000-row read workloads to the normal owned, empty local WordPress lab. It uses ten synthetic users, fifty tasks with eight steps and up to eight prerequisites, and records query counts plus elapsed milliseconds for personal progress, standings, sources, trends and diagnostics in the lab's `results.json`. The script requires the integration runner's temporary ownership marker, dedicated `wp_xp_core_ci` database, local environment and loopback host; an existing site cannot be adopted. Data is seeded directly as synthetic query fixtures, without claiming real reward semantics. Temporary task definitions are restored; the lab retains its generated subjects and ledger for inspection. This is opt-in and never runs as a scheduled job.
 
 在现有合成安装命令后加 `--scale`，才会运行有界的 1 万／5 万行查询规模检查。保护条件包括临时目录所有权标记、专用数据库、local 环境及回环数据库连接；不能对现有站点补标记接管。记录查询数与本机耗时，不将热缓存或共享主机的绝对耗时解释为生产性能。没有测量依据时不新增索引或宣称提速。
+
+## Localization / 翻译
+
+Edit reviewed `languages/wp-xp-core-{locale}.po` entries and run `python3 tools/languages.py`; `--check` verifies MO/JSON bytes. Fixed PHP strings use `wp_xp_core_t` (gettext extraction keyword) or `__` with domain `wp-xp-core`; the small JS bridge uses `languages/js-strings.json`. Keep positional placeholders and user snapshots verbatim. Run the catalog/ZIP tests and verify both locales when changing UI text.
+
+修改 PO 后离线编译 MO／JSON，同步 POT 与 JS 文案列表；保留位置占位符，不翻译用户文字或整段输出 HTML。新增语言文件必须通过实际安装 ZIP 的白名单与验证。
+
+CI currently covers PHP 8.0/8.2/8.5 basic/browser fixtures and real WordPress/MySQL installation/concurrency on WordPress 6.8.3 + PHP 8.0/8.2 and WordPress 7.1.3 + PHP 8.5. The declared WordPress 6.0 minimum does not mean every historical combination was tested.
+
+实际 CI 组合为 PHP 8.0／8.2／8.5 基础与浏览器检查，以及 WordPress 6.8.3 + PHP 8.0／8.2、WordPress 7.1.3 + PHP 8.5 的真实数据库安装／并发测试；不将最低版本声明当作所有历史组合的验收证据。

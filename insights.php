@@ -13,6 +13,7 @@ final class WP_XP_Core_Insights
         'milestone_like',
         'streak_reward',
         'task_complete',
+        'provider_reward',
         'task_revoke',
     ];
     private static function error(string $code, string $message, int $status = 400): WP_Error
@@ -28,24 +29,24 @@ final class WP_XP_Core_Insights
             (int) $value < $min ||
             (int) $value > $max
         ) {
-            throw new InvalidArgumentException('分页参数无效。');
+            throw new InvalidArgumentException(wp_xp_core_t('分页参数无效。'));
         }
         return (int) $value;
     }
     private static function fields(array $input, array $allowed): void
     {
         if (array_diff(array_keys($input), $allowed)) {
-            throw new InvalidArgumentException('统计参数无效。');
+            throw new InvalidArgumentException(wp_xp_core_t('统计参数无效。'));
         }
     }
     private static function date($value): DateTimeImmutable
     {
         if (!is_string($value)) {
-            throw new InvalidArgumentException('请选择有效日期。');
+            throw new InvalidArgumentException(wp_xp_core_t('请选择有效日期。'));
         }
         $date = DateTimeImmutable::createFromFormat('!Y-m-d', $value, new DateTimeZone('UTC'));
         if (!$date || $date->format('Y-m-d') !== $value) {
-            throw new InvalidArgumentException('请选择有效日期。');
+            throw new InvalidArgumentException(wp_xp_core_t('请选择有效日期。'));
         }
         return $date;
     }
@@ -55,17 +56,19 @@ final class WP_XP_Core_Insights
         $today = Reader_Experience::day();
         $date = self::date($today);
         if (!in_array($period, $custom ? ['week', 'month', 'custom'] : ['week', 'month'], true)) {
-            throw new InvalidArgumentException('请选择本周或本月。');
+            throw new InvalidArgumentException(wp_xp_core_t('请选择本周或本月。'));
         }
         if ($period === 'custom') {
             $from = self::date($input['from'] ?? null);
             $to = self::date($input['to'] ?? null);
             if ($from > $to || $to > $date || $from->diff($to)->days > 365) {
-                throw new InvalidArgumentException('日期范围须为截至今日的连续 1–366 天。');
+                throw new InvalidArgumentException(
+                    wp_xp_core_t('日期范围须为截至今日的连续 1–366 天。'),
+                );
             }
         } else {
             if (array_key_exists('from', $input) || array_key_exists('to', $input)) {
-                throw new InvalidArgumentException('仅自选时段可指定日期。');
+                throw new InvalidArgumentException(wp_xp_core_t('仅自选时段可指定日期。'));
             }
             $from = $date->modify(
                 $period === 'week' ? 'monday this week' : 'first day of this month',
@@ -82,11 +85,11 @@ final class WP_XP_Core_Insights
     private static function available(bool $admin = false)
     {
         if ($admin && !current_user_can('manage_options')) {
-            return self::error('forbidden', '没有查看统计的权限。', 403);
+            return self::error('forbidden', wp_xp_core_t('没有查看统计的权限。'), 403);
         }
         return Reader_Experience::ready()
             ? true
-            : self::error('maintenance', '经验系统维护中。', 503);
+            : self::error('maintenance', wp_xp_core_t('经验系统维护中。'), 503);
     }
     private static function rows(string $sql): array
     {
@@ -192,7 +195,7 @@ final class WP_XP_Core_Insights
         } catch (InvalidArgumentException $e) {
             return self::error('input', $e->getMessage());
         } catch (Throwable $e) {
-            return self::error('storage', '暂时无法读取经验榜。', 503);
+            return self::error('storage', wp_xp_core_t('暂时无法读取经验榜。'), 503);
         }
     }
     /** Internal explicit-user lookup. HTTP handlers must use mine() for personal position. */
@@ -222,16 +225,16 @@ final class WP_XP_Core_Insights
         } catch (InvalidArgumentException $e) {
             return self::error('input', $e->getMessage());
         } catch (Throwable $e) {
-            return self::error('storage', '暂时无法读取个人位置。', 503);
+            return self::error('storage', wp_xp_core_t('暂时无法读取个人位置。'), 503);
         }
     }
     public static function mine(array $input, $nonce)
     {
         if (!is_user_logged_in() || !current_user_can('read')) {
-            return self::error('login_required', '请先登录。', 401);
+            return self::error('login_required', wp_xp_core_t('请先登录。'), 401);
         }
         if (!is_string($nonce) || !wp_verify_nonce($nonce, 'wp_rest')) {
-            return self::error('nonce', '验证已过期，请刷新页面。', 403);
+            return self::error('nonce', wp_xp_core_t('验证已过期，请刷新页面。'), 403);
         }
         try {
             self::fields($input, ['period']);
@@ -246,7 +249,7 @@ final class WP_XP_Core_Insights
         } catch (InvalidArgumentException $e) {
             return self::error('input', $e->getMessage());
         } catch (Throwable $e) {
-            return self::error('storage', '暂时无法读取个人位置。', 503);
+            return self::error('storage', wp_xp_core_t('暂时无法读取个人位置。'), 503);
         }
     }
     public static function sources(array $input = [])
@@ -302,7 +305,7 @@ final class WP_XP_Core_Insights
         } catch (InvalidArgumentException $e) {
             return self::error('input', $e->getMessage());
         } catch (Throwable $e) {
-            return self::error('storage', '暂时无法读取来源分析。', 503);
+            return self::error('storage', wp_xp_core_t('暂时无法读取来源分析。'), 503);
         }
     }
     /** Denominator is participating users plus earned users, never page impressions. */
@@ -371,7 +374,7 @@ final class WP_XP_Core_Insights
         } catch (InvalidArgumentException $e) {
             return self::error('input', $e->getMessage());
         } catch (Throwable $e) {
-            return self::error('storage', '暂时无法读取期间趋势。', 503);
+            return self::error('storage', wp_xp_core_t('暂时无法读取期间趋势。'), 503);
         }
     }
     public static function anomalies(array $input = [])
@@ -416,14 +419,16 @@ final class WP_XP_Core_Insights
                     'positive_xp' => (int) $row['positive_xp'],
                     'capped_events' => (int) $row['capped_events'],
                     'reason' =>
-                        (int) $row['events'] >= 20 ? '同日首次活动至少二十次' : '出现活动上限截断',
+                        (int) $row['events'] >= 20
+                            ? wp_xp_core_t('同日首次活动至少二十次')
+                            : wp_xp_core_t('出现活动上限截断'),
                 ];
             }
             return $range + ['items' => $out];
         } catch (InvalidArgumentException $e) {
             return self::error('input', $e->getMessage());
         } catch (Throwable $e) {
-            return self::error('storage', '暂时无法读取活动线索。', 503);
+            return self::error('storage', wp_xp_core_t('暂时无法读取活动线索。'), 503);
         }
     }
     /** Old versions expose observed completions only; no invented participation denominator. */
@@ -479,7 +484,7 @@ final class WP_XP_Core_Insights
         } catch (InvalidArgumentException $e) {
             return self::error('input', $e->getMessage());
         } catch (Throwable $e) {
-            return self::error('storage', '暂时无法读取任务版本统计。', 503);
+            return self::error('storage', wp_xp_core_t('暂时无法读取任务版本统计。'), 503);
         }
     }
     public static function task_rates()
@@ -588,7 +593,7 @@ final class WP_XP_Core_Insights
             unset($task);
             return ['timezone' => WP_XP_Core_Settings::rules()['timezone'], 'rows' => $tasks];
         } catch (Throwable $e) {
-            return self::error('storage', '暂时无法读取任务完成率。', 503);
+            return self::error('storage', wp_xp_core_t('暂时无法读取任务完成率。'), 503);
         }
     }
 }

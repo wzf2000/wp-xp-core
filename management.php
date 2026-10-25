@@ -15,10 +15,10 @@ final class WP_XP_Core_Management
     public static function permission(int $uid = 0)
     {
         if (!current_user_can('manage_options')) {
-            return self::error('forbidden', '没有管理经验的权限。', 403);
+            return self::error('forbidden', wp_xp_core_t('没有管理经验的权限。'), 403);
         }
         if ($uid && !self::can_target($uid)) {
-            return self::error('forbidden', '没有管理该用户经验的权限。', 403);
+            return self::error('forbidden', wp_xp_core_t('没有管理该用户经验的权限。'), 403);
         }
         return true;
     }
@@ -64,14 +64,14 @@ final class WP_XP_Core_Management
         if (
             array_diff(array_keys($filters), ['user_id', 'kind', 'from', 'to', 'cursor', 'limit'])
         ) {
-            return self::error('input', '查询条件无效。');
+            return self::error('input', wp_xp_core_t('查询条件无效。'));
         }
         $where = ['1=1'];
         foreach (['user_id' => 1, 'cursor' => 0, 'limit' => 1] as $key => $min) {
             if (isset($filters[$key])) {
                 $value = self::integer($filters[$key], $min, $key === 'limit' ? 100 : PHP_INT_MAX);
                 if ($value === null) {
-                    return self::error('input', '用户、页码或每页数量无效。');
+                    return self::error('input', wp_xp_core_t('用户、页码或每页数量无效。'));
                 }
                 $filters[$key] = $value;
             }
@@ -87,14 +87,14 @@ final class WP_XP_Core_Management
                 !is_string($filters['kind']) ||
                 !preg_match('/^[a-z_]{1,32}$/D', $filters['kind'])
             ) {
-                return self::error('input', '事件类型无效。');
+                return self::error('input', wp_xp_core_t('事件类型无效。'));
             }
             $where[] = $wpdb->prepare('kind=%s', $filters['kind']);
         }
         foreach (['from', 'to'] as $key) {
             if (isset($filters[$key]) && $filters[$key] !== '') {
                 if (!self::date($filters[$key])) {
-                    return self::error('input', '日期格式无效。');
+                    return self::error('input', wp_xp_core_t('日期格式无效。'));
                 }
                 $where[] = $wpdb->prepare(
                     'local_day' . ($key === 'from' ? '>=' : '<=') . '%s',
@@ -107,7 +107,7 @@ final class WP_XP_Core_Management
             !empty($filters['to']) &&
             $filters['from'] > $filters['to']
         ) {
-            return self::error('input', '开始日期不能晚于结束日期。');
+            return self::error('input', wp_xp_core_t('开始日期不能晚于结束日期。'));
         }
         $limit = $filters['limit'] ?? 50;
         $columns = $private ? 'id,kind,xp,local_day,created_at' : '*';
@@ -123,7 +123,7 @@ final class WP_XP_Core_Management
             ARRAY_A,
         );
         if (!is_array($rows) || $wpdb->last_error !== '') {
-            return self::error('storage', '暂时无法读取经验记录。', 503);
+            return self::error('storage', wp_xp_core_t('暂时无法读取经验记录。'), 503);
         }
         $more = count($rows) > $limit;
         $rows = array_slice($rows, 0, $limit);
@@ -164,13 +164,13 @@ final class WP_XP_Core_Management
     {
         $uid = get_current_user_id();
         if (!$uid || !current_user_can('read')) {
-            return self::error('login_required', '请先登录。', 401);
+            return self::error('login_required', wp_xp_core_t('请先登录。'), 401);
         }
         if (
             isset($filters['user_id']) &&
             self::integer($filters['user_id'], 1, PHP_INT_MAX) !== $uid
         ) {
-            return self::error('forbidden', '只能查看自己的经验记录。', 403);
+            return self::error('forbidden', wp_xp_core_t('只能查看自己的经验记录。'), 403);
         }
         $filters['user_id'] = $uid;
         return self::query($filters, true);
@@ -183,7 +183,7 @@ final class WP_XP_Core_Management
         }
         $user = get_userdata($uid);
         if ($uid < 1 || !$user) {
-            return self::error('missing', '用户不存在。', 404);
+            return self::error('missing', wp_xp_core_t('用户不存在。'), 404);
         }
         global $wpdb;
         $rows = self::projection($wpdb->prepare('SELECT %d AS user_id', $uid));
@@ -227,7 +227,7 @@ final class WP_XP_Core_Management
             ARRAY_A,
         );
         if (!is_array($rows) || $wpdb->last_error !== '') {
-            return self::error('storage', '暂时无法读取经验记录。', 503);
+            return self::error('storage', wp_xp_core_t('暂时无法读取经验记录。'), 503);
         }
         $items = [];
         foreach ($rows as $row) {
@@ -257,7 +257,7 @@ final class WP_XP_Core_Management
             return $permission;
         }
         if ($cursor < 0 || $limit < 1 || $limit > 100) {
-            return self::error('input', '查询范围无效。');
+            return self::error('input', wp_xp_core_t('查询范围无效。'));
         }
         global $wpdb;
         // The union includes deleted ledger owners and metadata owners without ledger rows.
@@ -367,7 +367,7 @@ final class WP_XP_Core_Management
         try {
             return array_reverse(self::option_rows(self::AUDIT_OPTION));
         } catch (Throwable $e) {
-            return self::error('storage', '暂时无法读取规则修改记录。', 503);
+            return self::error('storage', wp_xp_core_t('暂时无法读取规则修改记录。'), 503);
         }
     }
     /** Best effort after the original rollback; recording cannot replace the original error. */
@@ -387,8 +387,8 @@ final class WP_XP_Core_Management
                 $rows[$id]['status'] = 'pending';
                 $rows[$id]['last_error'] =
                     ($attempt['failure_reason'] ?? '') === 'insufficient_balance'
-                        ? '当前经验不足，原评论奖励尚未扣回。'
-                        : '记录未完成';
+                        ? wp_xp_core_t('当前经验不足，原评论奖励尚未扣回。')
+                        : wp_xp_core_t('记录未完成');
                 while (count($rows) > self::MAX_FAILURES) {
                     $remove = null;
                     foreach ($rows as $key => $row) {
@@ -415,7 +415,7 @@ final class WP_XP_Core_Management
         try {
             return array_values(array_reverse(self::option_rows(self::FAILURE_OPTION), true));
         } catch (Throwable $e) {
-            return self::error('storage', '暂时无法读取未完成记录。', 503);
+            return self::error('storage', wp_xp_core_t('暂时无法读取未完成记录。'), 503);
         }
     }
     private static function input(array $input, $nonce, array $fields)
@@ -425,7 +425,7 @@ final class WP_XP_Core_Management
             return $permission;
         }
         if (!is_string($nonce) || !wp_verify_nonce($nonce, 'wp_xp_core_manage')) {
-            return self::error('nonce', '验证已过期，请刷新页面。', 403);
+            return self::error('nonce', wp_xp_core_t('验证已过期，请刷新页面。'), 403);
         }
         $keys = array_merge(['request_id', 'reason'], $fields);
         if (
@@ -437,7 +437,7 @@ final class WP_XP_Core_Management
                 $input['request_id'],
             )
         ) {
-            return self::error('input', '请求编号或操作参数无效。');
+            return self::error('input', wp_xp_core_t('请求编号或操作参数无效。'));
         }
         if (
             !is_string($input['reason']) ||
@@ -446,7 +446,7 @@ final class WP_XP_Core_Management
             strlen($input['reason']) > 1200 ||
             preg_match('/[\x00-\x08\x0b\x0c\x0e-\x1f]/', $input['reason'])
         ) {
-            return self::error('input', '请填写 1–300 字的原因。');
+            return self::error('input', wp_xp_core_t('请填写 1–300 字的原因。'));
         }
         $input['reason'] = trim($input['reason']);
         $input['request_id'] = strtolower($input['request_id']);
@@ -472,7 +472,11 @@ final class WP_XP_Core_Management
         try {
             return Reader_Experience::transaction(function () use ($action, $input, $operation) {
                 if (!Reader_Experience::ready()) {
-                    return self::error('maintenance', '经验系统维护中，请稍后重试。', 503);
+                    return self::error(
+                        'maintenance',
+                        wp_xp_core_t('经验系统维护中，请稍后重试。'),
+                        503,
+                    );
                 }
                 $payload = $input;
                 unset($payload['request_id']);
@@ -485,7 +489,7 @@ final class WP_XP_Core_Management
                     if (!hash_equals((string) ($detail['request_hash'] ?? ''), $hash)) {
                         return self::error(
                             'conflict',
-                            '该请求编号已用于另一项操作，请刷新后重试。',
+                            wp_xp_core_t('该请求编号已用于另一项操作，请刷新后重试。'),
                             409,
                         );
                     }
@@ -509,7 +513,11 @@ final class WP_XP_Core_Management
         } catch (Throwable $e) {
             self::clear_option_cache();
             error_log('reader_experience management operation failed: ' . $action);
-            return self::error('storage', '操作未能完成，请保留请求编号后重试。', 503);
+            return self::error(
+                'storage',
+                wp_xp_core_t('操作未能完成，请保留请求编号后重试。'),
+                503,
+            );
         }
     }
     /** Read-only range check; callers hold the ledger transaction lock. */
@@ -518,10 +526,14 @@ final class WP_XP_Core_Management
         wp_cache_delete($uid, 'user_meta');
         $balance = (int) get_user_meta($uid, Reader_Experience::balance_meta(), true);
         if ($xp < 0 && $balance < -$xp) {
-            return self::error('insufficient_balance', '该用户的经验不足，无法完成扣减。', 409);
+            return self::error(
+                'insufficient_balance',
+                wp_xp_core_t('该用户的经验不足，无法完成扣减。'),
+                409,
+            );
         }
         if ($xp > 0 && $balance > PHP_INT_MAX - $xp) {
-            return self::error('input', '经验余额超出可用范围。');
+            return self::error('input', wp_xp_core_t('经验余额超出可用范围。'));
         }
         return true;
     }
@@ -534,7 +546,10 @@ final class WP_XP_Core_Management
         $uid = self::integer($input['user_id'], 1, PHP_INT_MAX);
         $xp = self::integer($input['xp'], -1000000, 1000000);
         if ($uid === null || $xp === null || $xp === 0) {
-            return self::error('input', '请选择用户并填写非零整数经验，单次最多 1000000。');
+            return self::error(
+                'input',
+                wp_xp_core_t('请选择用户并填写非零整数经验，单次最多 1000000。'),
+            );
         }
         $input['user_id'] = $uid;
         $input['xp'] = $xp;
@@ -544,7 +559,7 @@ final class WP_XP_Core_Management
                 return $permission;
             }
             if (!get_userdata($uid)) {
-                return self::error('missing', '用户不存在。', 404);
+                return self::error('missing', wp_xp_core_t('用户不存在。'), 404);
             }
             $allowed = self::balance_allows($uid, $xp);
             if ($allowed !== true) {
@@ -578,7 +593,7 @@ final class WP_XP_Core_Management
         }
         $id = self::integer($input['event_id'], 1, PHP_INT_MAX);
         if ($id === null) {
-            return self::error('input', '记录编号无效。');
+            return self::error('input', wp_xp_core_t('记录编号无效。'));
         }
         $input['event_id'] = $id;
         return self::execute('reverse', $input, function ($key, $detail) use ($id) {
@@ -588,7 +603,7 @@ final class WP_XP_Core_Management
                 ARRAY_A,
             );
             if (!$original || $original['kind'] !== 'manual_adjust') {
-                return self::error('input', '只能撤销人工调整记录。');
+                return self::error('input', wp_xp_core_t('只能撤销人工调整记录。'));
             }
             $uid = (int) $original['user_id'];
             $permission = self::permission($uid);
@@ -596,7 +611,7 @@ final class WP_XP_Core_Management
                 return $permission;
             }
             if (!get_userdata($uid)) {
-                return self::error('missing', '用户不存在。', 404);
+                return self::error('missing', wp_xp_core_t('用户不存在。'), 404);
             }
             if (
                 $wpdb->get_var(
@@ -608,7 +623,7 @@ final class WP_XP_Core_Management
                     ),
                 )
             ) {
-                return self::error('conflict', '这项人工调整已经撤销。', 409);
+                return self::error('conflict', wp_xp_core_t('这项人工调整已经撤销。'), 409);
             }
             $xp = -(int) $original['xp'];
             $allowed = self::balance_allows($uid, $xp);
@@ -646,7 +661,7 @@ final class WP_XP_Core_Management
             !is_string($input['failure_id']) ||
             !preg_match('/^[a-f0-9]{32}$/D', $input['failure_id'])
         ) {
-            return self::error('input', '未完成记录编号无效。');
+            return self::error('input', wp_xp_core_t('未完成记录编号无效。'));
         }
         return self::execute('retry', $input, function ($key, $detail) use ($input) {
             self::require_options_transaction();
@@ -656,7 +671,7 @@ final class WP_XP_Core_Management
                 !$failure ||
                 !in_array($failure['kind'], ['article', 'comment', 'comment_adjust'], true)
             ) {
-                return self::error('missing', '未找到可重试的记录。', 404);
+                return self::error('missing', wp_xp_core_t('未找到可重试的记录。'), 404);
             }
             $uid = (int) $failure['user_id'];
             $permission = self::permission($uid);
@@ -664,7 +679,7 @@ final class WP_XP_Core_Management
                 return $permission;
             }
             if (!get_userdata($uid)) {
-                return self::error('missing', '用户不存在。', 404);
+                return self::error('missing', wp_xp_core_t('用户不存在。'), 404);
             }
             if ($failure['kind'] === 'comment_adjust') {
                 $original = self::event('comment:' . (int) $failure['object_id']);
@@ -674,7 +689,11 @@ final class WP_XP_Core_Management
                     (int) $original['object_id'] !== (int) $failure['object_id'] ||
                     (int) $original['user_id'] !== $uid
                 ) {
-                    return self::error('conflict', '失败记录与原评论奖励归属不符。', 409);
+                    return self::error(
+                        'conflict',
+                        wp_xp_core_t('失败记录与原评论奖励归属不符。'),
+                        409,
+                    );
                 }
                 $permission = self::permission((int) $original['user_id']);
                 if ($permission !== true) {
@@ -725,7 +744,11 @@ final class WP_XP_Core_Management
             $existing = self::event($failure['event_key']);
             if (!$existing) {
                 if ($failure['status'] !== 'pending' || !self::retry_eligible($failure)) {
-                    return self::error('ineligible', '该文章或评论目前不符合奖励条件。', 409);
+                    return self::error(
+                        'ineligible',
+                        wp_xp_core_t('该文章或评论目前不符合奖励条件。'),
+                        409,
+                    );
                 }
                 if (
                     !Reader_Experience::record(
@@ -788,6 +811,7 @@ final class WP_XP_Core_Management
             in_array($c->comment_type, ['', 'comment'], true) &&
             $p &&
             $p->post_status === 'publish' &&
+            $p->post_password === '' &&
             in_array($p->post_type, ['post', 'page'], true) &&
             (int) $p->post_author !== $uid &&
             WP_XP_Core_Settings::in_scope((int) $c->comment_post_ID) &&

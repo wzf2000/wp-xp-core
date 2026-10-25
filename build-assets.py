@@ -12,6 +12,7 @@ for key, name in [
     ("admin_css", "admin.css"),
     ("admin_js", "admin.js"),
     ("growth_js", "growth.js"),
+    ("blocks_js", "blocks.js"),
     ("growth_admin_js", "growth-admin.js"),
 ]:
     content = (assets / name).read_bytes()

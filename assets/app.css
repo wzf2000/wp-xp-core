@@ -364,3 +364,16 @@
 .xp-board-participation input[type='checkbox'] {
   width: auto;
 }
+
+.reader-experience-panel [hidden] {
+  display: none !important;
+}
+.reader-experience-panel :focus-visible,
+.wp-xp-core-admin :focus-visible {
+  outline: 3px solid #3856b0;
+  outline-offset: 3px;
+}
+.xp-personal-task:focus {
+  outline: 2px solid #3856b0;
+  outline-offset: 2px;
+}

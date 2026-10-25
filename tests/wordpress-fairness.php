@@ -121,6 +121,27 @@ $verify(
     'A new local week opens a new cap allowance',
     (int) $record($reader, 'visit', 2)['xp'] === 2,
 );
+$backdated = $make_user('backdated');
+$rules['activity_caps'] = ['day' => 0, 'week' => 10];
+$save_rules($rules);
+$GLOBALS['xp_fairness_day'] = '2034-04-07';
+$record($backdated, 'visit', 10);
+$GLOBALS['xp_fairness_day'] = '2034-04-03';
+$past = $record($backdated, 'article', 10);
+$verify(
+    'Backdated first rewards count later awards in the same full week',
+    (int) $past['xp'] === 0 &&
+        json_decode($past['detail'], true)['activity_cap']['week_to'] === '2034-04-09',
+);
+$GLOBALS['xp_fairness_day'] = '2034-04-10';
+$record($backdated, 'visit', 10);
+$GLOBALS['xp_fairness_day'] = '2034-03-27';
+$previous = $record($backdated, 'article', 10);
+$verify(
+    'Cross-week retry uses the original event week rather than the request week',
+    (int) $previous['xp'] === 10,
+);
+$GLOBALS['xp_fairness_day'] = '2034-04-10';
 foreach (WP_XP_Core_Fairness::FIRST_REWARD_KINDS as $kind) {
     $uid = $make_user($kind);
     $rules['activity_caps'] = ['day' => 1, 'week' => 1];
@@ -132,6 +153,9 @@ foreach (WP_XP_Core_Fairness::FIRST_REWARD_KINDS as $kind) {
 }
 // A zero-XP first event deliberately creates no balance projection; that is implicit zero.
 $zero_uid = $make_user('implicit-zero');
+Reader_Experience::transaction(function () use ($zero_uid) {
+    delete_user_meta($zero_uid, Reader_Experience::balance_meta());
+});
 $record($zero_uid, 'visit', 0);
 $record($zero_uid, 'task_grant', 0);
 $summary = WP_XP_Core_Management::user_summary($zero_uid);
@@ -142,6 +166,9 @@ $verify(
         !metadata_exists('user', $zero_uid, Reader_Experience::balance_meta()),
 );
 $positive_uid = $make_user('missing-positive');
+Reader_Experience::transaction(function () use ($positive_uid) {
+    delete_user_meta($positive_uid, Reader_Experience::balance_meta());
+});
 $wpdb->insert($table, [
     'event_key' => 'synthetic-missing-positive',
     'user_id' => $positive_uid,
@@ -451,6 +478,46 @@ wp_set_comment_status($partial_cid, 'approve');
 $verify(
     'Capped comment restoration uses actual original XP and bypasses cap',
     $balance($partial_commenter) === 1 && (int) $record($partial_commenter, 'visit', 1)['xp'] === 0,
+);
+// A captured initial reward must recheck password eligibility before retrying.
+$protected_user = $make_user('protected-retry');
+$protected_post = wp_insert_post([
+    'post_title' => 'Synthetic protected retry',
+    'post_type' => 'post',
+    'post_status' => 'publish',
+    'post_author' => $admin->ID,
+]);
+$protected_comment = wp_insert_comment([
+    'comment_post_ID' => $protected_post,
+    'user_id' => $protected_user,
+    'comment_approved' => '0',
+    'comment_content' => 'Captured initial failure',
+]);
+$attempt = [
+    'event_key' => 'comment:' . $protected_comment,
+    'kind' => 'comment',
+    'object_id' => $protected_comment,
+    'user_id' => $protected_user,
+    'xp' => 2,
+    'local_day' => Reader_Experience::day(),
+];
+WP_XP_Core_Management::capture_failure($attempt);
+$failure_id = substr(hash('sha256', $attempt['event_key']), 0, 32);
+wp_update_post(['ID' => $protected_post, 'post_password' => 'synthetic-password']);
+wp_set_comment_status($protected_comment, 'approve');
+$blocked = WP_XP_Core_Management::retry(
+    [
+        'failure_id' => $failure_id,
+        'reason' => 'Synthetic eligibility check',
+        'request_id' => wp_generate_uuid4(),
+    ],
+    wp_create_nonce('wp_xp_core_manage'),
+);
+$verify(
+    'First comment retry rejects content that became password protected',
+    $error($blocked, 'ineligible') &&
+        !Reader_Experience::exists($attempt['event_key']) &&
+        $balance($protected_user) === 0,
 );
 $verify(
     'Original settings can be restored without paying or reclaiming XP',

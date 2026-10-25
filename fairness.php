@@ -13,6 +13,7 @@ final class WP_XP_Core_Fairness
         'milestone_like',
         'streak_reward',
         'task_complete',
+        'provider_reward',
     ];
     public static function cap(int $uid, string $kind, int $xp, string $day, array &$detail): int
     {
@@ -30,6 +31,9 @@ final class WP_XP_Core_Fairness
         $from = (new DateTimeImmutable($day, new DateTimeZone('UTC')))
             ->modify('monday this week')
             ->format('Y-m-d');
+        $to = (new DateTimeImmutable($from, new DateTimeZone('UTC')))
+            ->modify('+6 days')
+            ->format('Y-m-d');
         $quoted = implode(
             ',',
             array_map(fn($v) => $wpdb->prepare('%s', $v), self::FIRST_REWARD_KINDS),
@@ -42,7 +46,7 @@ final class WP_XP_Core_Fairness
                 $day,
                 $uid,
                 $from,
-                $day,
+                $to,
             ),
             ARRAY_A,
         );
@@ -62,6 +66,7 @@ final class WP_XP_Core_Fairness
             'daily_gross_before' => (int) $used['daily'],
             'weekly_gross_before' => (int) $used['weekly'],
             'week_from' => $from,
+            'week_to' => $to,
             'truncated' => $actual < $xp,
         ];
         return $actual;
@@ -98,14 +103,14 @@ final class WP_XP_Core_Fairness
     private static function permission($nonce)
     {
         if (!is_user_logged_in() || !current_user_can('read')) {
-            return self::error('login_required', '请先登录。', 401);
+            return self::error('login_required', wp_xp_core_t('请先登录。'), 401);
         }
         if (!is_string($nonce) || !wp_verify_nonce($nonce, 'wp_rest')) {
-            return self::error('nonce', '验证已过期，请刷新页面。', 403);
+            return self::error('nonce', wp_xp_core_t('验证已过期，请刷新页面。'), 403);
         }
         return Reader_Experience::ready()
             ? true
-            : self::error('maintenance', '经验系统维护中。', 503);
+            : self::error('maintenance', wp_xp_core_t('经验系统维护中。'), 503);
     }
     public static function personal($nonce)
     {
@@ -135,19 +140,23 @@ final class WP_XP_Core_Fairness
             !is_bool($input['participating'] ?? null) ||
             !is_string($input['revision'] ?? null)
         ) {
-            return self::error('input', '榜单参与设置无效。');
+            return self::error('input', wp_xp_core_t('榜单参与设置无效。'));
         }
         try {
             return Reader_Experience::transaction(function () use ($input, $nonce) {
                 if (!Reader_Experience::ready()) {
-                    return self::error('maintenance', '经验系统维护中。', 503);
+                    return self::error('maintenance', wp_xp_core_t('经验系统维护中。'), 503);
                 }
                 $current = self::personal($nonce);
                 if (is_wp_error($current)) {
                     return $current;
                 }
                 if (!hash_equals($current['revision'], $input['revision'])) {
-                    return self::error('conflict', '榜单偏好已更新，请刷新后再修改。', 409);
+                    return self::error(
+                        'conflict',
+                        wp_xp_core_t('榜单偏好已更新，请刷新后再修改。'),
+                        409,
+                    );
                 }
                 $uid = get_current_user_id();
                 $value = $input['participating'] ? '1' : '0';
@@ -160,16 +169,16 @@ final class WP_XP_Core_Fairness
                 return self::personal($nonce);
             });
         } catch (Throwable $e) {
-            return self::error('storage', '榜单偏好未能保存，请重试。', 503);
+            return self::error('storage', wp_xp_core_t('榜单偏好未能保存，请重试。'), 503);
         }
     }
     public static function exclude(array $input, $nonce)
     {
         if (!current_user_can('manage_options')) {
-            return self::error('forbidden', '没有管理榜单的权限。', 403);
+            return self::error('forbidden', wp_xp_core_t('没有管理榜单的权限。'), 403);
         }
         if (!is_string($nonce) || !wp_verify_nonce($nonce, 'wp_xp_core_insights')) {
-            return self::error('nonce', '验证已过期，请刷新页面。', 403);
+            return self::error('nonce', wp_xp_core_t('验证已过期，请刷新页面。'), 403);
         }
         if (
             array_diff(array_keys($input), ['user_id', 'excluded', 'revision']) ||
@@ -179,7 +188,7 @@ final class WP_XP_Core_Fairness
             !preg_match('/^[1-9][0-9]{0,9}$/D', (string) $input['user_id']) ||
             (int) $input['user_id'] > 2147483647
         ) {
-            return self::error('input', '榜单排除设置无效。');
+            return self::error('input', wp_xp_core_t('榜单排除设置无效。'));
         }
         $uid = (int) $input['user_id'];
         $permission = WP_XP_Core_Management::permission($uid);
@@ -187,26 +196,26 @@ final class WP_XP_Core_Fairness
             return $permission;
         }
         if (!Reader_Experience::ready()) {
-            return self::error('maintenance', '经验系统维护中。', 503);
+            return self::error('maintenance', wp_xp_core_t('经验系统维护中。'), 503);
         }
         try {
             return Reader_Experience::transaction(function () use ($input, $uid) {
                 if (!Reader_Experience::ready()) {
-                    return self::error('maintenance', '经验系统维护中。', 503);
+                    return self::error('maintenance', wp_xp_core_t('经验系统维护中。'), 503);
                 }
                 WP_XP_Core_Management::require_options_transaction();
                 foreach ([self::EXCLUDED, 'alloptions', 'notoptions'] as $key) {
                     wp_cache_delete($key, 'options');
                 }
                 if (!hash_equals(self::exclusion_revision(), $input['revision'])) {
-                    return self::error('conflict', '榜单排除列表已更新。', 409);
+                    return self::error('conflict', wp_xp_core_t('榜单排除列表已更新。'), 409);
                 }
                 $permission = WP_XP_Core_Management::permission($uid);
                 if ($permission !== true) {
                     return $permission;
                 }
                 if (!get_userdata($uid)) {
-                    return self::error('missing', '用户不存在。', 404);
+                    return self::error('missing', wp_xp_core_t('用户不存在。'), 404);
                 }
                 $old = self::excluded();
                 $next = array_values(array_filter($old, fn($id) => $id !== $uid));
@@ -215,7 +224,7 @@ final class WP_XP_Core_Fairness
                 }
                 sort($next, SORT_NUMERIC);
                 if (count($next) > 1000) {
-                    return self::error('limit', '最多排除一千个账号。');
+                    return self::error('limit', wp_xp_core_t('最多排除一千个账号。'));
                 }
                 if ($old !== $next) {
                     Reader_Experience::touch_option(self::EXCLUDED);
@@ -227,7 +236,7 @@ final class WP_XP_Core_Fairness
                 return ['saved' => true];
             });
         } catch (Throwable $e) {
-            return self::error('storage', '榜单排除设置未能保存。', 503);
+            return self::error('storage', wp_xp_core_t('榜单排除设置未能保存。'), 503);
         }
     }
 }

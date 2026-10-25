@@ -60,7 +60,7 @@ final class WP_XP_Core_Growth
             (int) $value < $min ||
             (int) $value > $max
         ) {
-            throw new InvalidArgumentException('请填写有效的整数。');
+            throw new InvalidArgumentException(wp_xp_core_t('请填写有效的整数。'));
         }
         return (int) $value;
     }
@@ -71,7 +71,7 @@ final class WP_XP_Core_Growth
             mb_strlen($value) > $limit ||
             preg_match('/[<>\x00-\x1f]/u', $value)
         ) {
-            throw new InvalidArgumentException('名称或说明包含无效内容。');
+            throw new InvalidArgumentException(wp_xp_core_t('名称或说明包含无效内容。'));
         }
         return trim($value);
     }
@@ -83,7 +83,7 @@ final class WP_XP_Core_Growth
             !is_array($input['streak'] ?? null) ||
             count($input['levels']) > 100
         ) {
-            throw new InvalidArgumentException('成长设置不完整。');
+            throw new InvalidArgumentException(wp_xp_core_t('成长设置不完整。'));
         }
         $levels = [];
         foreach ($input['levels'] as $number => $row) {
@@ -92,11 +92,11 @@ final class WP_XP_Core_Growth
                 !is_array($row) ||
                 array_diff(array_keys($row), ['name', 'icon', 'color', 'description'])
             ) {
-                throw new InvalidArgumentException('等级资料无效。');
+                throw new InvalidArgumentException(wp_xp_core_t('等级资料无效。'));
             }
             $color = $row['color'] ?? '#3856b0';
             if (!is_string($color) || !preg_match('/^#[a-f0-9]{6}$/iD', $color)) {
-                throw new InvalidArgumentException('请选择有效的等级颜色。');
+                throw new InvalidArgumentException(wp_xp_core_t('请选择有效的等级颜色。'));
             }
             $levels[$number] = [
                 'name' => self::text($row['name'] ?? '', 40),
@@ -113,22 +113,22 @@ final class WP_XP_Core_Growth
             !is_array($s['rewards'] ?? null) ||
             count($s['rewards']) > 10
         ) {
-            throw new InvalidArgumentException('签到成长设置无效。');
+            throw new InvalidArgumentException(wp_xp_core_t('签到成长设置无效。'));
         }
         $rewards = [];
         $days = 0;
         $ids = [];
         foreach ($s['rewards'] as $row) {
             if (!is_array($row) || array_diff(array_keys($row), ['id', 'days', 'xp'])) {
-                throw new InvalidArgumentException('签到奖励无效。');
+                throw new InvalidArgumentException(wp_xp_core_t('签到奖励无效。'));
             }
             $id = $row['id'] ?? '';
             if (!is_string($id) || !preg_match('/^[a-z0-9_-]{1,32}$/D', $id) || isset($ids[$id])) {
-                throw new InvalidArgumentException('签到奖励编号无效或重复。');
+                throw new InvalidArgumentException(wp_xp_core_t('签到奖励编号无效或重复。'));
             }
             $n = self::integer($row['days'] ?? null, 1, 365);
             if ($n <= $days) {
-                throw new InvalidArgumentException('签到奖励天数必须严格递增。');
+                throw new InvalidArgumentException(wp_xp_core_t('签到奖励天数必须严格递增。'));
             }
             $rewards[] = [
                 'id' => $id,
@@ -150,13 +150,17 @@ final class WP_XP_Core_Growth
     public static function save(array $input, $nonce, $revision)
     {
         if (!current_user_can('manage_options')) {
-            return new WP_Error('forbidden', '没有管理成长设置的权限。', ['status' => 403]);
+            return new WP_Error('forbidden', wp_xp_core_t('没有管理成长设置的权限。'), [
+                'status' => 403,
+            ]);
         }
         if (!is_string($nonce) || !wp_verify_nonce($nonce, 'wp_xp_core_growth')) {
-            return new WP_Error('nonce', '验证已过期，请刷新页面。', ['status' => 403]);
+            return new WP_Error('nonce', wp_xp_core_t('验证已过期，请刷新页面。'), [
+                'status' => 403,
+            ]);
         }
         if (!Reader_Experience::ready()) {
-            return new WP_Error('maintenance', '经验系统维护中。', ['status' => 503]);
+            return new WP_Error('maintenance', wp_xp_core_t('经验系统维护中。'), ['status' => 503]);
         }
         try {
             $value = self::validate($input);
@@ -166,7 +170,9 @@ final class WP_XP_Core_Growth
         try {
             return Reader_Experience::transaction(function () use ($value, $revision) {
                 if (!Reader_Experience::ready()) {
-                    return new WP_Error('maintenance', '经验系统维护中。', ['status' => 503]);
+                    return new WP_Error('maintenance', wp_xp_core_t('经验系统维护中。'), [
+                        'status' => 503,
+                    ]);
                 }
                 WP_XP_Core_Management::require_options_transaction();
                 self::clear_cache();
@@ -175,7 +181,7 @@ final class WP_XP_Core_Growth
                     !is_string($revision) ||
                     !hash_equals(WP_XP_Core_Settings::revision($old), $revision)
                 ) {
-                    return new WP_Error('conflict', '成长设置已更新，请刷新页面。', [
+                    return new WP_Error('conflict', wp_xp_core_t('成长设置已更新，请刷新页面。'), [
                         'status' => 409,
                     ]);
                 }
@@ -204,7 +210,9 @@ final class WP_XP_Core_Growth
             });
         } catch (Throwable $e) {
             self::clear_cache();
-            return new WP_Error('storage', '成长设置未能保存，请重试。', ['status' => 503]);
+            return new WP_Error('storage', wp_xp_core_t('成长设置未能保存，请重试。'), [
+                'status' => 503,
+            ]);
         }
     }
     public static function clear_cache(): void

@@ -24,7 +24,7 @@ The plugin manages experience and levels independently of myCRED. Likes are an o
 
 ## Get started
 
-**The current prerelease is 2.0.0-rc.2**, adding weekly/monthly activity boards and incentive insights.
+**This branch is the unreleased 2.0.0-rc.3 development candidate.** The latest published Release remains rc.2. The new capabilities below are not available from that existing installation ZIP; they require candidate validation and publication.
 
 Back up existing sites and verify updates in an isolated environment first; use the documentation at your Release tag for version-specific behavior. On a new site, installing and activating creates the experience ledger and uses default rules. No server JSON profile or other experience plugin is required. Existing users start at zero XP; old articles and historical comments do not trigger automatic backfill.
 
@@ -36,7 +36,7 @@ Back up existing sites and verify updates in an isolated environment first; use 
 
 “My experience” is an ordinary WordPress page; no account plugin is required. Experience content belongs to the currently signed-in user. Activation does not create or publish a page.
 
-Existing sites can update with a new Release ZIP. Deactivating and reactivating preserves experience and settings. No automatic updater is included. External server configuration is an optional [advanced integration](docs/CONFIGURATION.en.md); ordinary first-time installation needs no old-plugin migration work.
+Existing sites can update with a new Release ZIP. Deactivating and reactivating preserves experience and settings. Optional official GitHub update checks default to off; enable them explicitly in Configuration tools. External server configuration is an optional [advanced integration](docs/CONFIGURATION.en.md); ordinary first-time installation needs no old-plugin migration work.
 
 ## Configure your experience rules
 
@@ -78,10 +78,12 @@ See the [user guide](docs/GUIDE.en.md) for steps and change effects. These featu
 | Contribute improvements                                        | [Contributing](CONTRIBUTING.md)                                           |
 | Maintain GitHub releases                                       | [Releasing](docs/RELEASING.md)                                            |
 
-Documentation on this branch describes the 2.0.0-rc.2 prerelease. For an installed release, use the documentation at its Release tag.
+Documentation on this branch describes the unreleased 2.0.0-rc.3 development candidate. For an installed release, use the documentation at its Release tag.
 
 [Open an Issue](https://github.com/wzf2000/wp-xp-core/issues/new/choose) with your version, observed behavior and reproduction steps. Report security issues privately under the [security policy](SECURITY.md).
 
 ## Author and license
 
 Maintained by [wzf2000](https://github.com/wzf2000), under **[GPL-2.0-or-later](LICENSE)**. Issues and Pull Requests are welcome.
+
+Minimum requirements: WordPress 6.0 and PHP 8.0. See [Contributing](CONTRIBUTING.md) for the combinations actually tested in CI. Configuration tools provide previewed imports and explicit templates; editor blocks retain shortcode compatibility. [The guide](docs/GUIDE.en.md) covers compact task lists, language, personal-data export and retention. [Integration](docs/CONFIGURATION.en.md) documents the trusted provider API and optional updates.

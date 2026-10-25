@@ -1,6 +1,6 @@
 <?php
 /** Plugin Name: WP XP Core
- * Description: 独立的经验与等级系统，支持自定义活动奖励、等级门槛与私人活动记录。
+ * Description: Independent experience and levels with configurable activity rewards, private growth and achievements.
  * Plugin URI: https://github.com/wzf2000/wp-xp-core
  * Author: wzf2000
  * Author URI: https://github.com/wzf2000
@@ -9,7 +9,9 @@
  * Requires PHP: 8.0
  * Requires at least: 6.0
  * Update URI: https://github.com/wzf2000/wp-xp-core
- * Version: 2.0.0-rc.2
+ * Text Domain: wp-xp-core
+ * Domain Path: /languages
+ * Version: 2.0.0-rc.3
  */
 defined('ABSPATH') || exit();
 require_once __DIR__ . '/config.php';
@@ -25,10 +27,17 @@ require_once __DIR__ . '/fairness.php';
 require_once __DIR__ . '/notifications.php';
 require_once __DIR__ . '/insights.php';
 require_once __DIR__ . '/insights-ui.php';
+require_once __DIR__ . '/configuration-tools.php';
+require_once __DIR__ . '/configuration-ui.php';
+require_once __DIR__ . '/provider.php';
+require_once __DIR__ . '/privacy.php';
+require_once __DIR__ . '/updates.php';
+require_once __DIR__ . '/i18n.php';
+require_once __DIR__ . '/modules/blocks.php';
 register_activation_hook(__FILE__, [WP_XP_Core_Lifecycle::class, 'activate']);
 final class Reader_Experience
 {
-    const VERSION = '2.0.0-rc.2';
+    const VERSION = '2.0.0-rc.3';
     const BALANCE_META = 'reader_experience_balance';
     const MINS = [0, 5, 20, 60, 150, 300, 600, 1000, 1800, 3000];
     private static bool $writing = false;
@@ -348,13 +357,17 @@ final class Reader_Experience
     public static function permission($r)
     {
         if (!is_user_logged_in() || !current_user_can('read')) {
-            return new WP_Error('login_required', '请先登录。', ['status' => 401]);
+            return new WP_Error('login_required', wp_xp_core_t('请先登录。'), ['status' => 401]);
         }
         if (!wp_verify_nonce($r->get_header('X-WP-Nonce'), 'wp_rest')) {
-            return new WP_Error('nonce', '登录验证已过期，请刷新页面。', ['status' => 403]);
+            return new WP_Error('nonce', wp_xp_core_t('登录验证已过期，请刷新页面。'), [
+                'status' => 403,
+            ]);
         }
         if (!self::ready()) {
-            return new WP_Error('maintenance', '经验系统维护中，请稍后重试。', ['status' => 503]);
+            return new WP_Error('maintenance', wp_xp_core_t('经验系统维护中，请稍后重试。'), [
+                'status' => 503,
+            ]);
         }
         return true;
     }
@@ -394,7 +407,7 @@ final class Reader_Experience
                 array_diff(array_keys($v), $keys) ||
                 array_diff($keys, array_keys($v))
             ) {
-                return new WP_Error('input', '请求参数无效。', ['status' => 400]);
+                return new WP_Error('input', wp_xp_core_t('请求参数无效。'), ['status' => 400]);
             }
             $uid = get_current_user_id();
             $pid = (int) ($v['post_id'] ?? 0);
@@ -404,7 +417,7 @@ final class Reader_Experience
                     !self::available_post($pid) ||
                     !WP_XP_Core_Settings::in_scope($pid))
             ) {
-                return new WP_Error('missing', '页面不可用。', ['status' => 404]);
+                return new WP_Error('missing', wp_xp_core_t('页面不可用。'), ['status' => 404]);
             }
             if ($action === 'state') {
                 return self::state($uid);
@@ -429,11 +442,15 @@ final class Reader_Experience
                         $v['signature'],
                     ))
             ) {
-                return new WP_Error('dwell', '请在页面停留后再记录访问。', ['status' => 400]);
+                return new WP_Error('dwell', wp_xp_core_t('请在页面停留后再记录访问。'), [
+                    'status' => 400,
+                ]);
             }
             if ($action === 'like') {
                 if (!function_exists('pagenest_companion_like')) {
-                    return new WP_Error('like_unavailable', '点赞服务不可用。', ['status' => 503]);
+                    return new WP_Error('like_unavailable', wp_xp_core_t('点赞服务不可用。'), [
+                        'status' => 503,
+                    ]);
                 }
                 $liked = pagenest_companion_like($uid, $pid);
                 if (is_wp_error($liked)) {
@@ -453,10 +470,12 @@ final class Reader_Experience
                     $action === 'visit' &&
                     (!self::available_post($pid) || !WP_XP_Core_Settings::in_scope($pid))
                 ) {
-                    return new WP_Error('missing', '页面不可用。', ['status' => 404]);
+                    return new WP_Error('missing', wp_xp_core_t('页面不可用。'), ['status' => 404]);
                 }
                 if ($action === 'visit' && time() - $v['issued'] < $rules['dwell_seconds']) {
-                    return new WP_Error('dwell', '请在页面停留后再记录访问。', ['status' => 400]);
+                    return new WP_Error('dwell', wp_xp_core_t('请在页面停留后再记录访问。'), [
+                        'status' => 400,
+                    ]);
                 }
                 if ($action === 'checkin' && WP_XP_Core_Settings::enabled('checkin')) {
                     self::record(
@@ -499,7 +518,9 @@ final class Reader_Experience
             });
         } catch (Throwable $e) {
             error_log('reader_experience: ' . $e->getMessage());
-            return new WP_Error('unavailable', '暂时无法记录，请稍后重试。', ['status' => 503]);
+            return new WP_Error('unavailable', wp_xp_core_t('暂时无法记录，请稍后重试。'), [
+                'status' => 503,
+            ]);
         }
     }
     public static function liked(int $uid, int $pid, int $count): void
@@ -708,7 +729,7 @@ final class Reader_Experience
             throw new RuntimeException('Original comment event unavailable');
         }
         if (!$first || $first['kind'] !== 'comment') {
-            return new WP_Error('missing', '未找到原评论奖励。', ['status' => 404]);
+            return new WP_Error('missing', wp_xp_core_t('未找到原评论奖励。'), ['status' => 404]);
         }
         $uid = (int) $first['user_id'];
         wp_cache_delete($id, 'comment');
@@ -740,7 +761,7 @@ final class Reader_Experience
         }
         $net = (int) $net;
         if ($net < 0 || $net > (int) $first['xp']) {
-            return new WP_Error('inconsistent', '评论奖励净额异常，请先检查账本。', [
+            return new WP_Error('inconsistent', wp_xp_core_t('评论奖励净额异常，请先检查账本。'), [
                 'status' => 409,
             ]);
         }
@@ -823,7 +844,7 @@ final class Reader_Experience
         remove_all_actions('wp_ajax_nopriv_bigfa_like');
         foreach (['wp_ajax_bigfa_like', 'wp_ajax_nopriv_bigfa_like'] as $name) {
             add_action($name, function () {
-                wp_send_json_error(['message' => '请刷新页面并登录后点赞。'], 410);
+                wp_send_json_error(['message' => wp_xp_core_t('请刷新页面并登录后点赞。')], 410);
             });
         }
         // Preserve the existing weekly event; replace payout callbacks with score-only rotation.
@@ -894,6 +915,9 @@ final class Reader_Experience
             null,
             true,
         );
+        if (class_exists('WP_XP_Core_I18n')) {
+            WP_XP_Core_I18n::script('reader_experience');
+        }
         $id = is_singular()
             ? (int) get_queried_object_id()
             : (is_home() || is_front_page()
@@ -916,7 +940,7 @@ final class Reader_Experience
     public static function panel(): string
     {
         if (!self::ready()) {
-            return '<p>经验系统维护中，请稍后再试。</p>';
+            return '<p>' . esc_html(wp_xp_core_t('经验系统维护中，请稍后再试。')) . '</p>';
         }
         return WP_XP_Core_Growth_UI::panel();
     }
@@ -924,9 +948,17 @@ final class Reader_Experience
     public static function admin_profile($user): void
     {
         if (self::ready()) {
-            echo '<h2>经验与等级</h2><p>经验由发表、签到、访问、评论和文章里程碑获得，不能购买或转让。<a href="' .
+            echo '<h2>' .
+                esc_html(wp_xp_core_t('经验与等级')) .
+                '</h2><p>' .
+                esc_html(
+                    wp_xp_core_t('经验由发表、签到、访问、评论和文章里程碑获得，不能购买或转让。'),
+                ) .
+                '<a href="' .
                 esc_url(reader_experience_panel_url()) .
-                '">查看经验与签到</a></p>';
+                '">' .
+                esc_html(wp_xp_core_t('查看经验与签到')) .
+                '</a></p>';
         }
     }
 }
@@ -939,7 +971,11 @@ add_filter('plugin_action_links_wp-xp-core/wp-xp-core.php', function ($links) {
     if (current_user_can('manage_options')) {
         array_unshift(
             $links,
-            '<a href="' . esc_url(admin_url('options-general.php?page=wp-xp-core')) . '">设置</a>',
+            '<a href="' .
+                esc_url(admin_url('options-general.php?page=wp-xp-core')) .
+                '">' .
+                esc_html(wp_xp_core_t('设置')) .
+                '</a>',
         );
     }
     return $links;
@@ -992,7 +1028,7 @@ add_action(
         if (Reader_Experience::ready()) {
             $bar->add_node([
                 'id' => 'reader_experience-checkin',
-                'title' => '经验签到',
+                'title' => wp_xp_core_t('经验签到'),
                 'href' => reader_experience_panel_url(),
             ]);
         }

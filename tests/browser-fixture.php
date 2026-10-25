@@ -66,6 +66,7 @@ function submit_button($label, ...$args)
     echo '<button type="submit">' . $label . '</button>';
 }
 $_SERVER['REQUEST_METHOD'] = 'GET';
+require_once dirname(__DIR__) . '/i18n.php';
 require $root . '/settings.php';
 ob_start();
 WP_XP_Core_Settings::page();

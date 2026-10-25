@@ -27,7 +27,7 @@ final class WP_XP_Core_Achievements
             (int) $value < $min ||
             (int) $value > $max
         ) {
-            throw new InvalidArgumentException('请填写有效的次数。');
+            throw new InvalidArgumentException(wp_xp_core_t('请填写有效的次数。'));
         }
         return (int) $value;
     }
@@ -38,7 +38,7 @@ final class WP_XP_Core_Achievements
             mb_strlen($value) > $max ||
             preg_match('/[<>\x00-\x1f]/u', $value)
         ) {
-            throw new InvalidArgumentException('任务文字无效或过长。');
+            throw new InvalidArgumentException(wp_xp_core_t('任务文字无效或过长。'));
         }
         return trim($value);
     }
@@ -63,25 +63,25 @@ final class WP_XP_Core_Achievements
                 'series',
             ])
         ) {
-            throw new InvalidArgumentException('任务字段无效。');
+            throw new InvalidArgumentException(wp_xp_core_t('任务字段无效。'));
         }
         $id = $input['id'] ?? '';
         if (!is_string($id) || ($id !== '' && !preg_match('/^t_[a-f0-9]{16}$/D', $id))) {
-            throw new InvalidArgumentException('任务编号无效。');
+            throw new InvalidArgumentException(wp_xp_core_t('任务编号无效。'));
         }
         $title = self::text($input['title'] ?? '', 60);
         if ($title === '') {
-            throw new InvalidArgumentException('请填写任务名称。');
+            throw new InvalidArgumentException(wp_xp_core_t('请填写任务名称。'));
         }
         if (
             !in_array($input['type'] ?? '', ['automatic', 'review'], true) ||
             !in_array($input['period'] ?? '', ['once', 'day', 'week', 'month'], true) ||
             !in_array($input['enabled'] ?? false, [true, false, 0, 1, '0', '1'], true)
         ) {
-            throw new InvalidArgumentException('请选择任务类型、周期和启用状态。');
+            throw new InvalidArgumentException(wp_xp_core_t('请选择任务类型、周期和启用状态。'));
         }
         if (!is_array($input['steps'] ?? null) || count($input['steps']) > 8) {
-            throw new InvalidArgumentException('每个任务最多八个步骤。');
+            throw new InvalidArgumentException(wp_xp_core_t('每个任务最多八个步骤。'));
         }
         $steps = [];
         foreach ($input['steps'] as $step) {
@@ -96,16 +96,18 @@ final class WP_XP_Core_Achievements
                 ]) ||
                 !in_array($step['kind'] ?? '', self::KINDS, true)
             ) {
-                throw new InvalidArgumentException('请选择有效的任务步骤。');
+                throw new InvalidArgumentException(wp_xp_core_t('请选择有效的任务步骤。'));
             }
             $mode = $step['mode'] ?? 'events';
             if (!in_array($mode, ['events', 'objects', 'days'], true)) {
-                throw new InvalidArgumentException('请选择有效计数方式。');
+                throw new InvalidArgumentException(wp_xp_core_t('请选择有效计数方式。'));
             }
             $posts = self::ids($step['post_ids'] ?? []);
             $categories = self::ids($step['category_ids'] ?? []);
             if ($step['kind'] === 'checkin' && ($posts || $categories || $mode === 'objects')) {
-                throw new InvalidArgumentException('签到不支持内容范围或不同内容计数。');
+                throw new InvalidArgumentException(
+                    wp_xp_core_t('签到不支持内容范围或不同内容计数。'),
+                );
             }
             $steps[] = [
                 'kind' => $step['kind'],
@@ -116,19 +118,21 @@ final class WP_XP_Core_Achievements
             ];
         }
         if ($input['type'] === 'automatic' && !$steps) {
-            throw new InvalidArgumentException('自动任务至少需要一个步骤。');
+            throw new InvalidArgumentException(wp_xp_core_t('自动任务至少需要一个步骤。'));
         }
         if ($input['type'] === 'review' && $steps) {
-            throw new InvalidArgumentException('审核任务通过提交说明完成，无需自动步骤。');
+            throw new InvalidArgumentException(
+                wp_xp_core_t('审核任务通过提交说明完成，无需自动步骤。'),
+            );
         }
         $starts = self::date($input['starts_on'] ?? '');
         $ends = self::date($input['ends_on'] ?? '');
         if ($starts && $ends && $starts > $ends) {
-            throw new InvalidArgumentException('结束日期不得早于开始日期。');
+            throw new InvalidArgumentException(wp_xp_core_t('结束日期不得早于开始日期。'));
         }
         $prerequisites = $input['prerequisites'] ?? [];
         if (!is_array($prerequisites) || count($prerequisites) > 8) {
-            throw new InvalidArgumentException('最多八个前置任务。');
+            throw new InvalidArgumentException(wp_xp_core_t('最多八个前置任务。'));
         }
         $seen = [];
         foreach ($prerequisites as $pre) {
@@ -140,14 +144,14 @@ final class WP_XP_Core_Achievements
                 !in_array($pre['scope'] ?? '', ['current', 'lifetime'], true) ||
                 isset($seen[$pre['id']])
             ) {
-                throw new InvalidArgumentException('前置任务或完成范围无效。');
+                throw new InvalidArgumentException(wp_xp_core_t('前置任务或完成范围无效。'));
             }
             $seen[$pre['id']] = true;
         }
         usort($prerequisites, fn($a, $b) => strcmp($a['id'], $b['id']));
         $image = self::integer($input['image_id'] ?? 0, 0, 2147483647);
         if ($check_media && $image && !self::public_image($image)) {
-            throw new InvalidArgumentException('请选择可公开展示的媒体库图片。');
+            throw new InvalidArgumentException(wp_xp_core_t('请选择可公开展示的媒体库图片。'));
         }
         return [
             'reward_xp' => self::integer($input['reward_xp'] ?? 0, 0, 1000000),
@@ -232,15 +236,19 @@ final class WP_XP_Core_Achievements
         }
         return $row ?: null;
     }
-    private static function condition_text(array $task): string
+    public static function condition_text(array $task): string
     {
         $names = [
-            'checkin' => '签到',
-            'visit' => '有效阅读',
-            'comment' => '有效评论',
-            'article' => '发表文章',
+            'checkin' => wp_xp_core_t('签到'),
+            'visit' => wp_xp_core_t('有效阅读'),
+            'comment' => wp_xp_core_t('有效评论'),
+            'article' => wp_xp_core_t('发表文章'),
         ];
-        $modes = ['events' => '次活动', 'objects' => '项不同内容', 'days' => '个自然日'];
+        $modes = [
+            'events' => wp_xp_core_t('次活动'),
+            'objects' => wp_xp_core_t('项不同内容'),
+            'days' => wp_xp_core_t('个自然日'),
+        ];
         $parts = [];
         foreach ($task['steps'] as $step) {
             $text =
@@ -250,28 +258,28 @@ final class WP_XP_Core_Achievements
                 ' ' .
                 $modes[$step['mode'] ?? 'events'];
             if (!empty($step['post_ids']) || !empty($step['category_ids'])) {
-                $text .= '（指定内容范围）';
+                $text .= wp_xp_core_t('（指定内容范围）');
             }
             $parts[] = $text;
         }
         if ($task['type'] === 'review') {
-            $parts[] = '提交说明并通过审核';
+            $parts[] = wp_xp_core_t('提交说明并通过审核');
         }
         if (!empty($task['prerequisites'])) {
-            $parts[] = '完成全部前置任务';
+            $parts[] = wp_xp_core_t('完成全部前置任务');
         }
         if (!empty($task['starts_on'])) {
-            $parts[] = '开始：' . $task['starts_on'];
+            $parts[] = wp_xp_core_t('开始：') . $task['starts_on'];
         }
         if (!empty($task['ends_on'])) {
-            $parts[] = '结束：' . $task['ends_on'];
+            $parts[] = wp_xp_core_t('结束：') . $task['ends_on'];
         }
         return implode('；', $parts);
     }
     private static function ids($values): array
     {
         if (!is_array($values) || count($values) > 100) {
-            throw new InvalidArgumentException('内容范围最多一百个编号。');
+            throw new InvalidArgumentException(wp_xp_core_t('内容范围最多一百个编号。'));
         }
         $out = array_values(
             array_unique(array_map(fn($v) => self::integer($v, 1, 2147483647), $values)),
@@ -288,23 +296,23 @@ final class WP_XP_Core_Achievements
                     !($d = DateTimeImmutable::createFromFormat('!Y-m-d', $value)) ||
                     $d->format('Y-m-d') !== $value))
         ) {
-            throw new InvalidArgumentException('日期须为有效的 YYYY-MM-DD。');
+            throw new InvalidArgumentException(wp_xp_core_t('日期须为有效的 YYYY-MM-DD。'));
         }
         return $value;
     }
-    private static function graph(array $definitions): void
+    public static function validate_graph(array $definitions): void
     {
         $visiting = [];
         $done = [];
         $visit = function ($id) use (&$visit, &$visiting, &$done, $definitions) {
             if (isset($visiting[$id])) {
-                throw new InvalidArgumentException('前置任务不能形成循环。');
+                throw new InvalidArgumentException(wp_xp_core_t('前置任务不能形成循环。'));
             }
             if (isset($done[$id])) {
                 return;
             }
             if (!isset($definitions[$id])) {
-                throw new InvalidArgumentException('前置任务不存在。');
+                throw new InvalidArgumentException(wp_xp_core_t('前置任务不存在。'));
             }
             $visiting[$id] = true;
             foreach ($definitions[$id]['prerequisites'] ?? [] as $pre) {
@@ -326,13 +334,13 @@ final class WP_XP_Core_Achievements
     public static function save(array $input, $nonce, $revision)
     {
         if (!current_user_can('manage_options')) {
-            return self::error('forbidden', '没有管理任务的权限。', 403);
+            return self::error('forbidden', wp_xp_core_t('没有管理任务的权限。'), 403);
         }
         if (!is_string($nonce) || !wp_verify_nonce($nonce, 'wp_xp_core_achievements')) {
-            return self::error('nonce', '验证已过期，请刷新页面。', 403);
+            return self::error('nonce', wp_xp_core_t('验证已过期，请刷新页面。'), 403);
         }
         if (!Reader_Experience::ready()) {
-            return self::error('maintenance', '经验系统维护中。', 503);
+            return self::error('maintenance', wp_xp_core_t('经验系统维护中。'), 503);
         }
         try {
             $task = self::validate($input);
@@ -342,7 +350,7 @@ final class WP_XP_Core_Achievements
         try {
             return Reader_Experience::transaction(function () use ($task, $revision) {
                 if (!Reader_Experience::ready()) {
-                    return self::error('maintenance', '经验系统维护中。', 503);
+                    return self::error('maintenance', wp_xp_core_t('经验系统维护中。'), 503);
                 }
                 WP_XP_Core_Management::require_options_transaction();
                 self::clear_cache();
@@ -351,17 +359,24 @@ final class WP_XP_Core_Achievements
                     !is_string($revision) ||
                     !hash_equals(WP_XP_Core_Settings::revision($raw), $revision)
                 ) {
-                    return self::error('conflict', '任务列表已更新，请刷新后再修改。', 409);
+                    return self::error(
+                        'conflict',
+                        wp_xp_core_t('任务列表已更新，请刷新后再修改。'),
+                        409,
+                    );
                 }
                 $old = self::definitions();
                 $next = $old;
                 $value = $task;
                 $existing = $old[$task['id']] ?? null;
                 if ($task['id'] !== '' && !$existing) {
-                    return self::error('missing', '任务不存在。', 404);
+                    return self::error('missing', wp_xp_core_t('任务不存在。'), 404);
                 }
                 if (!$existing && count($old) >= 50) {
-                    return self::error('limit', '最多保留五十个任务，可先停用不再使用的任务。');
+                    return self::error(
+                        'limit',
+                        wp_xp_core_t('最多保留五十个任务，可先停用不再使用的任务。'),
+                    );
                 }
                 if (!$existing) {
                     $value['id'] = 't_' . substr(str_replace('-', '', wp_generate_uuid4()), 0, 16);
@@ -371,7 +386,7 @@ final class WP_XP_Core_Achievements
                     : null;
                 $next[$value['id']] = $value;
                 try {
-                    self::graph($next);
+                    self::validate_graph($next);
                 } catch (InvalidArgumentException $e) {
                     return self::error('input', $e->getMessage());
                 }
@@ -415,7 +430,7 @@ final class WP_XP_Core_Achievements
             });
         } catch (Throwable $e) {
             self::clear_cache();
-            return self::error('storage', '任务未能保存，请重试。', 503);
+            return self::error('storage', wp_xp_core_t('任务未能保存，请重试。'), 503);
         }
     }
     public static function period(array $task): array
@@ -612,13 +627,13 @@ final class WP_XP_Core_Achievements
     private static function permission($nonce)
     {
         if (!is_user_logged_in() || !current_user_can('read')) {
-            return self::error('login_required', '请先登录。', 401);
+            return self::error('login_required', wp_xp_core_t('请先登录。'), 401);
         }
         if (!is_string($nonce) || !wp_verify_nonce($nonce, 'wp_rest')) {
-            return self::error('nonce', '验证已过期，请刷新页面。', 403);
+            return self::error('nonce', wp_xp_core_t('验证已过期，请刷新页面。'), 403);
         }
         if (!Reader_Experience::ready()) {
-            return self::error('maintenance', '经验系统维护中。', 503);
+            return self::error('maintenance', wp_xp_core_t('经验系统维护中。'), 503);
         }
         return true;
     }
@@ -675,11 +690,11 @@ final class WP_XP_Core_Achievements
             return Reader_Experience::transaction(function () use ($id) {
                 self::clear_cache();
                 if (!Reader_Experience::ready()) {
-                    return self::error('maintenance', '经验系统维护中。', 503);
+                    return self::error('maintenance', wp_xp_core_t('经验系统维护中。'), 503);
                 }
                 $task = self::active($id);
                 if (!$task || $task['type'] !== 'automatic') {
-                    return self::error('missing', '任务当前不可领取。', 404);
+                    return self::error('missing', wp_xp_core_t('任务当前不可领取。'), 404);
                 }
                 $uid = get_current_user_id();
                 $progress = self::progress($task, $uid);
@@ -687,16 +702,20 @@ final class WP_XP_Core_Achievements
                     return ['earned' => true, 'duplicate' => true];
                 }
                 if (!empty($progress['revoked'])) {
-                    return self::error('revoked', '本期成就已撤销，不能再次领取。', 409);
+                    return self::error(
+                        'revoked',
+                        wp_xp_core_t('本期成就已撤销，不能再次领取。'),
+                        409,
+                    );
                 }
                 if (!$progress['complete']) {
-                    return self::error('incomplete', '任务步骤尚未完成。', 409);
+                    return self::error('incomplete', wp_xp_core_t('任务步骤尚未完成。'), 409);
                 }
                 self::award($task, $uid);
                 return ['earned' => true, 'duplicate' => false];
             });
         } catch (Throwable $e) {
-            return self::error('storage', '暂时无法记录任务，请重试。', 503);
+            return self::error('storage', wp_xp_core_t('暂时无法记录任务，请重试。'), 503);
         }
     }
     public static function committed(array $event): void
@@ -864,16 +883,16 @@ final class WP_XP_Core_Achievements
                     $input['request_id'],
                 )
             ) {
-                return self::error('input', '提交信息无效。');
+                return self::error('input', wp_xp_core_t('提交信息无效。'));
             }
             $text = self::text($input['text'] ?? '', 1000);
             if (mb_strlen($text) < 5) {
-                return self::error('input', '请填写至少五个字的完成说明。');
+                return self::error('input', wp_xp_core_t('请填写至少五个字的完成说明。'));
             }
             return Reader_Experience::transaction(function () use ($input, $text) {
                 self::clear_cache();
                 if (!Reader_Experience::ready()) {
-                    return self::error('maintenance', '经验系统维护中。', 503);
+                    return self::error('maintenance', wp_xp_core_t('经验系统维护中。'), 503);
                 }
                 $uid = get_current_user_id();
                 $key = 'task-submit:' . $uid . ':' . $input['request_id'];
@@ -883,17 +902,21 @@ final class WP_XP_Core_Achievements
                     $detail = json_decode($existing['detail'], true);
                     return ($detail['fingerprint'] ?? '') === $fingerprint
                         ? ['submitted' => true, 'duplicate' => true]
-                        : self::error('conflict', '提交编号已用于另一份说明。', 409);
+                        : self::error('conflict', wp_xp_core_t('提交编号已用于另一份说明。'), 409);
                 }
                 $task = self::active($input['task_id']);
                 if (!$task || $task['type'] !== 'review') {
-                    return self::error('missing', '审核任务当前不可用。', 404);
+                    return self::error('missing', wp_xp_core_t('审核任务当前不可用。'), 404);
                 }
                 if (!self::unlocked($task, $uid)) {
-                    return self::error('locked', '任务尚未开放、已结束或前置任务尚未完成。', 409);
+                    return self::error(
+                        'locked',
+                        wp_xp_core_t('任务尚未开放、已结束或前置任务尚未完成。'),
+                        409,
+                    );
                 }
                 if (self::event(self::key($task, $uid))) {
-                    return self::error('earned', '本期成就已经获得。', 409);
+                    return self::error('earned', wp_xp_core_t('本期成就已经获得。'), 409);
                 }
                 $attempts = 0;
                 foreach (self::submissions($uid, $task) as $row) {
@@ -906,11 +929,19 @@ final class WP_XP_Core_Achievements
                     }
                     $attempts++;
                     if ($row['status'] === 'pending') {
-                        return self::error('pending', '这项任务已有一份说明等待审核。', 409);
+                        return self::error(
+                            'pending',
+                            wp_xp_core_t('这项任务已有一份说明等待审核。'),
+                            409,
+                        );
                     }
                 }
                 if ($attempts >= 5) {
-                    return self::error('limit', '本期提交次数已达上限，请联系管理员。', 409);
+                    return self::error(
+                        'limit',
+                        wp_xp_core_t('本期提交次数已达上限，请联系管理员。'),
+                        409,
+                    );
                 }
                 Reader_Experience::record(
                     $key,
@@ -933,36 +964,36 @@ final class WP_XP_Core_Achievements
         } catch (InvalidArgumentException $e) {
             return self::error('input', $e->getMessage());
         } catch (Throwable $e) {
-            return self::error('storage', '说明未能提交，请重试。', 503);
+            return self::error('storage', wp_xp_core_t('说明未能提交，请重试。'), 503);
         }
     }
     public static function review(array $input, $nonce)
     {
         if (!current_user_can('manage_options')) {
-            return self::error('forbidden', '没有审核成就的权限。', 403);
+            return self::error('forbidden', wp_xp_core_t('没有审核成就的权限。'), 403);
         }
         if (!is_string($nonce) || !wp_verify_nonce($nonce, 'wp_xp_core_achievements')) {
-            return self::error('nonce', '验证已过期，请刷新页面。', 403);
+            return self::error('nonce', wp_xp_core_t('验证已过期，请刷新页面。'), 403);
         }
         if (!Reader_Experience::ready()) {
-            return self::error('maintenance', '经验系统维护中。', 503);
+            return self::error('maintenance', wp_xp_core_t('经验系统维护中。'), 503);
         }
         try {
             if (
                 array_diff(array_keys($input), ['submission_id', 'decision', 'feedback']) ||
                 !in_array($input['decision'] ?? '', ['approve', 'reject'], true)
             ) {
-                return self::error('input', '审核内容无效。');
+                return self::error('input', wp_xp_core_t('审核内容无效。'));
             }
             $id = self::integer($input['submission_id'] ?? null, 1, 2147483647);
             $feedback = self::text($input['feedback'] ?? '', 300);
             if ($input['decision'] === 'reject' && $feedback === '') {
-                return self::error('input', '请填写退回原因。');
+                return self::error('input', wp_xp_core_t('请填写退回原因。'));
             }
             return Reader_Experience::transaction(function () use ($id, $input, $feedback) {
                 self::clear_cache();
                 if (!Reader_Experience::ready()) {
-                    return self::error('maintenance', '经验系统维护中。', 503);
+                    return self::error('maintenance', wp_xp_core_t('经验系统维护中。'), 503);
                 }
                 global $wpdb;
                 $row = $wpdb->get_row(
@@ -975,7 +1006,7 @@ final class WP_XP_Core_Achievements
                     ARRAY_A,
                 );
                 if (!$row) {
-                    return self::error('missing', '提交记录不存在。', 404);
+                    return self::error('missing', wp_xp_core_t('提交记录不存在。'), 404);
                 }
                 $uid = (int) $row['user_id'];
                 $permission = WP_XP_Core_Management::permission($uid);
@@ -983,7 +1014,7 @@ final class WP_XP_Core_Achievements
                     return $permission;
                 }
                 if (!get_userdata($uid)) {
-                    return self::error('missing', '该用户已经不存在。', 404);
+                    return self::error('missing', wp_xp_core_t('该用户已经不存在。'), 404);
                 }
                 $key = 'task-review:' . $id;
                 $existing = self::event($key);
@@ -993,11 +1024,15 @@ final class WP_XP_Core_Achievements
                         ($d['decision'] ?? null) === $input['decision'] &&
                         ($d['feedback'] ?? null) === $feedback
                         ? ['reviewed' => true, 'duplicate' => true]
-                        : self::error('conflict', '这份说明已被审核，请刷新页面。', 409);
+                        : self::error(
+                            'conflict',
+                            wp_xp_core_t('这份说明已被审核，请刷新页面。'),
+                            409,
+                        );
                 }
                 $detail = json_decode($row['detail'], true);
                 if (!self::submission_detail($detail)) {
-                    return self::error('input', '提交记录不完整，未能审核。');
+                    return self::error('input', wp_xp_core_t('提交记录不完整，未能审核。'));
                 }
                 $task = self::active($detail['task_id']);
                 if ($input['decision'] === 'approve') {
@@ -1009,7 +1044,7 @@ final class WP_XP_Core_Achievements
                     ) {
                         return self::error(
                             'changed',
-                            '任务已修改、停用或本期已结束，可退回说明并告知用户。',
+                            wp_xp_core_t('任务已修改、停用或本期已结束，可退回说明并告知用户。'),
                             409,
                         );
                     }
@@ -1017,7 +1052,11 @@ final class WP_XP_Core_Achievements
                         self::event(self::key($task, $uid)) &&
                         !self::receipt(self::key($task, $uid))
                     ) {
-                        return self::error('revoked', '本期成就已撤销，不能再次授予。', 409);
+                        return self::error(
+                            'revoked',
+                            wp_xp_core_t('本期成就已撤销，不能再次授予。'),
+                            409,
+                        );
                     }
                     self::award($task, $uid, [
                         'submission_id' => $id,
@@ -1043,7 +1082,7 @@ final class WP_XP_Core_Achievements
         } catch (InvalidArgumentException $e) {
             return self::error('input', $e->getMessage());
         } catch (Throwable $e) {
-            return self::error('storage', '审核未能保存，请重试。', 503);
+            return self::error('storage', wp_xp_core_t('审核未能保存，请重试。'), 503);
         }
     }
     /** Administrator-only current-cycle grant or append-only revocation. */
@@ -1054,10 +1093,10 @@ final class WP_XP_Core_Achievements
             return $allowed;
         }
         if (!is_string($nonce) || !wp_verify_nonce($nonce, 'wp_xp_core_achievements')) {
-            return self::error('nonce', '验证已过期，请刷新页面。', 403);
+            return self::error('nonce', wp_xp_core_t('验证已过期，请刷新页面。'), 403);
         }
         if (!Reader_Experience::ready()) {
-            return self::error('maintenance', '经验系统维护中。', 503);
+            return self::error('maintenance', wp_xp_core_t('经验系统维护中。'), 503);
         }
         try {
             $operation = $input['operation'] ?? '';
@@ -1082,11 +1121,11 @@ final class WP_XP_Core_Achievements
                     $input['request_id'],
                 )
             ) {
-                return self::error('input', '授予或撤销请求无效。');
+                return self::error('input', wp_xp_core_t('授予或撤销请求无效。'));
             }
             $reason = self::text($input['reason'] ?? '', 300);
             if ($reason === '') {
-                return self::error('input', '请填写操作原因。');
+                return self::error('input', wp_xp_core_t('请填写操作原因。'));
             }
             $value = ['operation' => $operation, 'reason' => $reason];
             if ($operation === 'grant') {
@@ -1108,7 +1147,7 @@ final class WP_XP_Core_Achievements
             ) {
                 self::clear_cache();
                 if (!Reader_Experience::ready()) {
-                    return self::error('maintenance', '经验系统维护中。', 503);
+                    return self::error('maintenance', wp_xp_core_t('经验系统维护中。'), 503);
                 }
                 $previous = self::event($request_key);
                 if ($previous) {
@@ -1119,7 +1158,7 @@ final class WP_XP_Core_Achievements
                     }
                     return ($d['fingerprint'] ?? '') === $fingerprint
                         ? ['managed' => true, 'duplicate' => true]
-                        : self::error('conflict', '操作编号已用于其他内容。', 409);
+                        : self::error('conflict', wp_xp_core_t('操作编号已用于其他内容。'), 409);
                 }
                 $event_id = 0;
                 $duplicate = false;
@@ -1130,7 +1169,7 @@ final class WP_XP_Core_Achievements
                         return $permission;
                     }
                     if (!get_userdata($uid)) {
-                        return self::error('missing', '用户不存在。', 404);
+                        return self::error('missing', wp_xp_core_t('用户不存在。'), 404);
                     }
                     $task = self::active($value['task_id']);
                     if (
@@ -1140,16 +1179,24 @@ final class WP_XP_Core_Achievements
                     ) {
                         return self::error(
                             'changed',
-                            '任务版本、周期或启用状态已改变，请刷新页面。',
+                            wp_xp_core_t('任务版本、周期或启用状态已改变，请刷新页面。'),
                             409,
                         );
                     }
                     if (!self::unlocked($task, $uid)) {
-                        return self::error('locked', '任务日期或前置条件尚未满足。', 409);
+                        return self::error(
+                            'locked',
+                            wp_xp_core_t('任务日期或前置条件尚未满足。'),
+                            409,
+                        );
                     }
                     $existing = self::event(self::key($task, $uid));
                     if ($existing && !self::receipt(self::key($task, $uid))) {
-                        return self::error('revoked', '本期成就已撤销，不能重复授予。', 409);
+                        return self::error(
+                            'revoked',
+                            wp_xp_core_t('本期成就已撤销，不能重复授予。'),
+                            409,
+                        );
                     }
                     $duplicate = $existing !== null;
                     if (
@@ -1179,7 +1226,7 @@ final class WP_XP_Core_Achievements
                         throw new RuntimeException('Achievement receipt unavailable');
                     }
                     if (!$original) {
-                        return self::error('missing', '成就授予记录不存在。', 404);
+                        return self::error('missing', wp_xp_core_t('成就授予记录不存在。'), 404);
                     }
                     $uid = (int) $original['user_id'];
                     $permission = WP_XP_Core_Management::permission($uid);
@@ -1187,7 +1234,7 @@ final class WP_XP_Core_Achievements
                         return $permission;
                     }
                     if (!get_userdata($uid)) {
-                        return self::error('missing', '用户不存在。', 404);
+                        return self::error('missing', wp_xp_core_t('用户不存在。'), 404);
                     }
                     $detail = json_decode($original['detail'], true);
                     if (
@@ -1195,7 +1242,7 @@ final class WP_XP_Core_Achievements
                         !isset($detail['task_id'], $detail['version'], $detail['period']) ||
                         (int) $original['xp'] < 0
                     ) {
-                        return self::error('input', '原成就记录无效，未执行撤销。');
+                        return self::error('input', wp_xp_core_t('原成就记录无效，未执行撤销。'));
                     }
                     $revoke_key = 'task-revoke:' . $original['id'];
                     $duplicate = self::event($revoke_key) !== null;
@@ -1207,7 +1254,7 @@ final class WP_XP_Core_Achievements
                         ) {
                             return self::error(
                                 'balance',
-                                '当前经验不足以扣回原奖励，成就与经验均未改变。',
+                                wp_xp_core_t('当前经验不足以扣回原奖励，成就与经验均未改变。'),
                                 409,
                             );
                         }
@@ -1262,16 +1309,16 @@ final class WP_XP_Core_Achievements
         } catch (InvalidArgumentException $e) {
             return self::error('input', $e->getMessage());
         } catch (Throwable $e) {
-            return self::error('storage', '成就操作未能保存，请重试。', 503);
+            return self::error('storage', wp_xp_core_t('成就操作未能保存，请重试。'), 503);
         }
     }
     public static function pending(int $cursor = 0, int $limit = 25)
     {
         if (!current_user_can('manage_options')) {
-            return self::error('forbidden', '没有查看审核记录的权限。', 403);
+            return self::error('forbidden', wp_xp_core_t('没有查看审核记录的权限。'), 403);
         }
         if ($cursor < 0 || $limit < 1 || $limit > 100) {
-            return self::error('input', '审核分页无效。');
+            return self::error('input', wp_xp_core_t('审核分页无效。'));
         }
         try {
             $rows = self::submissions(0, null, true, $cursor, $limit + 1);
@@ -1282,7 +1329,7 @@ final class WP_XP_Core_Achievements
                 'next_cursor' => $more ? $rows[count($rows) - 1]['id'] : null,
             ];
         } catch (Throwable $e) {
-            return self::error('storage', '审核记录暂不可读。', 503);
+            return self::error('storage', wp_xp_core_t('审核记录暂不可读。'), 503);
         }
     }
     /** One ledger scan for the whole personal task list, independent of step count. */
@@ -1408,7 +1455,7 @@ final class WP_XP_Core_Achievements
             $term = $terms[$id] ?? null;
             $url = $term ? get_category_link($id) : null;
             if ($term && !is_wp_error($term) && !is_wp_error($url)) {
-                $links[] = ['title' => $term->name . '（分类）', 'url' => $url];
+                $links[] = ['title' => $term->name . wp_xp_core_t('（分类）'), 'url' => $url];
             }
         }
         return $links;
@@ -1430,7 +1477,7 @@ final class WP_XP_Core_Achievements
                 'title' =>
                     $definition && !empty($definition['enabled'])
                         ? $definition['title']
-                        : '前置任务当前未开放',
+                        : wp_xp_core_t('前置任务当前未开放'),
                 'scope' => $pre['scope'],
                 'complete' => self::unlocked($probe, $uid, $context, $definitions),
             ];

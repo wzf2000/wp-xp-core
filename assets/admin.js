@@ -1,5 +1,10 @@
 (() => {
   'use strict';
+  const xpT = (text, ...values) =>
+    (window.WPXPI18n?.[text] || text).replace(/%([1-9][0-9]*)\$s/g, (_, n) =>
+      String(values[Number(n) - 1] ?? ''),
+    );
+
   const root = document.querySelector('.wp-xp-core-admin');
   if (!root) return;
   root.querySelectorAll('.xp-milestone-group').forEach((group) => {
@@ -11,7 +16,7 @@
     const refresh = () => {
       [...rows.children].forEach((row, index) => {
         const id = row.querySelector('[data-field="id"]').value;
-        row.querySelector('.xp-tier').textContent = `第 ${index + 1} 档`;
+        row.querySelector('.xp-tier').textContent = xpT('第 %1$s 档', index + 1);
         row.querySelectorAll('[data-field]').forEach((input) => {
           const field = input.dataset.field;
           input.name = `rules[milestones][${kind}][${index}][${field}]`;
@@ -19,7 +24,7 @@
           input.id = `xp-${kind}_${id}${field === 'threshold' ? '-threshold' : ''}`;
           row.querySelector(`[data-for="${field}"]`).htmlFor = input.id;
         });
-        row.querySelector('button').setAttribute('aria-label', `移除第 ${index + 1} 档`);
+        row.querySelector('button').setAttribute('aria-label', xpT('移除第 %1$s 档', index + 1));
       });
       add.disabled = rows.children.length >= 20 || group.disabled;
     };
@@ -38,7 +43,7 @@
       rows.append(row);
       refresh();
       row.querySelector('[data-field="threshold"]').focus();
-      message.textContent = '已添加新档位，请设置次数和经验，保存后生效。';
+      message.textContent = xpT('已添加新档位，请设置次数和经验，保存后生效。');
     });
     rows.addEventListener('click', (event) => {
       const button = event.target.closest('.xp-milestone-remove');
@@ -48,7 +53,7 @@
       row.remove();
       refresh();
       (next?.querySelector('[data-field="threshold"]') || add).focus();
-      message.textContent = '档位已移除，保存后永久停用；重新添加会创建新档位。';
+      message.textContent = xpT('档位已移除，保存后永久停用；重新添加会创建新档位。');
     });
     refresh();
   });
@@ -68,7 +73,7 @@
       label.htmlFor = input.id;
       label.textContent = `Level ${index + 1}`;
       remove.disabled = index === 0;
-      remove.setAttribute('aria-label', `移除 Level ${index + 1}`);
+      remove.setAttribute('aria-label', xpT('移除 Level %1$s', index + 1));
     });
     root.querySelector('#xp-level-count').textContent = rows.length;
     add.disabled = rows.length >= 100;
@@ -83,7 +88,7 @@
     list.append(row);
     refresh();
     input.focus();
-    message.textContent = `已添加 Level ${list.children.length}，请设置最低经验。`;
+    message.textContent = xpT('已添加 Level %1$s，请设置最低经验。', list.children.length);
   });
   list.addEventListener('click', (event) => {
     const button = event.target.closest('.xp-level-remove');
@@ -93,7 +98,7 @@
     row.remove();
     refresh();
     next.querySelector('input').focus();
-    message.textContent = '等级已移除，后续等级已重新编号；保存后生效。';
+    message.textContent = xpT('等级已移除，后续等级已重新编号；保存后生效。');
   });
   refresh();
 })();

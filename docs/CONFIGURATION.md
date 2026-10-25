@@ -107,7 +107,7 @@ Companion 原子保存点赞总数与新用户记录，经验记账另属独立�
 
 ## 上限、榜单参与与评估
 
-`rules.activity_caps` 为 `{day: 0, week: 0}`，整数范围 0–1000000000，0 不限。`WP_XP_Core_Fairness::FIRST_REWARD_KINDS` 独立于榜单来源，仅累计首次活动正向实际 XP：签到、阅读、文章、评论、两种里程碑、签到阶段、`task_complete`。`comment_adjust` 的正向恢复与所有反向补偿、人工、迁移均不计入或受限。`Reader_Experience::record()` 在同一锁与事务内读取当期 gross 总额，按更小的日／周余额截断，再保存 `detail.activity_cap` 请求额、实际额、限额、既发 gross 与截断标识。0 XP 事件仍幂等，后续不补齐；旧事件无元数据也按原实际发放计本期额度。
+`rules.activity_caps` 为 `{day: 0, week: 0}`，整数范围 0–1000000000，0 不限。`WP_XP_Core_Fairness::FIRST_REWARD_KINDS` 独立于榜单来源，仅累计首次活动正向实际 XP：签到、阅读、文章、评论、两种里程碑、签到阶段、`task_complete` 与 `provider_reward`。`comment_adjust` 的正向恢复与所有反向补偿、人工、迁移均不计入或受限。`Reader_Experience::record()` 在同一锁与事务内读取当期 gross 总额，按更小的日／周余额截断，再保存 `detail.activity_cap` 请求额、实际额、限额、既发 gross 与截断标识。0 XP 事件仍幂等，后续不补齐；旧事件无元数据也按原实际发放计本期额度。
 
 `record()` 在 INSERT 前拒绝负余额与整数溢出，`set_balance()` 拒绝负值。评论补偿通过 `reconcile_comment()` 在同锁内重新检查原事件、当前评论或删除、原实际 XP 和净额；不足则整笔拒绝并捕获 `comment_adjust` 失败。管理员 retry 先验证 canonical 原事件与失败归属和目标权限，再重算 delta，不能重放保存金额／键；补偿、失败解决与管理回执同事务。恢复批准但原净额仍在时 resolve/noop；永久删除也可受控重试。不建立负余额、部分补偿或自动追债，旧漂移须由只读诊断定位，不自动修复。缺余额 meta 且账本合计为 0 属于隐式零一致，仍返回 `balance_present: false`；非零缺失与重复 meta 继续报错，读取不补投影。
 
@@ -131,7 +131,7 @@ Companion 原子保存点赞总数与新用户记录，经验记账另属独立�
 
 `[xp_leaderboard period="week" limit="10"]` 是独立的手动公开入口，`period` 还支持 `month`，每页 1–50 人。它不由外部配置中的 `shortcodes` 字段改名，也不会创建页面。统计使用当前规则的经验时区与账本 `local_day`；周一／月初至今日的活动净经验必须大于 0。同分按 1、1、3 排名，同分记录按用户编号稳定排序，但该编号不进入公开行。单次 SQL 在同一数据库快照内计算该页、总人数与名次；offset 翻页之间的新活动仍可能移动结果。
 
-`WP_XP_Core_Insights::leaderboard()` 仅接受 `period`、`limit`（1–50）、`offset`（0–1000000）。公开行只返回 `display_name`、`author_url`、`xp`、`rank`，另有日期、时区和分页信息；不返回用户编号、登录名或个人记录。已删除用户及多站点中不再属于当前子站的用户不进入公开榜。参与来源是 `checkin`、`visit`、`article`、`comment`、`comment_adjust`、`milestone_view`、`milestone_like`、`streak_reward`、`task_complete`、`task_revoke`，含负补偿；不使用余额投影排名。
+`WP_XP_Core_Insights::leaderboard()` 仅接受 `period`、`limit`（1–50）、`offset`（0–1000000）。公开行只返回 `display_name`、`author_url`、`xp`、`rank`，另有日期、时区和分页信息；不返回用户编号、登录名或个人记录。已删除用户及多站点中不再属于当前子站的用户不进入公开榜。参与来源是 `checkin`、`visit`、`article`、`comment`、`comment_adjust`、`milestone_view`、`milestone_like`、`streak_reward`、`task_complete`、`provider_reward`、`task_revoke`，含负补偿；不使用余额投影排名。
 
 个人位置使用主 `rest_namespace` 及全部 `rest_aliases` 下的 `POST /position`，沿用原个人接口权限检查。要求登录、`read` 权限及有效 `X-WP-Nonce`；JSON 对象仅支持可选的 `period` 字段（`week` 或 `month`，默认 `week`），例如 `{"period":"month"}`；不接受目标用户编号或其他字段，正文上限 1000 字节。服务端强制读取当前用户，响应的 `position` 是公开行格式或无排名时的 `null`。成长面板用 JavaScript 调用此接口；读取不产生事件，私人响应不可进入共享缓存。
 
@@ -151,7 +151,7 @@ Companion 原子保存点赞总数与新用户记录，经验记账另属独立�
 
 1.4.0 为新站提供原生安装；已使用有效外部配置的站点更新时保持原接入，不执行建表、数据重算或原生初始化。
 
-**从 1.1.1 升级：** 无需数据迁移。已有完整自定义规则在内存补齐默认里程碑次数，保留奖励和等级，不自动保存。没有自定义规则时继续使用默认值。`Update URI` 标识源码仓库，未实现自动更新器。
+**从 1.1.1 升级：** 无需数据迁移。已有完整自定义规则在内存补齐默认里程碑次数，保留奖励和等级，不自动保存。没有自定义规则时继续使用默认值。`Update URI` 标识源码仓库，可选官方更新检查默认关闭，在配置工具显式启用。
 
 **从旧 Reader Experience 切换：** 1.1.1 将入口改为 `wp-xp-core/wp-xp-core.php`。先停用 `reader-experience/reader-experience.php`，再启用新入口，避免同时加载。WordPress 将两者视为不同插件，服务器提前加载引用也须同时切换。保留原配置、账本、余额、选项与定时钩子；改名不执行初始化或数据迁移。
 
@@ -162,3 +162,41 @@ Companion 原子保存点赞总数与新用户记录，经验记账另属独立�
 ## 可选旧系统集成
 
 `weekly_hook`／`weekly_lock` 保留已有每周游戏成绩轮换，使用与成绩结算相同的锁；它不发经验，也不属于设置界面。仅在对应成绩元数据与调度已存在的站点接入。该兼容实现保持不变。
+
+## 便携配置与编辑器
+
+`WP_XP_Core_Configuration::export($nonce)` 仅导出 `schema:1`、`rules`、`growth`、`tasks`；nonce 为 `wp_xp_core_configuration`，要求 `manage_options`。`preview($json, $mode, $nonce)` 最多接受 4 MiB（`MAX_BYTES`）、50 项任务，拒绝未知字段及内部 version／start_event_id／generation／安装或存储状态。`mode` 为 `update`（同站已知 ID）或 `template`（外站全量重映射），不删除未列出的本站任务。本站维护最多 1000 项非导出映射，使模板重复应用不会创建重复发奖身份。模板模式的里程碑同门槛匹配本站身份，退休身份继续拒绝。
+
+预览返回逐字段旧／新差异、任务变化、各配置 revision 和绑定当前管理员、文档、模式与插件版本的 HMAC `proof`。`apply($json, $mode, $revision, $proof, $nonce)` 先取规则锁再取既有账本锁，锁内重新鉴权并核对全部 revision，校验图和未来边界，再以同一 InnoDB 事务写规则、成长、任务、映射和审计；任何失败回滚所有写入。调用方不能提交奖励事件、余额、表名、REST 路由、管理员账号或历史版本。模板只有显式应用才创建任务，默认 reward_xp 为 0。导入不会重算、补历史或修改已获快照。
+
+`wp-xp-core/growth` 和 `wp-xp-core/leaderboard` 为动态区块，复用 `reader_experience` 与 `xp_leaderboard` 短代码。编辑器脚本不读取私人 API；旧短代码契约保留。
+
+## 可信活动提供者
+
+仅受信 PHP 插件调用，无对应用户提交 REST 路由：
+
+```php
+add_action('init', function () {
+    wp_xp_core_register_activity_provider('course', [
+        'label' => '课程完成',
+        'authorize' => function (int $uid, int $object_id, array $context): bool {
+            // 在服务端查验自己的完成记录、归属与当前资格。
+            return my_course_completion_is_verified($uid, $object_id, $context);
+        },
+    ]);
+});
+// 在服务端验证完成后，以稳定来源事件 ID 投递；失败可用相同 ID 重试。
+wp_xp_core_record_activity('course', 'completion-123', $uid, $course_id, []);
+```
+
+注册项仅含 label 与 authorize；不能在调用中指定 XP 或任意事件 kind。管理员在经验规则中显式启用提供者并保存 XP（0–1000000），默认关闭。规则 `providers` 为至多 20 个标识到 `{enabled, xp}` 的映射。回调必须严格返回 `true`，在锁内检查；context 不保存到账本。固定 `provider_reward` 使用提供者与稳定事件 ID 哈希幂等，复用 ID 改用户或对象拒绝；错误回滚且可重试。该来源属于首次活动，纳入日／周 gross 上限、来源统计、周／月活动榜和私人记录；不会作为自动任务步骤或反向触发任务循环。记录只保存提供者标识／名称及标准奖励／上限快照。
+
+## 翻译、隐私与更新接口
+
+Text Domain 为 `wp-xp-core`，catalog 位于 `languages/`，支持 `zh_CN` 和 `en_US`；`wp_xp_core_t()` 对固定文案调用标准 gettext。`tools/languages.py` 离线编译已审核 PO 为 MO 和 JSON，`--check` 验证生成一致性。JS 通过小型 `WPXPI18n` 桥获取 gettext 文案与带位置占位符的格式串，不转换用户内容或整个 HTML。语言文件与 `modules/` 均列入发布 ZIP、独立发布校验和真实 WP 安装白名单。
+
+WP 隐私 exporter `wp-xp-core` 按邮箱归属导出本站最多 50 条事件／页（再读一条确定结束），加本人余额、榜单状态与通知偏好。仅白名单事实，排除管理员 reason／actor 和他人字段；不存在自动 eraser、cron 或读时写入。停用与删除插件文件不删除数据；保留政策见指南，匿名化／清账需另行设计。
+
+`wp_xp_core_updates` 是独立默认关闭的更新偏好，后台 nonce／权限／revision 校验；不随便携配置导入。检查固定 GitHub API 最近 30 个 Release，响应上限 256 KiB、超时五秒、不跟随重定向，成功缓存六小时、失败十五分钟。只接受官方 tag 与对应准确命名、固定域路径且不超过 32 MiB 的安装 ZIP；稳定渠道排除预发布，预发布渠道可选更高稳定版或候选，以 `version_compare` 拒绝降级。关闭后忽略残留更新项，不添加定时任务。更新仍由 WordPress 常规权限与升级流程控制。
+
+多站点网络不提供本轮可选更新器；该网络的插件由网络管理员手动更新，子站偏好不会影响网络共享的插件更新结果。
