@@ -208,8 +208,20 @@ try {
         "add_filter('locale', static fn($locale) => 'zh_CN', 0);\n"
         "add_filter('determine_locale', static fn($locale) => 'zh_CN', 0);\n"
     )
-    if wp("eval", "echo determine_locale();").strip() != "zh_CN":
-        raise RuntimeError("Owned synthetic locale fixture did not initialize")
+    locale_probe = lab / "locale-probe.php"
+    locale_probe.write_text(
+        "<?php\n"
+        "if (PHP_SAPI !== 'cli' || DB_NAME !== 'wp_xp_core_ci' || "
+        "wp_get_environment_type() !== 'local' || get_option('wp_xp_core_test_owner') !== "
+        + json.dumps(owner_token)
+        + ") throw new RuntimeException('Owned synthetic locale probe required');\n"
+        "echo determine_locale();\n"
+    )
+    try:
+        if wp("eval-file", str(locale_probe)).strip() != "zh_CN":
+            raise RuntimeError("Owned synthetic locale fixture did not initialize")
+    finally:
+        locale_probe.unlink()
     results = {"wordpress": {"version": wp("core", "version").strip()}}
     fixture = str(ROOT / "tests/wordpress-install.php")
     for mode in ["install", "verify"]:

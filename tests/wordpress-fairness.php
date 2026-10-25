@@ -357,15 +357,16 @@ $verify(
 );
 // A synthetic mismatched failure owner must be rejected before reconciliation can write.
 $failure_rows = get_option(WP_XP_Core_Management::FAILURE_OPTION);
-$corrupt = $failure_rows;
+$corrupt = json_decode($failure_rows, true, 512, JSON_THROW_ON_ERROR);
 $corrupt[$failure['id']]['user_id'] = $other;
-update_option(WP_XP_Core_Management::FAILURE_OPTION, $corrupt, false);
+$corrupt_raw = wp_json_encode($corrupt);
+update_option(WP_XP_Core_Management::FAILURE_OPTION, $corrupt_raw, false);
 $count_before = (int) $wpdb->get_var('SELECT COUNT(*) FROM ' . $table);
 $verify(
     'Mismatched failure ownership cannot write compensation or resolve state',
     $error($retry($failure, wp_generate_uuid4()), 'conflict') &&
         (int) $wpdb->get_var('SELECT COUNT(*) FROM ' . $table) === $count_before &&
-        get_option(WP_XP_Core_Management::FAILURE_OPTION) === $corrupt &&
+        get_option(WP_XP_Core_Management::FAILURE_OPTION) === $corrupt_raw &&
         $balance($commenter) === 2,
 );
 update_option(WP_XP_Core_Management::FAILURE_OPTION, $failure_rows, false);
