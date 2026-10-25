@@ -289,6 +289,7 @@ try {
             shutil.copy2(path, target)
     # No core language pack is implied. The lab's low-priority locale can still be
     # overridden by WordPress's real locale switcher for English-catalog tests.
+    # WP 6.0 switches the locale filter only; do not pin determine_locale independently.
     mu_plugins = site / "wp-content/mu-plugins"
     mu_plugins.mkdir(exist_ok=True)
     (mu_plugins / "xp-owned-test-locale.php").write_text(
@@ -296,7 +297,7 @@ try {
         "if (DB_NAME !== 'wp_xp_core_ci' || wp_get_environment_type() !== 'local' || "
         "get_option('wp_xp_core_test_owner') !== " + json.dumps(owner_token) + ") return;\n"
         "add_filter('locale', static fn($locale) => 'zh_CN', 0);\n"
-        "add_filter('determine_locale', static fn($locale) => 'zh_CN', 0);\n"
+        "add_filter('determine_locale', static fn($locale) => get_locale(), 0);\n"
     )
     locale_probe = lab / "locale-probe.php"
     locale_probe.write_text(
