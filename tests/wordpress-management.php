@@ -154,4 +154,111 @@ $verify(
     str_contains($html, '账本与余额核对') && str_contains($html, '规则修改记录'),
 );
 unset($_GET['view']);
+// Exercise WordPress's real menu registry and access checks, without changing site data.
+require_once ABSPATH . 'wp-admin/includes/plugin.php';
+$menu_globals = [
+    'menu',
+    'submenu',
+    'admin_page_hooks',
+    '_registered_pages',
+    '_parent_pages',
+    '_wp_real_parent_file',
+    '_wp_menu_nopriv',
+    '_wp_submenu_nopriv',
+    'pagenow',
+    'plugin_page',
+    'parent_file',
+    'typenow',
+    'title',
+];
+$saved_menu_globals = [];
+foreach ($menu_globals as $name) {
+    $saved_menu_globals[$name] = $GLOBALS[$name] ?? null;
+}
+$saved_get = $_GET;
+$prepare_menu = static function () {
+    $GLOBALS['menu'] = [['Settings', 'manage_options', 'options-general.php', 'Settings']];
+    $GLOBALS['submenu'] = [
+        'options-general.php' => [['General', 'manage_options', 'options-general.php', 'General']],
+    ];
+    $GLOBALS['admin_page_hooks'] = ['options-general.php' => 'settings'];
+    foreach (
+        [
+            '_registered_pages',
+            '_parent_pages',
+            '_wp_real_parent_file',
+            '_wp_menu_nopriv',
+            '_wp_submenu_nopriv',
+        ]
+        as $name
+    ) {
+        $GLOBALS[$name] = [];
+    }
+    $GLOBALS['pagenow'] = 'options-general.php';
+    $GLOBALS['plugin_page'] = null;
+    $GLOBALS['parent_file'] = '';
+    $GLOBALS['typenow'] = '';
+    do_action('admin_menu');
+};
+$screens = [
+    'wp-xp-core' => [WP_XP_Core_Settings::class, 'page'],
+    'wp-xp-ledger' => [WP_XP_Core_Management_UI::class, 'page'],
+    'wp-xp-growth' => [WP_XP_Core_Growth_UI::class, 'settings_page'],
+    'wp-xp-achievements' => [WP_XP_Core_Achievements_UI::class, 'page'],
+    'wp-xp-insights' => [WP_XP_Core_Insights_UI::class, 'page'],
+    'wp-xp-configuration' => [WP_XP_Core_Configuration_UI::class, 'page'],
+];
+try {
+    $prepare_menu();
+    $visible = array_column($GLOBALS['submenu']['options-general.php'], 2);
+    $verify(
+        'Settings retains only one WP XP Core entry and preserves General',
+        $visible === ['options-general.php', 'wp-xp-core'],
+    );
+    foreach ($screens as $slug => $callback) {
+        $GLOBALS['plugin_page'] = $slug;
+        $GLOBALS['parent_file'] = '';
+        $_GET = ['page' => $slug, 'user_id' => '7', 'view' => 'diagnostics', 'task' => 't_fixture'];
+        $hook = get_plugin_page_hook($slug, 'options-general.php');
+        $verify(
+            $slug .
+                ' keeps its original registered hook, parent, callback and administrator access',
+            $hook === 'settings_page_' . $slug &&
+                isset($GLOBALS['_registered_pages'][$hook]) &&
+                $GLOBALS['_parent_pages'][$slug] === 'options-general.php' &&
+                has_action($hook, $callback) !== false &&
+                user_can_access_admin_page(),
+        );
+        $verify(
+            $slug . ' selects Settings and the shared WP XP Core entry',
+            apply_filters('parent_file', '') === 'options-general.php' &&
+                apply_filters('submenu_file', null, 'options-general.php') === 'wp-xp-core',
+        );
+        $GLOBALS['title'] = '';
+        do_action('load-' . $hook);
+        $verify($slug . ' retains its WordPress page title', get_admin_page_title() !== '');
+    }
+    $GLOBALS['plugin_page'] = 'unrelated-plugin';
+    $verify(
+        'Other plugin menu selections remain unchanged',
+        apply_filters('parent_file', 'tools.php') === 'tools.php' &&
+            apply_filters('submenu_file', 'unrelated-plugin', 'tools.php') === 'unrelated-plugin',
+    );
+    wp_set_current_user($reader->ID);
+    $prepare_menu();
+    foreach (array_keys($screens) as $slug) {
+        $GLOBALS['plugin_page'] = $slug;
+        $GLOBALS['parent_file'] = '';
+        $verify(
+            $slug . ' still denies a non-administrator direct URL',
+            !user_can_access_admin_page(),
+        );
+    }
+} finally {
+    wp_set_current_user($admin->ID);
+    $_GET = $saved_get;
+    foreach ($saved_menu_globals as $name => $value) {
+        $GLOBALS[$name] = $value;
+    }
+}
 echo wp_json_encode(['checks' => $checks], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) . "\n";

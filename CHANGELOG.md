@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.0.1
+
+- 后台 “设置” 菜单统一保留 WP XP Core 一个入口，经验账本、成长中心、任务与成就、激励效果和配置工具通过插件页内页签访问。
+- 保留原有页面地址、详情链接、权限与资源加载；切换页签时侧栏持续高亮 WP XP Core，不改变经验或规则。
+
 ## 2.0.0
 
 Configure independent XP, personal growth, versioned tasks, achievements and activity standings without another points plugin. / 独立配置经验、个人成长、版本化任务、成就与活动榜单，无需其他积分插件。

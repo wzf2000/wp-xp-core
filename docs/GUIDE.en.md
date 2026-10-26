@@ -1,10 +1,10 @@
-<!-- wp-xp-core-version: 2.0.0 -->
+<!-- wp-xp-core-version: 2.0.1 -->
 
 # User guide
 
 [简体中文](GUIDE.md) · English · [Back to overview](../README.en.md)
 
-This administrator guide describes **2.0.0**. For released versions, use the guide at the matching Release tag. From 1.4.0, new sites can install and activate with default rules, without server JSON configuration. See [Get started](../README.en.md#get-started) for installation.
+This administrator guide describes **2.0.1**. For released versions, use the guide at the matching Release tag. From 1.4.0, new sites can install and activate with default rules, without server JSON configuration. See [Get started](../README.en.md#get-started) for installation.
 
 ## Create an experience page
 
@@ -25,6 +25,8 @@ An experience page is a normal WordPress page displaying the currently signed-in
 You can add the page to your site’s navigation using WordPress’s menu/navigation editor. Without a selected page, links use the current page or home. Advanced external integrations retain their configured panel page and shortcode; see [Optional external configuration](CONFIGURATION.en.md#optional-external-configuration).
 
 ## Set experience rules
+
+The WordPress **Settings** menu has one **WP XP Core** entry. Use the tabs at the top of the plugin page for rules, the ledger, diagnostics, growth, tasks and achievements, insights and configuration. WP XP Core stays selected in the sidebar across tabs. Existing page bookmarks and detail links continue to work.
 
 Open **Settings → WP XP Core**, or select **Settings** on the plugin row. Saving requires administrator capability `manage_options`.
 
