@@ -29,6 +29,7 @@ class Reader_Experience
     const VERSION = 'fixture';
 }
 function add_action(...$args) {}
+function add_filter(...$args) {}
 function reader_experience_native()
 {
     return true;

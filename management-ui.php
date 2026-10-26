@@ -3,12 +3,48 @@
 defined('ABSPATH') || exit();
 final class WP_XP_Core_Management_UI
 {
+    private const INTERNAL_PAGES = [
+        'wp-xp-ledger',
+        'wp-xp-growth',
+        'wp-xp-achievements',
+        'wp-xp-insights',
+        'wp-xp-configuration',
+    ];
     private static bool $retain_request = true;
     public static function boot(): void
     {
         add_action('admin_menu', [self::class, 'menu']);
+        add_action('admin_menu', [self::class, 'consolidate_menu'], 99);
+        add_filter('parent_file', [self::class, 'parent_file']);
+        add_filter('submenu_file', [self::class, 'submenu_file']);
         add_action('admin_enqueue_scripts', [self::class, 'assets']);
         add_action('admin_post_wp_xp_core_export', [self::class, 'export']);
+    }
+    public static function consolidate_menu(): void
+    {
+        foreach (self::INTERNAL_PAGES as $slug) {
+            // Keep the registered page, callback and capability checks for existing URLs.
+            $item = remove_submenu_page('options-general.php', $slug);
+            if ($item !== false) {
+                // WordPress normally derives this title from the visible submenu entry.
+                add_action('load-settings_page_' . $slug, static function () use ($item): void {
+                    $GLOBALS['title'] = $item[3];
+                });
+            }
+        }
+    }
+    private static function is_plugin_page(): bool
+    {
+        global $plugin_page;
+        return $plugin_page === 'wp-xp-core' || in_array($plugin_page, self::INTERNAL_PAGES, true);
+    }
+    public static function parent_file($parent_file)
+    {
+        return self::is_plugin_page() ? 'options-general.php' : $parent_file;
+    }
+    public static function submenu_file($submenu_file)
+    {
+        return self::is_plugin_page() ? 'wp-xp-core' : $submenu_file;
     }
     public static function menu(): void
     {

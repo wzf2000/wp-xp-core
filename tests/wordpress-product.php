@@ -572,7 +572,14 @@ $verify(
     ),
 );
 $original_updates = get_site_transient('update_plugins');
-set_transient(WP_XP_Core_Updates::CACHE, [$release('2.1.0-rc.1', true), $release('2.0.1')], 600);
+$future_major = (int) explode('.', Reader_Experience::VERSION)[0] + 1;
+$future_stable = $future_major . '.0.0';
+$future_prerelease = $future_major . '.1.0-rc.1';
+set_transient(
+    WP_XP_Core_Updates::CACHE,
+    [$release($future_prerelease, true), $release($future_stable)],
+    600,
+);
 $save_updates = static fn($enabled, $channel) => WP_XP_Core_Updates::save(
     ['enabled' => $enabled, 'channel' => $channel, 'revision' => WP_XP_Core_Updates::revision()],
     wp_create_nonce('wp_xp_core_configuration'),
@@ -590,7 +597,7 @@ $cached_updates = get_site_transient('update_plugins');
 $update_file = plugin_basename(WP_PLUGIN_DIR . '/wp-xp-core/wp-xp-core.php');
 $verify(
     'Actual shared transient holds the prerelease candidate',
-    $cached_updates->response[$update_file]->new_version === '2.1.0-rc.1',
+    $cached_updates->response[$update_file]->new_version === $future_prerelease,
 );
 $verify('Administrator can change to stable channel', !is_wp_error($save_updates(true, 'stable')));
 $stable_updates = get_site_transient('update_plugins');
@@ -603,7 +610,7 @@ set_site_transient('update_plugins', $stable_updates, 600);
 $stable_updates = get_site_transient('update_plugins');
 $verify(
     'A normal update check repopulates the allowed stable candidate',
-    $stable_updates->response[$update_file]->new_version === '2.0.1',
+    $stable_updates->response[$update_file]->new_version === $future_stable,
 );
 $verify(
     'Disabling updates strips own shared cached entry without touching other plugins',

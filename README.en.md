@@ -1,4 +1,4 @@
-<!-- wp-xp-core-version: 2.0.0 -->
+<!-- wp-xp-core-version: 2.0.1 -->
 
 <p align="center"><img src="docs/assets/hero.svg" alt="WP XP Core — Experience for participation, levels for progress" width="100%"></p>
 
@@ -26,7 +26,7 @@ The plugin manages experience and levels independently of myCRED. Likes are an o
 
 ## Get started
 
-This branch documents **2.0.0**, including task conditions, achievement rewards, private notifications and configuration tools. Download the version actually published on [Releases](https://github.com/wzf2000/wp-xp-core/releases).
+This branch documents **2.0.1**, including task conditions, achievement rewards, private notifications and configuration tools. Download the version actually published on [Releases](https://github.com/wzf2000/wp-xp-core/releases).
 
 Back up existing sites and verify updates in an isolated environment first; use the documentation at your Release tag for version-specific behavior. On a new site, installing and activating creates the experience ledger and uses default rules. No server JSON profile or other experience plugin is required. Existing users start at zero XP; old articles and historical comments do not trigger automatic backfill.
 
@@ -60,6 +60,8 @@ For value ranges, comment eligibility, counting and examples, see [Rule settings
 
 ## Management and growth
 
+Open **Settings → WP XP Core** for all administration. Switch between rules, the ledger, diagnostics, growth, tasks and achievements, insights and configuration using the tabs inside the plugin page.
+
 - **Ledger and diagnostics:** filter events by user, source and date; adjust individual XP with a reason or reverse a manual adjustment; compare balances to the ledger without writes and handle explicitly recorded failed rewards.
 - **Growth center:** customize level names, character icons, colors and descriptions. Personal pages show check-in calendars, consecutive and cumulative counts, progress and private history. Optional check-in stage rewards start disabled and count new check-ins only.
 - **Tasks and achievements:** create once-only, daily, weekly or monthly tasks. Automatic tasks combine activity steps; reviewed tasks accept a user's explanation. Achievements default to honors, with optional XP rewards and image badges. Reasoned administrative grants/revocations are supported, and earned badges retain their awarded snapshots.
@@ -80,7 +82,7 @@ See the [user guide](docs/GUIDE.en.md) for steps and change effects. These featu
 | Contribute improvements                                        | [Contributing](CONTRIBUTING.md)                                           |
 | Maintain GitHub releases                                       | [Releasing](docs/RELEASING.md)                                            |
 
-Documentation on this branch describes 2.0.0. For another version, use the documentation at its Release tag.
+Documentation on this branch describes 2.0.1. For another version, use the documentation at its Release tag.
 
 [Open an Issue](https://github.com/wzf2000/wp-xp-core/issues/new/choose) with your version, observed behavior and reproduction steps. Report security issues privately under the [security policy](SECURITY.md).
 
