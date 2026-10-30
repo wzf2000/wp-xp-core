@@ -595,6 +595,13 @@ try {
         if operation in ["record", "revoke"]:
             if sorted(client.get("duplicate") for client in clients) != [False, True]:
                 raise RuntimeError("Provider race must commit once and return one duplicate")
+        elif operation == "quota":
+            if (
+                any(client.get("duplicate") is not False for client in clients)
+                or any(not isinstance(client.get("event_id"), int) for client in clients)
+                or len({client["event_id"] for client in clients}) != 2
+            ):
+                raise RuntimeError("Quota race must commit two distinct activity receipts")
         elif (
             sum(client.get("saved") is True for client in clients) != 1
             or sum(client.get("error") == "conflict" for client in clients) != 1
