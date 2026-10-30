@@ -126,31 +126,57 @@ $diagnostic = static function (int $topic) use ($wpdb, $fixture): array {
 };
 if ($mode === 'reward') {
     $sent = false;
-    $filter = static function ($sql) use (&$sent, $signal, $waiting, $wait, $wpdb, $fixture) {
-        if (
-            !$sent &&
-            str_contains(
+    $created_topic = 0;
+    $capture_topic = static function ($id) use (&$created_topic): void {
+        $created_topic = (int) $id;
+    };
+    // Capture the official creation-hook ID immediately before XP's priority-100 callback.
+    add_action('bbp_insert_topic', $capture_topic, 99, 1);
+    $ledger_insert_seen = false;
+    $balance_table = $wpdb->usermeta;
+    $timing = [];
+    $filter = static function ($sql) use (
+        &$sent,
+        &$created_topic,
+        &$ledger_insert_seen,
+        &$timing,
+        $balance_table,
+        $signal,
+        $waiting,
+        $wait,
+    ) {
+        if (str_starts_with($sql, 'INSERT INTO ' . Reader_Experience::table())) {
+            $ledger_insert_seen = true;
+        }
+        // The ledger INSERT has returned successfully before record() writes its balance.
+        // Pause before that metadata write so bbPress can update its own author counts.
+        $balance_write =
+            preg_match(
+                '/^(?:INSERT INTO|UPDATE) `?' . preg_quote($balance_table, '/') . '`?\s/',
                 $sql,
-                'SELECT id,user_id,object_id,kind FROM ' . Reader_Experience::table(),
-            )
-        ) {
+            ) && str_contains($sql, Reader_Experience::balance_meta());
+        if (!$sent && $ledger_insert_seen && $balance_write) {
             $sent = true;
-            // The preceding INSERT and balance projection are uncommitted under event_lock.
-            $id = (int) $wpdb->get_var(
-                $wpdb->prepare(
-                    'SELECT object_id FROM ' .
-                        Reader_Experience::table() .
-                        " WHERE user_id=%d AND kind='provider_reward' ORDER BY id DESC LIMIT 1",
-                    $fixture['uid'],
-                ),
-            );
+            $id = $created_topic;
+            $timing['before_balance_write'] = microtime(true);
             if (
                 !$id ||
-                file_put_contents($signal, wp_json_encode(['topic' => $id]), LOCK_EX) === false
+                file_put_contents(
+                    $signal,
+                    wp_json_encode([
+                        'topic' => $id,
+                        'stage' => 'ledger_inserted_before_balance_write',
+                        'time' => $timing['before_balance_write'],
+                    ]),
+                    LOCK_EX,
+                ) === false
             ) {
                 throw new RuntimeException('Race signal write failed');
             }
+            // Never issue a nested query on the active wpdb instance from its query filter.
             $wait($waiting);
+            $timing['moderation_waiting'] = json_decode(file_get_contents($waiting), true);
+            $timing['resume_balance_write'] = microtime(true);
         }
         return $sql;
     };
@@ -168,11 +194,16 @@ if ($mode === 'reward') {
         );
     } finally {
         remove_filter('query', $filter);
+        remove_action('bbp_insert_topic', $capture_topic, 99);
     }
     if (!$sent || !$topic) {
         throw new RuntimeException('Real provider receipt was not paused');
     }
-    echo wp_json_encode(['topic' => (int) $topic, 'diagnostic' => $diagnostic((int) $topic)]);
+    echo wp_json_encode([
+        'topic' => (int) $topic,
+        'timing' => $timing,
+        'diagnostic' => $diagnostic((int) $topic),
+    ]);
     return;
 }
 if ($mode === 'moderate') {
@@ -181,12 +212,24 @@ if ($mode === 'moderate') {
     if (!is_array($data) || empty($data['topic'])) {
         throw new RuntimeException('Topic signal unavailable');
     }
-    $filter = static function ($sql) use ($waiting) {
+    $timing = [];
+    $count_table = $wpdb->usermeta;
+    $filter = static function ($sql) use ($waiting, &$timing, $count_table) {
+        if (
+            preg_match(
+                '/^(?:INSERT INTO|UPDATE) `?' . preg_quote($count_table, '/') . '`?\s/',
+                $sql,
+            ) &&
+            str_contains($sql, '_bbp_topic_count')
+        ) {
+            $timing['before_author_count_write'] = microtime(true);
+        }
         if (
             str_contains($sql, 'SELECT GET_LOCK(') &&
             str_contains($sql, reader_experience_lock('event_lock'))
         ) {
-            if (file_put_contents($waiting, 'waiting', LOCK_EX) === false) {
+            $timing['before_event_lock'] = microtime(true);
+            if (file_put_contents($waiting, wp_json_encode($timing), LOCK_EX) === false) {
                 throw new RuntimeException('Wait signal failed');
             }
         }
@@ -198,7 +241,11 @@ if ($mode === 'moderate') {
     } finally {
         remove_filter('query', $filter);
     }
-    echo wp_json_encode(['moderated' => true, 'diagnostic' => $diagnostic((int) $data['topic'])]);
+    echo wp_json_encode([
+        'moderated' => true,
+        'timing' => $timing,
+        'diagnostic' => $diagnostic((int) $data['topic']),
+    ]);
     return;
 }
 if ($mode !== 'verify') {
