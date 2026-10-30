@@ -60,6 +60,41 @@ $checkin = static function ($nonce = null) {
 };
 global $wpdb;
 $table = Reader_Experience::table();
+$has_activity_rules = class_exists('WP_XP_Core_Activity_Notifications');
+$provider_created = 0;
+$channel_attempts = 0;
+if ($has_activity_rules) {
+    $verify(
+        'Upgrade source registers its trusted activity',
+        wp_xp_core_register_activity_provider('upgrade_fixture', [
+            'label' => 'Synthetic upgrade activity',
+            'authorize' => static fn($uid, $object) => $uid === (int) $reader->ID && $object === 77,
+            'revoke_authorize' => static fn($uid, $object) => $uid === (int) $reader->ID &&
+                $object === 77,
+            'fields' => ['score'],
+            'facts' => static function () use (&$provider_created) {
+                return ['created_ms' => $provider_created, 'score' => 20];
+            },
+        ]),
+    );
+    $verify(
+        'Upgrade source registers its local-only notification channel',
+        wp_xp_core_register_notification_channel('upgrade_channel', [
+            'label' => 'Synthetic local channel',
+            'available' => static fn() => true,
+            'deliver' => static function () use (&$channel_attempts) {
+                $channel_attempts++;
+                return true;
+            },
+        ]),
+    );
+}
+$activity = static fn($id) => wp_xp_core_record_activity(
+    'upgrade_fixture',
+    $id,
+    (int) $reader->ID,
+    77,
+);
 $digest = static fn($value) => hash('sha256', wp_json_encode($value));
 $snapshot = static function (int $page) use ($wpdb, $table, $digest): array {
     $read = static function ($sql) use ($wpdb) {
@@ -82,11 +117,15 @@ $snapshot = static function (int $page) use ($wpdb, $table, $digest): array {
         static fn($row) => array_diff_key($row, ['Cardinality' => true]),
         $read('SHOW INDEX FROM ' . $table),
     );
+    // Retain every usermeta column/row, while making failed preservation checks explainable.
+    $metadata = [];
+    foreach ($read("SELECT * FROM {$wpdb->usermeta} ORDER BY umeta_id") as $row) {
+        $metadata[$row['meta_key']][] = $row;
+    }
+    ksort($metadata);
     return [
         'ledger' => $digest($read('SELECT * FROM ' . $table . ' ORDER BY id')),
-        'balance_and_user_state' => $digest(
-            $read("SELECT * FROM {$wpdb->usermeta} ORDER BY umeta_id"),
-        ),
+        'balance_and_user_state' => array_map($digest, $metadata),
         'plugin_options_and_schema_marker' => $digest($options),
         'ledger_schema' => $digest([$read('SHOW FULL COLUMNS FROM ' . $table), $indices]),
         'manual_panel_page' => $digest(
@@ -204,10 +243,65 @@ if ($mode === 'seed') {
             ),
         );
     }
+    $activity_state = [];
+    if ($has_activity_rules) {
+        wp_set_current_user($admin->ID);
+        $rules = WP_XP_Core_Settings::rules();
+        $rules['providers']['upgrade_fixture'] = [
+            'enabled' => true,
+            'xp' => 5,
+            'day_limit' => 1,
+            'min_score' => 10,
+            'inbox' => true,
+            'template' => 'Activity {activity}: +{xp}, score {score}',
+            'channels' => ['upgrade_channel'],
+        ];
+        $verify(
+            'RC saves a nondefault activity policy with a server boundary',
+            WP_XP_Core_Settings::save(
+                $rules,
+                wp_create_nonce('wp_xp_core_settings'),
+                WP_XP_Core_Settings::revision(get_option(WP_XP_Core_Settings::OPTION, null)),
+            ) === true,
+        );
+        $boundary = WP_XP_Core_Providers::boundary('upgrade_fixture');
+        $provider_created = $boundary + 1;
+        $first = $activity('retained-positive');
+        $zero = $activity('retained-zero');
+        $verify(
+            'RC stores positive and quota-exhausted receipts with two local deliveries',
+            $boundary > 0 && !is_wp_error($first) && !is_wp_error($zero) && $channel_attempts === 2,
+        );
+        $verify(
+            'RC activity adds only the first five XP',
+            (int) get_user_meta($reader->ID, Reader_Experience::balance_meta(), true) === 12,
+        );
+        wp_set_current_user($reader->ID);
+        $inbox = WP_XP_Core_Notifications::listing([], wp_create_nonce('wp_rest'));
+        $preferences = $inbox['preferences'];
+        $preferences['activity'] = false;
+        $verify(
+            'RC saves activity notification opt-out',
+            !is_wp_error(
+                WP_XP_Core_Notifications::save(
+                    ['revision' => $inbox['revision'], 'preferences' => $preferences],
+                    wp_create_nonce('wp_rest'),
+                ),
+            ),
+        );
+        $activity_state = [
+            'boundary' => $boundary,
+            'created_ms' => $provider_created,
+            'positive_id' => $first['event_id'],
+            'zero_id' => $zero['event_id'],
+        ];
+    }
     $state = [
         'old_version' => Reader_Experience::VERSION,
         'page' => (int) $page,
         'has_tasks' => $has_tasks,
+        'activity' => $activity_state,
+        'old_balance' => (int) get_user_meta($reader->ID, Reader_Experience::balance_meta(), true),
         'snapshot' => $snapshot((int) $page),
     ];
     $save_state($state);
@@ -219,7 +313,31 @@ if ($mode === 'seed') {
         is_array($state) && is_array($state['snapshot'] ?? null),
     );
     foreach ($snapshot($state['page']) as $key => $value) {
-        $verify('Upgrade preserves ' . $key, $state['snapshot'][$key] === $value);
+        $changed =
+            $key === 'balance_and_user_state'
+                ? array_unique(
+                    array_merge(
+                        array_keys(array_diff_assoc($state['snapshot'][$key], $value)),
+                        array_keys(array_diff_assoc($value, $state['snapshot'][$key])),
+                    ),
+                )
+                : [];
+        $verify(
+            'Upgrade preserves ' . $key . ($changed ? ' (' . implode(', ', $changed) . ')' : ''),
+            $state['snapshot'][$key] === $value,
+        );
+    }
+    if ($state['activity'] ?? []) {
+        $provider_created = $state['activity']['created_ms'];
+        $verify(
+            'Upgrade preserves the RC server boundary',
+            WP_XP_Core_Providers::boundary('upgrade_fixture') === $state['activity']['boundary'],
+        );
+        $verify(
+            'Upgrade preserves the saved activity notification choice',
+            WP_XP_Core_Notifications::activity_enabled((int) $reader->ID) ===
+                ($state['activity']['notifications_enabled'] ?? false),
+        );
     }
     wp_set_current_user($reader->ID);
     $verify(
@@ -240,6 +358,40 @@ if ($mode === 'seed') {
             'Old daily checkin remains idempotent',
             $checkin(wp_create_nonce('wp_rest'))->get_status() === 200,
         );
+        if ($state['activity'] ?? []) {
+            foreach (
+                ['retained-positive' => 'positive_id', 'retained-zero' => 'zero_id']
+                as $event => $id
+            ) {
+                $duplicate = $activity($event);
+                $verify(
+                    'Upgrade retains activity receipt ' . $event,
+                    !is_wp_error($duplicate) &&
+                        $duplicate['duplicate'] &&
+                        $duplicate['event_id'] === $state['activity'][$id],
+                );
+            }
+            $verify('Upgrade does not replay old channel delivery', $channel_attempts === 0);
+            $export = WP_XP_Core_Privacy::export($reader->user_email);
+            $zero = array_values(
+                array_filter(
+                    $export['data'],
+                    static fn($item) => $item['item_id'] ===
+                        'wp-xp-core-event-' . $state['activity']['zero_id'],
+                ),
+            );
+            $verify('Formal export retains the RC quota receipt', count($zero) === 1);
+            $values = array_column($zero[0]['data'], 'value', 'name');
+            $detail = json_decode($values[__('Snapshot', 'wp-xp-core')], true);
+            $verify(
+                'Formal export explains a retained RC quota receipt',
+                ($detail['provider_quota'] ?? null) === [
+                    'limit' => 1,
+                    'exhausted' => true,
+                    'requested_xp' => 5,
+                ],
+            );
+        }
         wp_set_current_user(0);
         $verify('Upgraded anonymous checkin remains denied', $checkin()->get_status() === 401);
         wp_set_current_user($reader->ID);
@@ -258,10 +410,60 @@ if ($mode === 'seed') {
         wp_cache_delete($reader->ID, 'user_meta');
         $verify(
             'New activity awards the retained seven XP once',
-            (int) get_user_meta($reader->ID, Reader_Experience::balance_meta(), true) === 14 &&
+            (int) get_user_meta($reader->ID, Reader_Experience::balance_meta(), true) ===
+                $state['old_balance'] + 7 &&
                 (int) $wpdb->get_var('SELECT COUNT(*) FROM ' . $table) === $count + 1 &&
                 WP_XP_Core_Settings::rules()['checkin_xp'] === 7,
         );
+        if ($state['activity'] ?? []) {
+            $inbox = WP_XP_Core_Notifications::listing([], $nonce);
+            $preferences = $inbox['preferences'];
+            $preferences['activity'] = true;
+            $verify(
+                'User can explicitly resume activity notifications after upgrade',
+                !is_wp_error(
+                    WP_XP_Core_Notifications::save(
+                        ['revision' => $inbox['revision'], 'preferences' => $preferences],
+                        $nonce,
+                    ),
+                ),
+            );
+            $next = $activity('future-positive');
+            $again = $activity('future-positive');
+            $verify(
+                'New activity after upgrade awards and delivers once',
+                !is_wp_error($next) &&
+                    !is_wp_error($again) &&
+                    $again['duplicate'] &&
+                    $channel_attempts === 1 &&
+                    (int) get_user_meta($reader->ID, Reader_Experience::balance_meta(), true) ===
+                        $state['old_balance'] + 12,
+            );
+            $reverse = wp_xp_core_revoke_activity(
+                'upgrade_fixture',
+                'retained-positive',
+                (int) $reader->ID,
+                77,
+            );
+            $again = wp_xp_core_revoke_activity(
+                'upgrade_fixture',
+                'retained-positive',
+                (int) $reader->ID,
+                77,
+            );
+            wp_cache_delete($reader->ID, 'user_meta');
+            $verify(
+                'An RC award still reverses its original amount exactly once',
+                !is_wp_error($reverse) &&
+                    !is_wp_error($again) &&
+                    $again['duplicate'] &&
+                    $channel_attempts === 2 &&
+                    (int) get_user_meta($reader->ID, Reader_Experience::balance_meta(), true) ===
+                        $state['old_balance'] + 7 &&
+                    (int) $wpdb->get_var('SELECT COUNT(*) FROM ' . $table) === $count + 3,
+            );
+            $state['activity']['notifications_enabled'] = true;
+        }
         $state['snapshot'] = $snapshot($state['page']);
         $save_state($state);
     }

@@ -1,10 +1,10 @@
-<!-- wp-xp-core-version: 2.1.0-rc.2 -->
+<!-- wp-xp-core-version: 2.1.0 -->
 
 # User guide
 
 [简体中文](GUIDE.md) · English · [Back to overview](../README.en.md)
 
-This administrator guide describes **2.1.0-rc.2**. For released versions, use the guide at the matching Release tag. From 1.4.0, new sites can install and activate with default rules, without server JSON configuration. See [Get started](../README.en.md#get-started) for installation.
+This administrator guide describes **2.1.0**. For released versions, use the guide at the matching Release tag. From 1.4.0, new sites can install and activate with default rules, without server JSON configuration. See [Get started](../README.en.md#get-started) for installation.
 
 ## Create an experience page
 
@@ -26,7 +26,7 @@ You can add the page to your site’s navigation using WordPress’s menu/naviga
 
 ## Set experience rules
 
-The WordPress **Settings** menu has one **WP XP Core** entry. Use the tabs at the top of the plugin page for rules, the ledger, diagnostics, growth, tasks and achievements, insights and configuration. WP XP Core stays selected in the sidebar across tabs. Existing page bookmarks and detail links continue to work.
+The WordPress **Settings** menu has one **WP XP Core** entry. Use the tabs at the top of the plugin page for rules, the ledger, diagnostics, growth, tasks and achievements, insights, activities and notifications, and configuration. WP XP Core stays selected in the sidebar across tabs. Existing page bookmarks and detail links continue to work.
 
 Open **Settings → WP XP Core**, or select **Settings** on the plugin row. Saving requires administrator capability `manage_options`.
 
@@ -137,7 +137,7 @@ Uncheck **参与公开活动榜** (Participate in public standings) on the perso
 
 ## Review incentive insights
 
-Open **Settings → 激励效果** (Incentive insights), or use plugin navigation. Access requires `manage_options`.
+Open **Settings → WP XP Core → Incentive insights** (Incentive insights), or use plugin navigation. Access requires `manage_options`.
 
 **Experience sources** supports this week, this month or custom dates. Custom ranges include both endpoints, span at most 366 days and cannot end after today in the experience time zone. Each source shows positive XP, negative XP, net XP, event count and distinct participants. Eligible zero-XP activity counts toward events and participants. The total participant count is deduplicated across sources, so source counts cannot be added together.
 
@@ -187,7 +187,7 @@ Use [Issues](https://github.com/wzf2000/wp-xp-core/issues/new/choose) with plugi
 
 ## Configuration tools, templates and updates
 
-Open **Settings → Configuration tools**. Export produces copyable JSON containing rules, growth settings and tasks only. It excludes users, ledger, balances, administrator audits, notification preferences, storage routing and installation state. Export is read-only. Review site-specific media, post and category IDs before moving configuration.
+Open **Settings → WP XP Core → Configuration tools**. Export produces copyable JSON containing rules, growth settings and tasks only. It excludes users, ledger, balances, administrator audits, notification preferences, storage routing and installation state. Export is read-only. Review site-specific media, post and category IDs before moving configuration.
 
 Choose an import mode and **Preview configuration** first. Same-site updates match existing task IDs; external templates remap tasks and prerequisites. Preview shows old/new rule and growth values, milestone changes, and tasks that are new, display-only modifications, new versions or preserved. **Apply previewed configuration** commits all changes together; any intervening relevant revision change rejects the entire application. Unlisted tasks remain. Reusing a template preserves earned claims and never backfills rewards. External milestones matching an existing threshold retain its local identity; retired identities cannot be reused. Unknown tasks receive local IDs; external versions, event boundaries and generations are rejected.
 
@@ -205,7 +205,7 @@ The personal panel initially shows three actionable tasks. **Show remaining task
 
 ## Personal data and retention
 
-Administrators use **Tools → Export Personal Data**, with WordPress’s email verification flow, to export the recipient’s site-local XP events, task notes/achievement snapshots, balance, standings status and private notification preferences/read state. Each page reads at most fifty events. Other recipients, internal administrator reasons and unrestricted audit detail are excluded. Reads do not award XP or create notifications.
+Administrators use **Tools → Export Personal Data**, with WordPress’s email verification flow, to export the recipient’s site-local XP events, task notes/achievement snapshots, balance, standings status and private notification preferences/read state. Activity snapshots retain the daily limit, exhaustion state and requested XP so zero-XP results remain explainable. Each page reads at most fifty events. Other recipients, internal administrator reasons and unrestricted audit detail are excluded. Reads do not award XP or create notifications.
 
 Deactivation, updates and deleting plugin files retain the ledger, balances, tasks, settings and notification state. Reinstallation does not clear accounts. There is no automatic expiry or one-click personal-ledger eraser. Site operators must document purpose and retention and respond to erasure requests through their own reviewed policy. Direct deletion or promised anonymization would require an accounting and identity design first. Export support does not claim comprehensive privacy compliance certification.
 
@@ -223,7 +223,7 @@ When a claim, daily quota, milestone, original comment receipt or response histo
 
 **Preview task** validates fields, dates and prerequisites and shows the expected version and whether progress is retained or counts subsequent activity, without saving configuration or calculating user progress. The draft remains editable; saving checks the task-list revision again. **Copy as new task** opens an unsaved, disabled draft. Saving creates its own ID, version 1 and future activity boundary, without copying progress, claims or reviews. Configuration tools include discussion, monthly learning and review templates with zero XP; preview and apply them explicitly.
 
-With bbPress installed, public-topic and public-reply providers appear in experience rules, disabled by default. Only newly created eligible content by registered users qualifies: the forum and its ancestors must be public, and the topic/reply must be public and password-free. Anonymous, pending, private, hidden, spam and trashed content is excluded. Closed topics can remain public. The adapter listens to official creation hooks; historical content, later moderation approval and re-enabling do not backfill rewards. Community activity contributes to XP, net standings, source statistics and private history. Task steps still cover check-ins, reading, articles and comments.
+With bbPress installed, public-topic and public-reply providers appear in Activities and notifications, disabled by default. Only newly created eligible content by registered users qualifies: the forum and its ancestors must be public, and the topic/reply must be public and password-free. Anonymous, pending, private, hidden, spam and trashed content is excluded. Closed topics can remain public. The adapter listens to official creation hooks; historical content, later moderation approval and re-enabling do not backfill rewards. Community activity contributes to XP, net standings, source statistics and private history. Task steps still cover check-ins, reading, articles and comments.
 
 Changing or deleting the topic/reply itself attempts an append-only reversal of its original actual XP. Insufficient balance rejects the whole reversal. Parent forum/topic changes never scan descendants; administrators must inspect original receipts and use the server reversal API where needed. Diagnostics retain the latest twenty adapter failure codes without automatic replay. Disabling future rewards does not disable reversals.
 

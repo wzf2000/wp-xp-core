@@ -11,7 +11,7 @@
  * Update URI: https://github.com/wzf2000/wp-xp-core
  * Text Domain: wp-xp-core
  * Domain Path: /languages
- * Version: 2.1.0-rc.2
+ * Version: 2.1.0
  */
 defined('ABSPATH') || exit();
 require_once __DIR__ . '/config.php';
@@ -43,7 +43,7 @@ require_once __DIR__ . '/modules/blocks.php';
 register_activation_hook(__FILE__, [WP_XP_Core_Lifecycle::class, 'activate']);
 final class Reader_Experience
 {
-    const VERSION = '2.1.0-rc.2';
+    const VERSION = '2.1.0';
     const BALANCE_META = 'reader_experience_balance';
     const MINS = [0, 5, 20, 60, 150, 300, 600, 1000, 1800, 3000];
     private static bool $writing = false;

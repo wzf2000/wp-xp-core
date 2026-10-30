@@ -406,8 +406,11 @@ try {
             shutil.copy2(path, target)
         exchange_directories(plugin, staged)
         results["upgrade_verify"] = json.loads(wp("eval-file", upgrade_fixture, mode="verify"))
-        wp("plugin", "deactivate", "wp-xp-core", "--user=fixture-author")
-        wp("plugin", "activate", "wp-xp-core", "--user=fixture-author")
+        # WP-CLI's auto/admin context generates auth sessions before plugin commands.
+        # Use its explicit CLI context for this reactivation check so the runner
+        # itself cannot change usermeta between the full-state snapshots.
+        wp("plugin", "deactivate", "wp-xp-core", "--user=fixture-author", "--context=cli")
+        wp("plugin", "activate", "wp-xp-core", "--user=fixture-author", "--context=cli")
         results["upgrade_restart"] = json.loads(wp("eval-file", upgrade_fixture, mode="restart"))
         results["upgrade_from"] = old_manifest
         # Preserve the verified old manifest, rather than duplicate every file in evidence.

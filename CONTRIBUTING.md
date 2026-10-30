@@ -85,15 +85,19 @@ WP_XP_TEST_DATABASE=wp_xp_core_ci python3 tools/wp-integration.py \
 
 Both version and SHA-256 are required. Arbitrary URLs, existing sites and old-ZIP upgrade combinations are rejected. Before installation, the runner validates the ZIP digest, safe paths, slug, version, every manifest payload digest and PHP version header; it then checks the installed version and active state. The real fixture switches between the parent-comment and reply authors, creates approved synthetic comments and suppresses mail. It compares Companion's projection, direct XP dispatch and actual JSON REST list/read routes, including cross-user 404 and independent XP behavior after disabling the source. Failure diagnostics contain only counts, booleans and error codes, without private notification content. Public CI adds Companion 1.12.0 only to the existing WordPress 7.1.3 / PHP 8.5 / MySQL 8.0 combination alongside bbPress; other combinations retain dependency-free coverage. Both optional argument groups may be used together.
 
+2.1 RC 升级夹具还保存非默认活动奖励、每日额度、最低分、消息文案与渠道、服务器规则边界、正向／零经验回执和用户通知偏好。只替换程序后及停用／重新启用后逐项比对；后续合成活动与旧奖励撤销必须各自只处理一次，历史渠道不重投递。个人导出同时验证保留的零经验原因。 重新启用使用显式 CLI 上下文，避免 WP-CLI 后台上下文本身创建管理员会话；仍检查全部用户元数据。
+
+The 2.1 RC upgrade fixture also retains nondefault activity policy, quotas, score thresholds, message/channel settings, server boundaries, positive/zero receipts and notification preferences. After file replacement it checks retained state, one-time future awards, exact reversals, no historical channel redelivery and explainable exports; it then checks retained state again after reactivation. Reactivation uses explicit CLI context to avoid WP-CLI admin-context session creation; all usermeta rows remain checked.
+
 ## Localization / 翻译
 
 Edit reviewed `languages/wp-xp-core-{locale}.po` entries and run `python3 tools/languages.py`; `--check` verifies MO/JSON bytes. Fixed PHP strings use `wp_xp_core_t` (gettext extraction keyword) or `__` with domain `wp-xp-core`; the small JS bridge uses `languages/js-strings.json`. Keep positional placeholders and user snapshots verbatim. Run the catalog/ZIP tests and verify both locales when changing UI text.
 
 修改 PO 后离线编译 MO／JSON，同步 POT 与 JS 文案列表；保留位置占位符，不翻译用户文字或整段输出 HTML。新增语言文件必须通过实际安装 ZIP 的白名单与验证。
 
-CI covers PHP 8.0/8.2/8.5 basic/browser fixtures and real WordPress/MySQL installation/concurrency on WordPress 6.0 + PHP 8.0, WordPress 6.8.3 + PHP 8.0/8.2 and WordPress 7.1.3 + PHP 8.5. Separate upgrade fixtures install verified official 1.4.1 and 2.0.0-rc.3 ZIPs, seed synthetic account state, replace only plugin files, and verify unchanged data plus idempotent future awards. These combinations define tested coverage, not every historical environment.
+CI covers PHP 8.0/8.2/8.5 basic/browser fixtures and real WordPress/MySQL installation/concurrency on WordPress 6.0 + PHP 8.0, WordPress 6.8.3 + PHP 8.0/8.2 and WordPress 7.1.3 + PHP 8.5. Separate upgrade fixtures install verified official 1.4.1, 2.0.0-rc.3, 2.0.1 and 2.1.0-rc.2 ZIPs, seed synthetic account state, replace only plugin files, and verify unchanged data plus idempotent future awards. These combinations define tested coverage, not every historical environment.
 
-实际 CI 包含 WordPress 6.0 + PHP 8.0 最低组合、WordPress 6.8.3 + PHP 8.0／8.2 和 WordPress 7.1.3 + PHP 8.5 的安装／并发检查，以及 PHP 8.0／8.2／8.5 基础与浏览器检查。独立升级夹具从经校验的官方 1.4.1 与 2.0.0-rc.3 ZIP 建立合成旧站，只替换插件文件，检查数据保留及后续奖励幂等。没有将这些组合扩称为所有历史环境。
+实际 CI 包含 WordPress 6.0 + PHP 8.0 最低组合、WordPress 6.8.3 + PHP 8.0／8.2 和 WordPress 7.1.3 + PHP 8.5 的安装／并发检查，以及 PHP 8.0／8.2／8.5 基础与浏览器检查。独立升级夹具从经校验的官方 1.4.1、2.0.0-rc.3、2.0.1 与 2.1.0-rc.2 ZIP 建立合成旧站，只替换插件文件，检查数据保留及后续奖励幂等。没有将这些组合扩称为所有历史环境。
 
 The database must provide InnoDB transactions and `JSON_VALID`, `JSON_EXTRACT`, `JSON_UNQUOTE` and `JSON_TYPE`. Activation probes those functions before making installation changes. Run SELECT-failure fixtures when changing accounting reads: an unreadable claim, quota or history must never become a successful empty result.
 

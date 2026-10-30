@@ -1,10 +1,10 @@
-<!-- wp-xp-core-version: 2.1.0-rc.2 -->
+<!-- wp-xp-core-version: 2.1.0 -->
 
 # Server configuration and integration
 
 [简体中文](CONFIGURATION.md) · English · [Back to overview](../README.en.md) · [User guide](GUIDE.en.md)
 
-This document describes **2.1.0-rc.2**. Installed releases follow their tagged documentation.
+This document describes **2.1.0**. Installed releases follow their tagged documentation.
 
 This page is for integrators. **Ordinary first-time installation needs no external configuration: upload and activate a 1.4.0+ installation ZIP.** For page setup, see the [user guide](GUIDE.en.md). External JSON is only for advanced deployments with custom storage or existing integrations.
 

@@ -88,6 +88,7 @@ final class WP_XP_Core_Privacy
                         'submission_id',
                         'level_transition',
                         'activity_cap',
+                        'provider_quota',
                         'provider',
                         'provider_label',
                         'activity_message',
