@@ -69,6 +69,22 @@ Use the runner's existing `WP_XP_TEST_DB_HOST`, `WP_XP_TEST_DB_USER` and `WP_XP_
 
 Public CI adds bbPress 2.6.21 only to the existing WordPress 7.1.3 / PHP 8.5 / MySQL 8.0 combination. Other combinations keep bbPress absent to cover independent operation. This pinned combination does not imply coverage of every historical bbPress version, theme or community plugin; local checks and actual public CI runs are separate evidence.
 
+## Optional real notification source / 可选真实通知源
+
+同一全新合成站可在无配套依赖检查后，显式安装固定 Companion 官方 GitHub Release ZIP：
+The same fresh synthetic lab can opt in to a pinned official Companion GitHub Release ZIP after its independent checks:
+
+```sh
+WP_XP_TEST_DATABASE=wp_xp_core_ci python3 tools/wp-integration.py \
+  --wp-cli /tmp/wp-cli.phar --lab /tmp/wp-xp-core-notifications-ci \
+  --core-version 7.1.3 --companion-version 1.12.0 \
+  --companion-sha256 628a2844bb6369d249057fbac44a835e4a9f617123e087ac6f58238802c3d0c2
+```
+
+版本与 SHA-256 必须同时给出，不接受任意下载地址或旧站接管，不能与旧 ZIP 升级模式混用。安装前核对 ZIP 总哈希、安全路径、slug、版本、发行清单内每个文件及 PHP 版本头，激活后核对实际安装版本及状态。真实回归分别切换父评论与回复的作者，创建已批准合成评论并阻止邮件；对照 Companion 原投影、XP 直接调用及实际 JSON REST 列表／已读路由，检查跨用户 404 和关闭后 XP 独立可用。失败仅记录计数、布尔和错误码，不输出私人通知正文。公共 CI 只在现有 WordPress 7.1.3／PHP 8.5／MySQL 8.0 组合加 Companion 1.12.0，与固定 bbPress 检查共用该组合；其余组合保留不安装配套插件的覆盖。可将两组可选参数一起传给运行器。
+
+Both version and SHA-256 are required. Arbitrary URLs, existing sites and old-ZIP upgrade combinations are rejected. Before installation, the runner validates the ZIP digest, safe paths, slug, version, every manifest payload digest and PHP version header; it then checks the installed version and active state. The real fixture switches between the parent-comment and reply authors, creates approved synthetic comments and suppresses mail. It compares Companion's projection, direct XP dispatch and actual JSON REST list/read routes, including cross-user 404 and independent XP behavior after disabling the source. Failure diagnostics contain only counts, booleans and error codes, without private notification content. Public CI adds Companion 1.12.0 only to the existing WordPress 7.1.3 / PHP 8.5 / MySQL 8.0 combination alongside bbPress; other combinations retain dependency-free coverage. Both optional argument groups may be used together.
+
 ## Localization / 翻译
 
 Edit reviewed `languages/wp-xp-core-{locale}.po` entries and run `python3 tools/languages.py`; `--check` verifies MO/JSON bytes. Fixed PHP strings use `wp_xp_core_t` (gettext extraction keyword) or `__` with domain `wp-xp-core`; the small JS bridge uses `languages/js-strings.json`. Keep positional placeholders and user snapshots verbatim. Run the catalog/ZIP tests and verify both locales when changing UI text.

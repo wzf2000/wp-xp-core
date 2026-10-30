@@ -12,6 +12,7 @@ import stat
 import subprocess
 import time
 import uuid
+import urllib.request
 import zipfile
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -97,6 +98,61 @@ def upgrade_payload(path, checksum):
     return payload, manifest
 
 
+def companion_manifest(path, checksum, version):
+    """Validate the pinned official Companion ZIP before installing or executing it."""
+    if (
+        path.is_symlink()
+        or not path.is_file()
+        or hashlib.sha256(path.read_bytes()).hexdigest() != checksum.lower()
+    ):
+        raise ValueError("Companion ZIP checksum mismatch")
+    payload = {}
+    with zipfile.ZipFile(path) as archive:
+        entries = archive.infolist()
+        if len(entries) > 3000 or sum(entry.file_size for entry in entries) > 128 * 1024 * 1024:
+            raise ValueError("Companion ZIP exceeds bounded installation size")
+        for entry in entries:
+            name = entry.filename
+            parts = name.split("/")
+            mode = entry.external_attr >> 16
+            if (
+                len(parts) < 2
+                or parts[0] != "pagenest-compatibility"
+                or any(part in {"", ".", ".."} for part in parts)
+                or "\\" in name
+                or "\x00" in name
+                or entry.is_dir()
+                or stat.S_ISLNK(mode)
+                or stat.S_IFMT(mode) not in {0, stat.S_IFREG}
+                or entry.flag_bits & 1
+            ):
+                raise ValueError("Unsafe Companion archive entry")
+            relative = "/".join(parts[1:])
+            if relative in payload:
+                raise ValueError("Duplicate Companion archive entry")
+            payload[relative] = archive.read(entry)
+    manifest = json.loads(payload.pop("release-manifest.json"))
+    if (
+        manifest.get("schema") != 1
+        or manifest.get("slug") != "pagenest-compatibility"
+        or manifest.get("version") != version
+        or not re.fullmatch(r"[0-9a-f]{40}", manifest.get("source_commit", ""))
+        or not isinstance(manifest.get("files"), dict)
+        or set(manifest["files"]) != set(payload)
+        or "pagenest-compatibility.php" not in payload
+    ):
+        raise ValueError("Invalid Companion release manifest")
+    for name, content in payload.items():
+        if manifest["files"][name] != hashlib.sha256(content).hexdigest():
+            raise ValueError("Companion manifest payload mismatch")
+    if not re.search(
+        r"Version:\s*" + re.escape(version) + r"\s*(?:\n|$)",
+        payload["pagenest-compatibility.php"].decode("utf-8"),
+    ):
+        raise ValueError("Companion header version differs from manifest")
+    return manifest
+
+
 def exchange_directories(first, second):
     # Both directories are on the same owned /tmp filesystem. Linux's exchange
     # keeps the plugin path continuously present and never runs activation hooks.
@@ -122,9 +178,20 @@ def main():
     parser.add_argument(
         "--bbpress-version", help="Opt in to a verified official stable bbPress version"
     )
+    parser.add_argument("--companion-version", help="Opt in to a pinned official Companion release")
+    parser.add_argument("--companion-sha256", help="Required immutable Companion ZIP SHA-256")
     parser.add_argument("--upgrade-from", type=Path, help="Run only an isolated old-ZIP upgrade")
     parser.add_argument("--upgrade-sha256", help="Required immutable old-ZIP SHA-256")
     args = parser.parse_args()
+    if (args.companion_version is None) != (args.companion_sha256 is None):
+        raise ValueError("Companion requires both version and immutable SHA-256")
+    if args.companion_version is not None:
+        if not re.fullmatch(
+            r"(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)", args.companion_version
+        ) or not re.fullmatch(r"[0-9a-fA-F]{64}", args.companion_sha256):
+            raise ValueError("Companion requires a stable major.minor.patch version and SHA-256")
+        if args.upgrade_from:
+            raise ValueError("Optional Companion checks cannot be combined with old-ZIP upgrades")
     if args.bbpress_version is not None and not re.fullmatch(
         r"(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)", args.bbpress_version
     ):
@@ -588,6 +655,37 @@ try {
                     process.wait(timeout=10)
         results["bbpress-concurrency"] = json.loads(wp("eval-file", bbpress_race, mode="verify"))
         results["bbpress-concurrency"]["clients"] = clients
+    if args.companion_version:
+        # Only the newly created, token-owned lab above can reach this installation step.
+        url = (
+            "https://github.com/wzf2000/PageNest-Compatibility/releases/download/v"
+            + args.companion_version
+            + "/pagenest-compatibility-"
+            + args.companion_version
+            + ".zip"
+        )
+        request = urllib.request.Request(
+            url, headers={"User-Agent": "WP-XP-Core-synthetic-integration"}
+        )
+        with urllib.request.urlopen(request, timeout=60) as response:
+            content = response.read(128 * 1024 * 1024 + 1)
+        if len(content) > 128 * 1024 * 1024:
+            raise ValueError("Companion download exceeds bounded ZIP size")
+        archive = lab / "companion-verified.zip"
+        archive.write_bytes(content)
+        manifest = companion_manifest(archive, args.companion_sha256, args.companion_version)
+        wp("plugin", "install", str(archive))
+        actual = wp("plugin", "get", "pagenest-compatibility", "--field=version").strip()
+        if actual != args.companion_version:
+            raise RuntimeError("Installed Companion version differs from requested version")
+        wp("plugin", "activate", "pagenest-compatibility", "--user=fixture-author")
+        wp("plugin", "is-active", "pagenest-compatibility")
+        results["notification-sources"] = json.loads(
+            wp("eval-file", str(ROOT / "tests/wordpress-notification-sources.php"))
+        )
+        results["notification-sources"]["version"] = actual
+        results["notification-sources"]["sha256"] = args.companion_sha256.lower()
+        results["notification-sources"]["source_commit"] = manifest["source_commit"]
     (lab / "results.json").write_text(json.dumps(results, indent=2) + "\n")
     print(
         json.dumps({key: len(value.get("checks", [])) for key, value in results.items()}, indent=2)
