@@ -26,6 +26,10 @@ final class WP_XP_Core_Game_Activities
             return;
         }
         foreach ($catalog as $slug => $game) {
+            // PHP represents numeric slugs such as "2048" as integer array keys.
+            if (is_int($slug)) {
+                $slug = (string) $slug;
+            }
             if (!is_string($slug) || !is_array($game) || !is_string($game['label'] ?? null)) {
                 continue;
             }
