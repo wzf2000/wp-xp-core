@@ -104,6 +104,30 @@ $verify(
     (int) $row['xp'] === 0 &&
         (json_decode($row['detail'], true)['provider_quota']['exhausted'] ?? false) === true,
 );
+$export = WP_XP_Core_Privacy::export('easy-activity@example.invalid');
+$quota_export = array_values(
+    array_filter(
+        $export['data'],
+        static fn($item) => $item['item_id'] === 'wp-xp-core-event-' . $two['event_id'],
+    ),
+);
+$verify('Owner export includes the exhausted activity receipt', count($quota_export) === 1);
+$export_values = array_column($quota_export[0]['data'], 'value', 'name');
+$quota_snapshot = json_decode($export_values[__('Snapshot', 'wp-xp-core')], true);
+$verify(
+    'Owner export preserves why activity earned zero XP',
+    ($quota_snapshot['provider_quota'] ?? null) === [
+        'limit' => 1,
+        'exhausted' => true,
+        'requested_xp' => 5,
+    ],
+);
+$verify(
+    'Activity export does not reveal delivery or private source context',
+    !isset($quota_snapshot['activity_channels']) &&
+        !isset($quota_snapshot['event_key']) &&
+        !str_contains(wp_json_encode($quota_snapshot), 'easy_channel'),
+);
 $clock = static fn($value, $format) => $format === 'Y-m-d' ? '2038-02-03' : $value;
 add_filter('wp_date', $clock, 10, 2);
 $duplicate = $event('quota-zero');

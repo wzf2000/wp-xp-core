@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.1.0
+
+- 整合 2.1 预发行版的可配置活动、可选游戏与 bbPress 接入、任务预览／副本、私人通知源和管理诊断；默认开关、已有规则和用户数据保持。
+- 修复个人数据导出遗漏活动每日额度快照的问题，保留零经验记录的额度、耗尽状态和原请求经验，方便解释奖励结果。
+- 增加固定 2.0.1 与 2.1.0-rc.2 安装包升级回归，核对规则、来源边界、通知偏好、历史回执及重新启用后数据保留，后续奖励和撤销保持幂等。
+- 整理中英文首页与指南中的活动入口、依赖说明和升级步骤，统一八个内部页签的导航说明。
+
+Stable 2.1 integrates optional activities, trusted game and bbPress adapters, task tools, private notification sources and operational controls. Personal exports retain quota-exhaustion facts. Upgrade regressions cover the previous stable and RC packages, preserving policy boundaries, preferences and receipts. Existing data and default-disabled integrations remain unchanged; no migration or historical awards run.
+
 ## 2.1.0-rc.2
 
 - 新增「活动与通知」后台页签，选择可信来源后设置固定经验、每日次数、可选最低分、私人通知文案与预览。

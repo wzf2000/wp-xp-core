@@ -1,4 +1,4 @@
-<!-- wp-xp-core-version: 2.1.0-rc.2 -->
+<!-- wp-xp-core-version: 2.1.0 -->
 
 <p align="center"><img src="docs/assets/hero.svg" alt="WP XP Core — Experience for participation, levels for progress" width="100%"></p>
 
@@ -21,12 +21,13 @@
 - **Create your growth curve.** Add or remove rows to configure minimum experience for 1–100 levels, without editing code.
 - **Show personal progress.** The experience panel displays experience, level, experience needed for the next level, check-in and recent private history.
 - **Keep an award trail.** Experience changes are recorded in an event ledger; repeated requests cannot claim the same reward twice.
+- **Connect optional activities.** Select a trusted source in the dashboard and configure XP, daily limits, minimum scores and private messages. Core XP keeps working without companion plugins.
 
 The plugin manages experience and levels independently of myCRED. Likes are an optional integration. When the like service is unavailable, its rules are disabled while other settings remain editable.
 
 ## Get started
 
-This branch documents **2.1.0-rc.2**, including task conditions, achievement rewards, private notifications and configuration tools. Download the version actually published on [Releases](https://github.com/wzf2000/wp-xp-core/releases).
+This branch documents **2.1.0**. Download the version actually published on [Releases](https://github.com/wzf2000/wp-xp-core/releases).
 
 Back up existing sites and verify updates in an isolated environment first; use the documentation at your Release tag for version-specific behavior. On a new site, installing and activating creates the experience ledger and uses default rules. No server JSON profile or other experience plugin is required. Existing users start at zero XP; old articles and historical comments do not trigger automatic backfill.
 
@@ -60,16 +61,34 @@ For value ranges, comment eligibility, counting and examples, see [Rule settings
 
 ## Management and growth
 
-Open **Settings → WP XP Core** for all administration. Switch between rules, the ledger, diagnostics, growth, tasks and achievements, insights and configuration using the tabs inside the plugin page.
+Open **Settings → WP XP Core** for all administration. Switch between rules, the ledger, diagnostics, growth, tasks and achievements, insights, activities and notifications, and configuration using the tabs inside the plugin page.
 
 - **Ledger and diagnostics:** filter events by user, source and date; adjust individual XP with a reason or reverse a manual adjustment; compare balances to the ledger without writes and handle explicitly recorded failed rewards.
 - **Growth center:** customize level names, character icons, colors and descriptions. Personal pages show check-in calendars, consecutive and cumulative counts, progress and private history. Optional check-in stage rewards start disabled and count new check-ins only.
 - **Tasks and achievements:** create once-only, daily, weekly or monthly tasks. Automatic tasks combine activity steps; reviewed tasks accept a user's explanation. Achievements default to honors, with optional XP rewards and image badges. Reasoned administrative grants/revocations are supported, and earned badges retain their awarded snapshots.
 - **Control rewards and public participation:** optional daily/weekly XP caps default off, users can leave standings, and administrators can exclude test accounts and inspect activity clues/equal-period trends.
+- **Preview before operating:** check task conditions and version effects before saving, copy tasks into disabled drafts, pause a user's automatic rewards temporarily with a reason, and sample query performance manually in diagnostics.
 - **Private notifications and next goals:** review achievement, review and level messages with read/type preferences; task goals explain remaining counts, available content links and prerequisites.
 - **Weekly/monthly boards and insights:** manually place `[xp_leaderboard period="week" limit="10"]` or its monthly variant to rank net activity XP. Personal panels show the current user’s position; administrators can review source aggregates and current task completion rates. New weeks and months do not reset XP balances.
 
 See the [user guide](docs/GUIDE.en.md) for steps and change effects. These features do not backfill all historical activity, schedule cron jobs or provide a shop or spendable currency.
+
+## Connect activities and notifications
+
+Open **Settings → WP XP Core → Activities and notifications**, choose a detected source, then preview and save its reward and message rules. New sources start disabled. Enabling a source or changing eligibility applies to new activity without historical awards. Everyday changes need no code edits.
+
+| Optional integration    | What you can do                                                                                        | Without the companion                                      |
+| ----------------------- | ------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------- |
+| bbPress                 | Configure XP for eligible new public topics and replies                                                | Source unavailable; existing configuration retained        |
+| Server-verified games   | Set fixed XP, daily limits and minimum scores with a game extension exposing the public settlement API | Core check-ins, reading and other rewards remain available |
+| Companion notifications | Read your existing messages in the XP panel, preserving the original read state                        | Independent XP notifications remain available              |
+| Extension channels      | Select registered channels for activity messages                                                       | No outbound messages; no built-in email or webhook channel |
+
+Game extensions verify and store scores; this plugin accounts for XP separately. Browser-only games do not automatically become trusted reward sources. An extension author [connects the public API once](docs/CONFIGURATION.en.md#trusted-activity-providers), then administrators maintain values and text in the dashboard. See the [activity guide](docs/GUIDE.en.md#configure-optional-activities-and-notifications) for steps and limits.
+
+## Requirements
+
+WordPress 6.0 and PHP 8.0 or later. See [Contributing](CONTRIBUTING.md) for the combinations actually tested in CI. The database must support InnoDB transactions and `JSON_VALID`, `JSON_EXTRACT`, `JSON_UNQUOTE`, `JSON_TYPE`. Activation checks these capabilities before writing and reports an error without changing unsupported storage.
 
 ## Documentation and help
 
@@ -82,18 +101,10 @@ See the [user guide](docs/GUIDE.en.md) for steps and change effects. These featu
 | Contribute improvements                                        | [Contributing](CONTRIBUTING.md)                                           |
 | Maintain GitHub releases                                       | [Releasing](docs/RELEASING.md)                                            |
 
-Documentation on this branch describes 2.1.0-rc.2. For another version, use the documentation at its Release tag.
+Documentation on this branch describes 2.1.0. For another version, use the documentation at its Release tag.
 
 [Open an Issue](https://github.com/wzf2000/wp-xp-core/issues/new/choose) with your version, observed behavior and reproduction steps. Report security issues privately under the [security policy](SECURITY.md).
 
 ## Author and license
 
 Maintained by [wzf2000](https://github.com/wzf2000), under **[GPL-2.0-or-later](LICENSE)**. Issues and Pull Requests are welcome.
-
-Minimum requirements: WordPress 6.0 and PHP 8.0. See [Contributing](CONTRIBUTING.md) for the combinations actually tested in CI. Configuration tools provide previewed imports and explicit templates; editor blocks retain shortcode compatibility. [The guide](docs/GUIDE.en.md) covers compact task lists, language, personal-data export and retention. [Integration](docs/CONFIGURATION.en.md) documents the trusted provider API and optional updates.
-
-The database must support InnoDB transactions and `JSON_VALID`, `JSON_EXTRACT`, `JSON_UNQUOTE` and `JSON_TYPE`. Activation checks these functions before installation writes; unsupported databases receive an explicit activation error without changing storage.
-
-This candidate adds task preview/copy, optional bbPress activities and private notification sources, manual performance samples and temporary automatic-reward holds. It works independently with standard themes and no companion plugins; see [Optional extensions](docs/GUIDE.en.md#optional-extensions-and-operations).
-
-Activities and notifications lets administrators configure trusted sources, fixed XP, daily counts, minimum scores and private messages. Server-verified games are optional and new sources default to off. Extensions may register other channels; no email channel is provided. See the [guide](docs/GUIDE.en.md#configure-optional-activities-and-notifications).

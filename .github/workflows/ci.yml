@@ -164,6 +164,10 @@ jobs:
             sha256: '602202444c8a87bc5e02463c21cbd8fc35e9fc9e8d66c18a82f7eb9ce891ac94'
           - version: '2.0.0-rc.3'
             sha256: 'd0992608def9587e43a04fe3f11c5c4a102cf755a2f10f0ebecfbed17778ad23'
+          - version: '2.0.1'
+            sha256: '30f78600c50d0ae51c6d1ca97b0d111aabb4df340729fd88dcf800a6d8d0a4a3'
+          - version: '2.1.0-rc.2'
+            sha256: '5fd72040aa004df38030ba0ce9cf043c31508c42fe6c38f8b6a91fc48120f11d'
     services:
       mysql:
         image: mysql:8.0
