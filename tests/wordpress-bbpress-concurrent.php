@@ -75,6 +75,55 @@ if (!is_array($fixture)) {
     throw new RuntimeException('Race fixture required');
 }
 global $wpdb;
+// This fixture is restricted above to its own synthetic user and local database.
+// Keep failure evidence structural: no usernames, titles, content, reasons or SQL text.
+$diagnostic = static function (int $topic) use ($wpdb, $fixture): array {
+    $rows = $wpdb->get_results(
+        $wpdb->prepare(
+            'SELECT kind,xp FROM ' .
+                Reader_Experience::table() .
+                ' WHERE user_id=%d ORDER BY id LIMIT 20',
+            $fixture['uid'],
+        ),
+        ARRAY_A,
+    );
+    $rows_failed = $wpdb->last_error !== '' || !is_array($rows);
+    $rows = is_array($rows)
+        ? array_map(
+            static fn($row) => ['kind' => (string) $row['kind'], 'xp' => (int) $row['xp']],
+            $rows,
+        )
+        : [];
+    wp_cache_delete($fixture['uid'], 'user_meta');
+    $balance = (int) get_user_meta($fixture['uid'], Reader_Experience::balance_meta(), true);
+    $balance_failed = $wpdb->last_error !== '';
+    $status = $wpdb->get_var(
+        $wpdb->prepare("SELECT post_status FROM {$wpdb->posts} WHERE ID=%d", $topic),
+    );
+    $status_failed = $wpdb->last_error !== '';
+    $failures = get_option('wp_xp_core_bbpress_failures', []);
+    $codes = [];
+    foreach (is_array($failures) ? array_slice($failures, -20) : [] as $failure) {
+        if (
+            is_array($failure) &&
+            (int) ($failure['object_id'] ?? 0) === $topic &&
+            is_string($failure['code'] ?? null)
+        ) {
+            $codes[] = substr($failure['code'], 0, 64);
+        }
+    }
+    return [
+        'rows' => $rows,
+        'balance' => $balance,
+        'topic_status' => is_string($status) ? substr($status, 0, 40) : null,
+        'failure_codes' => $codes,
+        'read_errors' => [
+            'rows' => $rows_failed,
+            'balance' => $balance_failed,
+            'status' => $status_failed,
+        ],
+    ];
+};
 if ($mode === 'reward') {
     $sent = false;
     $filter = static function ($sql) use (&$sent, $signal, $waiting, $wait, $wpdb, $fixture) {
@@ -123,7 +172,7 @@ if ($mode === 'reward') {
     if (!$sent || !$topic) {
         throw new RuntimeException('Real provider receipt was not paused');
     }
-    echo wp_json_encode(['topic' => (int) $topic]);
+    echo wp_json_encode(['topic' => (int) $topic, 'diagnostic' => $diagnostic((int) $topic)]);
     return;
 }
 if ($mode === 'moderate') {
@@ -149,7 +198,7 @@ if ($mode === 'moderate') {
     } finally {
         remove_filter('query', $filter);
     }
-    echo wp_json_encode(['moderated' => true]);
+    echo wp_json_encode(['moderated' => true, 'diagnostic' => $diagnostic((int) $data['topic'])]);
     return;
 }
 if ($mode !== 'verify') {
@@ -170,7 +219,10 @@ if (
     (int) get_user_meta($fixture['uid'], Reader_Experience::balance_meta(), true) !== 0
 ) {
     throw new RuntimeException(
-        'Moderation must wait for the uncommitted reward and reverse it exactly',
+        'Moderation must wait for the uncommitted reward and reverse it exactly: ' .
+            wp_json_encode(
+                $diagnostic((int) (json_decode(file_get_contents($signal), true)['topic'] ?? 0)),
+            ),
     );
 }
 if (
