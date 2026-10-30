@@ -77,6 +77,28 @@
   color: var(--xp-muted);
   line-height: 1.7;
 }
+.xp-activities .xp-card + .xp-card {
+  margin-top: 20px;
+}
+.xp-activities .xp-field {
+  display: block;
+  margin: 16px 0;
+  font-weight: 600;
+}
+.xp-activities .xp-field > input:not([type='checkbox']):not([type='hidden']),
+.xp-activities .xp-field > select {
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  max-width: 34rem;
+  margin-top: 8px;
+}
+.xp-activities .xp-field > input[type='number'] {
+  max-width: 16rem;
+}
+.xp-activities form > h2:not(:first-child) {
+  margin-top: 24px;
+}
 .wp-xp-core-admin .xp-card-heading {
   display: flex;
   gap: 12px;

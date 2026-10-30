@@ -6,6 +6,13 @@ final class WP_XP_Core_Activities_UI
     public static function boot(): void
     {
         add_action('admin_menu', [self::class, 'menu']);
+        add_action('admin_enqueue_scripts', [self::class, 'assets']);
+    }
+    public static function assets($hook): void
+    {
+        if ($hook === 'settings_page_wp-xp-activities') {
+            WP_XP_Core_Settings::assets('settings_page_wp-xp-core');
+        }
     }
     public static function menu(): void
     {
@@ -132,9 +139,9 @@ final class WP_XP_Core_Activities_UI
                 $result = new WP_Error('input', $e->getMessage());
             }
         }
-        echo '<div class="wrap wp-xp-core-admin"><h1>' .
+        echo '<div class="wrap wp-xp-core-admin xp-activities"><header class="xp-header"><span class="xp-mark" aria-hidden="true">XP</span><div><h1>' .
             esc_html(wp_xp_core_t('活动与通知')) .
-            '</h1>';
+            '</h1></div></header>';
         WP_XP_Core_Management_UI::nav('activities');
         WP_XP_Core_Growth_UI::notice($result);
         echo '<section class="xp-card"><h2>' .
@@ -201,7 +208,7 @@ final class WP_XP_Core_Activities_UI
             checked($policy['enabled'], true, false) .
             '>' .
             esc_html(wp_xp_core_t('启用此活动奖励')) .
-            '</label><label class="xp-field">' .
+            '</label><div class="xp-fields xp-fields-three"><label class="xp-field">' .
             esc_html(wp_xp_core_t('每次固定经验')) .
             '<input type="number" min="0" max="1000000" name="activity[xp]" required value="' .
             esc_attr((string) $policy['xp']) .
@@ -232,7 +239,7 @@ final class WP_XP_Core_Activities_UI
                 esc_attr((string) ($policy['min_score'] ?? 0)) .
                 '" required></label>';
         }
-        echo '<h2>' .
+        echo '</div><h2>' .
             esc_html(wp_xp_core_t('设置活动通知')) .
             '</h2><label class="xp-field"><input type="hidden" name="activity[inbox]" value="0"><input type="checkbox" name="activity[inbox]" value="1"' .
             checked($policy['inbox'] ?? false, true, false) .

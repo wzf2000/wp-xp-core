@@ -18,6 +18,8 @@ $verify = static function ($name, $ok) use (&$checks) {
 $error = static fn($value, $code) => is_wp_error($value) && $value->get_error_code() === $code;
 $admin = get_user_by('login', 'fixture-author');
 wp_set_current_user($admin->ID);
+do_action('admin_enqueue_scripts', 'settings_page_wp-xp-activities');
+$verify('Activity tab loads the shared admin styles', wp_style_is('wp-xp-core-admin', 'enqueued'));
 $uid = wp_insert_user([
     'user_login' => 'fixture-easy-activity',
     'user_email' => 'easy-activity@example.invalid',
