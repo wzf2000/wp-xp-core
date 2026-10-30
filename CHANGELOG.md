@@ -1,5 +1,24 @@
 # Changelog
 
+## 2.1.0-rc.2
+
+- 新增「活动与通知」后台页签，选择可信来源后设置固定经验、每日次数、可选最低分、私人通知文案与预览。
+- 新增活动通知偏好与可扩展渠道接口；仅新账本提交后尝试投递，失败不影响经验，不自动重放。
+- 可选接入支持公开结算门面的服务端验证游戏；旧游戏包提示升级适配，未安装时仍独立运行。
+- 来源规则边界由服务器维护，资格变更或重新启用只接纳新活动；次数耗尽留下零经验幂等凭据，跨日重试不补差。
+
+Adds a trusted activity directory, bounded reward rules, private activity messages and optional post-commit channel callbacks. Verified game receipts can opt in through the public server facade; existing data and default-disabled integrations remain preserved.
+
+## 2.1.0-rc.1
+
+- 新增任务只读预览、禁用的新任务副本，以及讨论、组合参与和审核模板。
+- 新增服务端活动原额撤销接口、默认关闭的 bbPress 公开主题／回复适配。
+- 新增私人通知源接口；可在经验面板选择可用的 Companion 通知源。
+- 新增管理员手动性能采样与最长二十四小时的自动经验奖励暂停，保留零经验活动凭据，不追补差额。
+- 保留已有规则、余额、历史事件和任务；不增加表、索引或定时任务。
+
+Task preview/copy/templates, exact provider reversals, optional bbPress activity, private notification sources, bounded diagnostics and temporary automatic-reward holds. Existing data and defaults remain unchanged.
+
 ## 2.0.1
 
 - 后台 “设置” 菜单统一保留 WP XP Core 一个入口，经验账本、成长中心、任务与成就、激励效果和配置工具通过插件页内页签访问。

@@ -90,6 +90,10 @@ final class WP_XP_Core_Privacy
                         'activity_cap',
                         'provider',
                         'provider_label',
+                        'activity_message',
+                        'activity_score',
+                        'original_event_id',
+                        'reward_hold',
                     ]),
                 )
                 : [];

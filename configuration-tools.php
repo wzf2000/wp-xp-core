@@ -434,6 +434,10 @@ final class WP_XP_Core_Configuration
                 $plan['growth']['streak']['start_event_id'] = $reset
                     ? (int) $boundary
                     : $previous['streak']['start_event_id'];
+                WP_XP_Core_Providers::update_boundaries(
+                    WP_XP_Core_Settings::rules(),
+                    $plan['rules'],
+                );
                 foreach (
                     [
                         WP_XP_Core_Settings::OPTION => 'rules',
@@ -479,6 +483,39 @@ final class WP_XP_Core_Configuration
                 'period' => 'once',
                 'enabled' => true,
                 'steps' => [['kind' => 'visit', 'count' => 3, 'mode' => 'objects']],
+            ],
+            'discussion' => [
+                'id' => 't_0000000000000003',
+                'title' => wp_xp_core_t('参与讨论'),
+                'description' => wp_xp_core_t('本周在两篇不同公开内容下发表评论。'),
+                'icon' => '◇',
+                'type' => 'automatic',
+                'period' => 'week',
+                'enabled' => false,
+                'steps' => [['kind' => 'comment', 'count' => 2, 'mode' => 'objects']],
+            ],
+            'participation' => [
+                'id' => 't_0000000000000004',
+                'title' => wp_xp_core_t('每月学习'),
+                'description' => wp_xp_core_t('阅读五篇不同内容，并在三个自然日签到。'),
+                'icon' => '☆',
+                'type' => 'automatic',
+                'period' => 'month',
+                'enabled' => false,
+                'steps' => [
+                    ['kind' => 'visit', 'count' => 5, 'mode' => 'objects'],
+                    ['kind' => 'checkin', 'count' => 3, 'mode' => 'days'],
+                ],
+            ],
+            'review' => [
+                'id' => 't_0000000000000005',
+                'title' => wp_xp_core_t('提交学习成果'),
+                'description' => wp_xp_core_t('提交完成说明，由管理员审核。'),
+                'icon' => '☆',
+                'type' => 'review',
+                'period' => 'once',
+                'enabled' => false,
+                'steps' => [],
             ],
             'checkin' => [
                 'id' => 't_0000000000000002',

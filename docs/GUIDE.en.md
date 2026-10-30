@@ -1,10 +1,10 @@
-<!-- wp-xp-core-version: 2.0.1 -->
+<!-- wp-xp-core-version: 2.1.0-rc.2 -->
 
 # User guide
 
 [简体中文](GUIDE.md) · English · [Back to overview](../README.en.md)
 
-This administrator guide describes **2.0.1**. For released versions, use the guide at the matching Release tag. From 1.4.0, new sites can install and activate with default rules, without server JSON configuration. See [Get started](../README.en.md#get-started) for installation.
+This administrator guide describes **2.1.0-rc.2**. For released versions, use the guide at the matching Release tag. From 1.4.0, new sites can install and activate with default rules, without server JSON configuration. See [Get started](../README.en.md#get-started) for installation.
 
 ## Create an experience page
 
@@ -218,3 +218,32 @@ After an update-channel change, cached candidates are immediately checked agains
 Use InnoDB for transactional storage and a database providing `JSON_VALID`, `JSON_EXTRACT`, `JSON_UNQUOTE` and `JSON_TYPE`. Activation checks those functions before installation writes. If a check fails, ask the server administrator to provide a compatible database and retry activation; no tables are converted or adopted.
 
 When a claim, daily quota, milestone, original comment receipt or response history cannot be read, the reward operation stops and rolls back. Restore database access before retrying the original action; do not edit the balance or replay initialization. Personal-data exports include review decisions, feedback and the associated submission ID, without internal administrator identities or reasons.
+
+## Optional extensions and operations
+
+**Preview task** validates fields, dates and prerequisites and shows the expected version and whether progress is retained or counts subsequent activity, without saving configuration or calculating user progress. The draft remains editable; saving checks the task-list revision again. **Copy as new task** opens an unsaved, disabled draft. Saving creates its own ID, version 1 and future activity boundary, without copying progress, claims or reviews. Configuration tools include discussion, monthly learning and review templates with zero XP; preview and apply them explicitly.
+
+With bbPress installed, public-topic and public-reply providers appear in experience rules, disabled by default. Only newly created eligible content by registered users qualifies: the forum and its ancestors must be public, and the topic/reply must be public and password-free. Anonymous, pending, private, hidden, spam and trashed content is excluded. Closed topics can remain public. The adapter listens to official creation hooks; historical content, later moderation approval and re-enabling do not backfill rewards. Community activity contributes to XP, net standings, source statistics and private history. Task steps still cover check-ins, reading, articles and comments.
+
+Changing or deleting the topic/reply itself attempts an append-only reversal of its original actual XP. Insufficient balance rejects the whole reversal. Parent forum/topic changes never scan descendants; administrators must inspect original receipts and use the server reversal API where needed. Diagnostics retain the latest twenty adapter failure codes without automatic replay. Disabling future rewards does not disable reversals.
+
+The personal XP panel shows a notification-source selector when another source is available. Its own inbox works independently. When Companion is installed with notifications enabled, users can read and mark its recent messages here. The original source owns read state; XP does not copy messages or write external storage. Companion's bell, preference controls and existing page remain unchanged. Each source has separate pagination; Companion exposes its recent window of at most 100 items, which can shift when new messages arrive.
+
+**Read-only performance sample** runs manually and reads only the newest 50/500 event IDs, reporting query count, row count and local elapsed milliseconds without exposing event contents. This bounded sample and optional synthetic scale comparisons are not production load tests.
+
+Administrators can load a user's current state, then **Pause automatic XP rewards** with a reason for up to 1440 minutes; zero releases the hold. Management and target-user edit permissions, a nonce and a current revision are required. Valid activity and task honors continue while new automatic positive XP becomes zero with an idempotent receipt. Expiration is checked on access, without cron; releasing never backfills the difference. Manual adjustments, original compensation and exact reversals remain available. Users see only their own deadline and reward effect; administrative reasons stay in the management audit.
+
+## Configure optional activities and notifications
+
+Open **Settings → WP XP Core → Activities and notifications**. Choose a registered trusted source, then set reward and message rules. Administrators never enter hook names or executable code. Companion plugins are optional; another site's extension can integrate the server API once and let administrators maintain its rules here.
+
+1. Select a source and check availability. Unloaded sources retain their settings; old game packs show that the settlement adapter needs upgrading.
+2. Set fixed XP and daily count. **Zero stops new rewards.** Legacy providers without a count keep their original unlimited behavior, with an explicit option to switch to a limit. New sources start disabled with count zero. Sources declaring authoritative scores also expose a minimum-score field.
+3. Optionally enable private inbox messages. Templates are required plain text, at most 200 characters, with only `{activity}`, `{xp}` and `{score}`. HTML and unknown placeholders are rejected. Preview uses a sample award; stored messages use actual XP, including +0 after caps, holds or exhausted counts.
+4. Preview and save. Eligibility/reward changes or re-enabling establish a new server boundary; changing only message text/channels preserves it. Existing events never reward again. Users can disable activity participation/reversal messages in their own preferences.
+
+Eligible events after quota exhaustion persist zero-XP receipts. Retrying them on another day never backfills XP or repeats messages. A zero limit stops acceptance; games must have been created after the new boundary. Reversals append the original actual amount, require enough balance and do not restore daily count.
+
+Additional channels appear only when registered by an extension and default to off. This API covers activity participation/reversal messages only: one attempt after commit, without delivery guarantees, XP rollback or implicit retries. The plugin implements no email, webhook or outbound-network channel. Recent outcomes contain event IDs, channel IDs and codes, without message text or secrets.
+
+**Optional games:** PageNest Game Tools 0.2.0-rc.1 provides the public settlement facade and isolated observers. Only registered, server-replay-verified games qualify, all disabled by default. Browser-selected users, scores or XP are never authoritative; XP rereads the receipt under its own ledger lock. Scores commit and release the shared lock before XP is notified. Identical-proof retries can recover an XP receipt that never committed, but existing receipts never repeat. The game response retains `awards: []`: XP and private messages are maintained independently by WP XP Core. Browser-only tools and unverified games are outside this integration.

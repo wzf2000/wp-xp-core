@@ -11,7 +11,10 @@ function api(page, handler) {
   return page.route('**/api/*', async (route) => {
     expect(route.request().headers()['x-wp-nonce']).toBe('synthetic-nonce');
     const action = route.request().url().split('/').pop();
-    const reply = await handler(action, route.request().postDataJSON());
+    const value = await handler(action, route.request().postDataJSON());
+    const reply =
+      value ??
+      (action === 'notification-sources' ? { sources: [{ id: 'xp', label: 'Experience' }] } : {});
     await route.fulfill(typeof reply?.status === 'number' ? reply : { json: reply ?? {} });
   });
 }
@@ -393,4 +396,141 @@ test('English JS catalog translates fixed labels and preserves Chinese user snap
   await expect(page.locator('.xp-personal-task h4')).toContainText('经验规则');
   await expect(page.locator('.xp-personal-task')).toContainText('Different content');
   await expect(page.locator('.xp-personal-task p').first()).toHaveText('我的成长');
+});
+
+test('optional private source switches, escapes content, marks read and clears on expired session', async ({
+  page,
+}) => {
+  let marked = false;
+  let expired = false;
+  await api(page, (action, data) => {
+    if (action === 'growth') return { ...state, reward_hold: { active: true, until: 2000000000 } };
+    if (action === 'tasks') return emptyTasks;
+    if (action === 'notification-sources')
+      return {
+        sources: [
+          { id: 'xp', label: 'Experience' },
+          { id: 'fixture', label: 'Other inbox' },
+        ],
+      };
+    if (action === 'notifications')
+      return { items: [], next_cursor: null, revision: 'a'.repeat(64), preferences: {} };
+    if (action === 'notification-source-list') {
+      expect(data.source).toBe('fixture');
+      if (expired) return { status: 401, json: { message: 'Session expired' } };
+      return {
+        items: [
+          {
+            id: 'safe:1',
+            title: '<img src=x onerror=alert(1)>',
+            message: 'Private owner message',
+            day: '2026-10-30',
+            read: marked,
+            url: 'https://example.invalid/comment',
+          },
+        ],
+        next_cursor: null,
+      };
+    }
+    if (action === 'notification-source-read') {
+      expect(data).toEqual({ source: 'fixture', id: 'safe:1' });
+      marked = true;
+      return { saved: true };
+    }
+  });
+  await page.goto('/growth.html');
+  await expect(page.locator('.xp-reward-hold')).toBeVisible();
+  await page.locator('.xp-inbox-source').selectOption('fixture');
+  await expect(page.locator('.xp-inbox-list')).toContainText('<img src=x onerror=alert(1)>');
+  await expect(page.locator('.xp-inbox-list img')).toHaveCount(0);
+  await expect(page.locator('.xp-inbox-list a')).toHaveAttribute(
+    'href',
+    'https://example.invalid/comment',
+  );
+  await expect(page.locator('.xp-inbox-read-all')).toBeHidden();
+  await page.locator('.xp-inbox-list button').click();
+  await expect(page.locator('.xp-inbox-list')).toContainText('已读');
+  expired = true;
+  await page.locator('.xp-inbox-refresh').click();
+  await expect(page.locator('.xp-inbox-list')).toBeEmpty();
+  await expect(page.locator('.xp-inbox-message')).toContainText('Session expired');
+  await expect(page.locator('.xp-inbox-refresh')).toBeEnabled();
+});
+
+test('disabling an optional notification source falls back to independent XP inbox', async ({
+  page,
+}) => {
+  let enabled = true;
+  await api(page, (action) => {
+    if (action === 'growth') return state;
+    if (action === 'tasks') return emptyTasks;
+    if (action === 'notification-sources')
+      return {
+        sources: [
+          { id: 'xp', label: 'Experience' },
+          ...(enabled ? [{ id: 'fixture', label: 'Other inbox' }] : []),
+        ],
+      };
+    if (action === 'notifications')
+      return {
+        items: [
+          { id: '1:task', title: 'XP inbox', message: 'Independent', day: 'today', read: true },
+        ],
+        next_cursor: null,
+        revision: 'a'.repeat(64),
+        preferences: {},
+      };
+    if (action === 'notification-source-list')
+      return {
+        items: [
+          { id: '1', title: 'Other private item', message: 'Private', day: 'today', read: true },
+        ],
+        next_cursor: null,
+      };
+  });
+  await page.goto('/growth.html');
+  await page.locator('.xp-inbox-source').selectOption('fixture');
+  await expect(page.locator('.xp-inbox-list')).toContainText('Other private item');
+  enabled = false;
+  await page.locator('.xp-inbox-refresh').click();
+  await expect(page.locator('.xp-inbox-source')).toHaveCount(0);
+  await expect(page.locator('.xp-inbox-list')).toContainText('XP inbox');
+  await expect(page.locator('.xp-inbox-read-all')).toBeVisible();
+});
+
+test('optional source permission denial does not expire the XP session', async ({ page }) => {
+  await api(page, (action) => {
+    if (action === 'growth') return state;
+    if (action === 'tasks') return emptyTasks;
+    if (action === 'notification-sources')
+      return {
+        sources: [
+          { id: 'xp', label: 'Experience' },
+          { id: 'denied', label: 'Denied source' },
+        ],
+      };
+    if (action === 'notifications')
+      return {
+        items: [
+          {
+            id: '1:task',
+            title: 'XP still available',
+            message: 'Independent',
+            day: 'today',
+            read: true,
+          },
+        ],
+        next_cursor: null,
+        revision: 'a'.repeat(64),
+        preferences: {},
+      };
+    if (action === 'notification-source-list')
+      return { status: 403, json: { code: 'source_forbidden', message: 'Source denied' } };
+  });
+  await page.goto('/growth.html');
+  await page.locator('.xp-inbox-source').selectOption('denied');
+  await expect(page.locator('.xp-inbox-message')).toContainText('Source denied');
+  await expect(page.locator('.xp-inbox-source')).toBeEnabled();
+  await page.locator('.xp-inbox-source').selectOption('xp');
+  await expect(page.locator('.xp-inbox-list')).toContainText('XP still available');
 });

@@ -331,6 +331,62 @@ final class WP_XP_Core_Achievements
             wp_cache_delete($name, 'options');
         }
     }
+    private static function restarts(?array $base, array $value): bool
+    {
+        $conditions = [
+            'type',
+            'period',
+            'enabled',
+            'steps',
+            'starts_on',
+            'ends_on',
+            'prerequisites',
+            'reward_xp',
+        ];
+        return $base === null ||
+            array_intersect_key($base, array_flip($conditions)) !==
+                array_intersect_key($value, array_flip($conditions));
+    }
+    /** Validate an editor draft without persisting configuration or reading user progress. */
+    public static function preview(array $input, $nonce, $revision)
+    {
+        if (!current_user_can('manage_options')) {
+            return self::error('forbidden', wp_xp_core_t('没有管理任务的权限。'), 403);
+        }
+        if (!is_string($nonce) || !wp_verify_nonce($nonce, 'wp_xp_core_achievements')) {
+            return self::error('nonce', wp_xp_core_t('验证已过期，请刷新页面。'), 403);
+        }
+        if (!is_string($revision) || !hash_equals(self::revision(), $revision)) {
+            return self::error('conflict', wp_xp_core_t('任务列表已更新，请刷新后再修改。'), 409);
+        }
+        try {
+            $task = self::validate($input);
+            $all = self::definitions();
+            if ($task['id'] !== '' && !isset($all[$task['id']])) {
+                return self::error('missing', wp_xp_core_t('任务不存在。'), 404);
+            }
+            if ($task['id'] === '' && count($all) >= 50) {
+                return self::error(
+                    'limit',
+                    wp_xp_core_t('最多保留五十个任务，可先停用不再使用的任务。'),
+                );
+            }
+            $all[$task['id'] ?: 'draft'] = $task;
+            self::validate_graph($all);
+            $existing = self::definitions()[$task['id']] ?? null;
+            $base = $existing ? self::validate(array_intersect_key($existing, $task), false) : null;
+            $restarts = self::restarts($base, $task);
+            return [
+                'preview' => true,
+                'task' => $task,
+                'new_task' => $existing === null,
+                'restarts' => $restarts,
+                'version' => $existing ? (int) $existing['version'] + (int) $restarts : 1,
+            ];
+        } catch (InvalidArgumentException $e) {
+            return self::error('input', $e->getMessage());
+        }
+    }
     public static function save(array $input, $nonce, $revision)
     {
         if (!current_user_can('manage_options')) {
@@ -393,20 +449,7 @@ final class WP_XP_Core_Achievements
                 if ($base === $value) {
                     return ['id' => $value['id'], 'unchanged' => true];
                 }
-                $conditions = [
-                    'type',
-                    'period',
-                    'enabled',
-                    'steps',
-                    'starts_on',
-                    'ends_on',
-                    'prerequisites',
-                    'reward_xp',
-                ];
-                $new_version =
-                    !$existing ||
-                    array_intersect_key($base, array_flip($conditions)) !==
-                        array_intersect_key($value, array_flip($conditions));
+                $new_version = self::restarts($base, $value);
                 $value['number'] = $existing ? (int) $existing['number'] : count($old) + 1;
                 $value['version'] = $existing ? (int) $existing['version'] + (int) $new_version : 1;
                 global $wpdb;
