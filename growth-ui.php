@@ -399,6 +399,8 @@ final class WP_XP_Core_Growth_UI
             esc_html(wp_xp_core_t('审核结果')) .
             '</label><label><input type="checkbox" name="level" checked>' .
             esc_html(wp_xp_core_t('等级提升')) .
+            '</label><label><input type="checkbox" name="activity" checked>' .
+            esc_html(wp_xp_core_t('活动参与与撤销')) .
             '</label><button>' .
             esc_html(wp_xp_core_t('保存通知偏好')) .
             '</button></form></details></section><section class="xp-personal-tasks" aria-label="' .

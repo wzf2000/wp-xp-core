@@ -194,7 +194,15 @@ final class WP_XP_Core_Settings
                 !is_string($id) ||
                 !preg_match('/^[a-z][a-z0-9_]{0,31}$/D', $id) ||
                 !is_array($provider) ||
-                array_diff(array_keys($provider), ['enabled', 'xp']) ||
+                array_diff(array_keys($provider), [
+                    'enabled',
+                    'xp',
+                    'day_limit',
+                    'min_score',
+                    'inbox',
+                    'template',
+                    'channels',
+                ]) ||
                 !in_array($provider['enabled'] ?? null, [true, false, 0, 1, '0', '1'], true)
             ) {
                 throw new InvalidArgumentException(wp_xp_core_t('活动提供者设置无效。'));
@@ -203,6 +211,58 @@ final class WP_XP_Core_Settings
                 'enabled' => (bool) $provider['enabled'],
                 'xp' => self::number($provider['xp'] ?? null, 0, 1000000),
             ];
+            if (array_key_exists('day_limit', $provider)) {
+                $out['providers'][$id]['day_limit'] =
+                    $provider['day_limit'] === null
+                        ? null
+                        : self::number($provider['day_limit'], 0, 100000);
+            }
+            if (array_key_exists('min_score', $provider)) {
+                $out['providers'][$id]['min_score'] = self::number(
+                    $provider['min_score'],
+                    0,
+                    1000000000,
+                );
+            }
+            if (array_key_exists('inbox', $provider)) {
+                if (!in_array($provider['inbox'], [true, false, 0, 1, '0', '1'], true)) {
+                    throw new InvalidArgumentException(wp_xp_core_t('活动通知设置无效。'));
+                }
+                $out['providers'][$id]['inbox'] = (bool) $provider['inbox'];
+            }
+            if (array_key_exists('template', $provider)) {
+                if (
+                    !is_string($provider['template']) ||
+                    trim($provider['template']) === '' ||
+                    mb_strlen($provider['template']) > 200 ||
+                    preg_match('/[<>\x00-\x1f]/u', $provider['template']) ||
+                    preg_match(
+                        '/[{}]/',
+                        str_replace(['{activity}', '{xp}', '{score}'], '', $provider['template']),
+                    )
+                ) {
+                    throw new InvalidArgumentException(
+                        wp_xp_core_t('通知文案只支持活动、经验和分数占位符。'),
+                    );
+                }
+                $out['providers'][$id]['template'] = $provider['template'];
+            }
+            if (array_key_exists('channels', $provider)) {
+                if (!is_array($provider['channels']) || count($provider['channels']) > 10) {
+                    throw new InvalidArgumentException(wp_xp_core_t('活动通知设置无效。'));
+                }
+                foreach ($provider['channels'] as $channel) {
+                    if (
+                        !is_string($channel) ||
+                        !preg_match('/^[a-z][a-z0-9_]{0,31}$/D', $channel)
+                    ) {
+                        throw new InvalidArgumentException(wp_xp_core_t('活动通知设置无效。'));
+                    }
+                }
+                $out['providers'][$id]['channels'] = array_values(
+                    array_unique($provider['channels']),
+                );
+            }
         }
         $out['dwell_seconds'] = self::number($input['dwell_seconds'] ?? 15, 5, 3600);
         $timezone = $input['timezone'] ?? 'Asia/Shanghai';
@@ -431,9 +491,8 @@ final class WP_XP_Core_Settings
             } catch (InvalidArgumentException $e) {
                 return new WP_Error('input', $e->getMessage(), ['status' => 400]);
             }
-            if ($old === $rules) {
-                return true;
-            }
+            // Even an unchanged form may initialize a missing server-owned activity boundary.
+
             // Store the new policy and its audit entry together on transactional options storage.
             return Reader_Experience::transaction(function () use ($old, $rules, $saved) {
                 if ($rules['timezone'] !== $saved['timezone']) {
@@ -453,6 +512,17 @@ final class WP_XP_Core_Settings
                     }
                 }
                 WP_XP_Core_Management::require_options_transaction();
+                if (self::revision(get_option(self::OPTION, null)) !== self::revision($old)) {
+                    return new WP_Error(
+                        'conflict',
+                        wp_xp_core_t('设置已被其他管理员更新，请刷新后重新修改。'),
+                        ['status' => 409],
+                    );
+                }
+                WP_XP_Core_Providers::update_boundaries($saved, $rules);
+                if ($old === $rules) {
+                    return true;
+                }
                 Reader_Experience::touch_option(self::OPTION);
                 if (!update_option(self::OPTION, $rules, false)) {
                     throw new RuntimeException('Experience settings write failed');
@@ -781,26 +851,11 @@ final class WP_XP_Core_Settings
             }
             echo '</div>';
         }
-        if (class_exists('WP_XP_Core_Providers')) {
-            foreach (WP_XP_Core_Providers::definitions() as $provider => $definition) {
-                $policy = $rules['providers'][$provider] ?? ['enabled' => false, 'xp' => 0];
-                echo '<div class="xp-field"><label><input type="hidden" name="rules[providers][' .
-                    esc_attr($provider) .
-                    '][enabled]" value="0"><input type="checkbox" name="rules[providers][' .
-                    esc_attr($provider) .
-                    '][enabled]" value="1"' .
-                    checked($policy['enabled'], true, false) .
-                    '>' .
-                    esc_html($definition['label']) .
-                    '</label><label>' .
-                    esc_html(wp_xp_core_t('奖励经验')) .
-                    '<input type="number" min="0" max="1000000" name="rules[providers][' .
-                    esc_attr($provider) .
-                    '][xp]" value="' .
-                    (int) $policy['xp'] .
-                    '"></label></div>';
-            }
-        }
+        echo '<p><a href="' .
+            esc_url(admin_url('options-general.php?page=wp-xp-activities')) .
+            '">' .
+            esc_html(wp_xp_core_t('配置可选活动与通知')) .
+            '</a></p>';
         echo '</div><div class="xp-field"><label>' .
             esc_html(wp_xp_core_t('每日活动经验上限')) .
             '<input type="number" min="0" max="1000000000" name="rules[activity_caps][day]" value="' .

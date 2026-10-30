@@ -1,4 +1,4 @@
-<!-- wp-xp-core-version: 2.1.0-rc.1 -->
+<!-- wp-xp-core-version: 2.1.0-rc.2 -->
 
 <p align="center"><img src="docs/assets/hero.svg" alt="WP XP Core — Experience for participation, levels for progress" width="100%"></p>
 
@@ -26,7 +26,7 @@ The plugin manages experience and levels independently of myCRED. Likes are an o
 
 ## Get started
 
-This branch documents **2.1.0-rc.1**, including task conditions, achievement rewards, private notifications and configuration tools. Download the version actually published on [Releases](https://github.com/wzf2000/wp-xp-core/releases).
+This branch documents **2.1.0-rc.2**, including task conditions, achievement rewards, private notifications and configuration tools. Download the version actually published on [Releases](https://github.com/wzf2000/wp-xp-core/releases).
 
 Back up existing sites and verify updates in an isolated environment first; use the documentation at your Release tag for version-specific behavior. On a new site, installing and activating creates the experience ledger and uses default rules. No server JSON profile or other experience plugin is required. Existing users start at zero XP; old articles and historical comments do not trigger automatic backfill.
 
@@ -82,7 +82,7 @@ See the [user guide](docs/GUIDE.en.md) for steps and change effects. These featu
 | Contribute improvements                                        | [Contributing](CONTRIBUTING.md)                                           |
 | Maintain GitHub releases                                       | [Releasing](docs/RELEASING.md)                                            |
 
-Documentation on this branch describes 2.1.0-rc.1. For another version, use the documentation at its Release tag.
+Documentation on this branch describes 2.1.0-rc.2. For another version, use the documentation at its Release tag.
 
 [Open an Issue](https://github.com/wzf2000/wp-xp-core/issues/new/choose) with your version, observed behavior and reproduction steps. Report security issues privately under the [security policy](SECURITY.md).
 
@@ -95,3 +95,5 @@ Minimum requirements: WordPress 6.0 and PHP 8.0. See [Contributing](CONTRIBUTING
 The database must support InnoDB transactions and `JSON_VALID`, `JSON_EXTRACT`, `JSON_UNQUOTE` and `JSON_TYPE`. Activation checks these functions before installation writes; unsupported databases receive an explicit activation error without changing storage.
 
 This candidate adds task preview/copy, optional bbPress activities and private notification sources, manual performance samples and temporary automatic-reward holds. It works independently with standard themes and no companion plugins; see [Optional extensions](docs/GUIDE.en.md#optional-extensions-and-operations).
+
+Activities and notifications lets administrators configure trusted sources, fixed XP, daily counts, minimum scores and private messages. Server-verified games are optional and new sources default to off. Extensions may register other channels; no email channel is provided. See the [guide](docs/GUIDE.en.md#configure-optional-activities-and-notifications).

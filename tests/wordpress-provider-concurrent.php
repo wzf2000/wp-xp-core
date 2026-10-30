@@ -29,6 +29,14 @@ if ($mode === 'prepare') {
     $rules = WP_XP_Core_Settings::rules();
     $next = $rules;
     $next['providers']['race_fixture'] = ['enabled' => true, 'xp' => 5];
+    $next['providers']['quota_race'] = [
+        'enabled' => true,
+        'xp' => 4,
+        'day_limit' => 1,
+        'inbox' => true,
+        'template' => '完成{activity}，本次经验+{xp}',
+        'channels' => ['race_channel'],
+    ];
     $next['activity_caps'] = ['day' => 0, 'week' => 0];
     if (
         WP_XP_Core_Settings::save(
@@ -67,7 +75,21 @@ wp_xp_core_register_activity_provider('race_fixture', [
     'authorize' => static fn($user, $object, $context) => $user === $uid && $object === 99,
     'revoke_authorize' => static fn($user, $object, $context) => $user === $uid && $object === 99,
 ]);
-if (in_array($mode, ['record', 'revoke', 'hold'], true)) {
+wp_xp_core_register_activity_provider('quota_race', [
+    'label' => 'Quota race',
+    'authorize' => static fn($user, $object) => $user === $uid && $object === 99,
+]);
+wp_xp_core_register_notification_channel('race_channel', [
+    'label' => 'Race channel',
+    'available' => static fn() => true,
+    'deliver' => static function ($user, $message) {
+        if (!add_option('wp_xp_quota_delivery_' . $message['event_id'], 1, '', false)) {
+            throw new RuntimeException('Duplicate channel attempt');
+        }
+        return true;
+    },
+]);
+if (in_array($mode, ['record', 'revoke', 'quota', 'hold'], true)) {
     $barrier = (float) getenv('WP_XP_TEST_BARRIER');
     if ($barrier < microtime(true) - 5 || $barrier > microtime(true) + 10) {
         throw new RuntimeException('Bounded race barrier required');
@@ -78,6 +100,7 @@ if (in_array($mode, ['record', 'revoke', 'hold'], true)) {
     $result = match ($mode) {
         'record' => wp_xp_core_record_activity('race_fixture', 'single-original', $uid, 99),
         'revoke' => wp_xp_core_revoke_activity('race_fixture', 'single-original', $uid, 99),
+        'quota' => wp_xp_core_record_activity('quota_race', 'quota-' . getmypid(), $uid, 99),
         'hold' => WP_XP_Core_Reward_Controls::save(
             [
                 'user_id' => $uid,
@@ -96,7 +119,9 @@ if ($mode !== 'verify') {
 }
 $rows = $wpdb->get_results(
     $wpdb->prepare(
-        'SELECT kind,xp FROM ' . Reader_Experience::table() . ' WHERE user_id=%d ORDER BY id',
+        'SELECT kind,xp FROM ' .
+            Reader_Experience::table() .
+            " WHERE user_id=%d AND (kind='provider_revoke' OR JSON_UNQUOTE(JSON_EXTRACT(detail,'$.provider'))='race_fixture') ORDER BY id",
         $uid,
     ),
     ARRAY_A,
@@ -106,11 +131,35 @@ if (
     $wpdb->last_error !== '' ||
     array_column($rows, 'kind') !== ['provider_reward', 'provider_revoke'] ||
     array_map('intval', array_column($rows, 'xp')) !== [5, -5] ||
-    (int) get_user_meta($uid, Reader_Experience::balance_meta(), true) !== 0
+    (int) get_user_meta($uid, Reader_Experience::balance_meta(), true) !== 4
 ) {
     throw new RuntimeException(
         'Provider race must append exactly one reward and one exact reversal',
     );
+}
+$quota = $wpdb->get_results(
+    $wpdb->prepare(
+        'SELECT id,xp,detail FROM ' .
+            Reader_Experience::table() .
+            " WHERE user_id=%d AND kind='provider_reward' AND JSON_UNQUOTE(JSON_EXTRACT(detail,'$.provider'))='quota_race' ORDER BY xp",
+        $uid,
+    ),
+    ARRAY_A,
+);
+if (count($quota) !== 2 || array_map('intval', array_column($quota, 'xp')) !== [0, 4]) {
+    throw new RuntimeException(
+        'Concurrent daily quota must award once and persist one zero receipt',
+    );
+}
+foreach ($quota as $row) {
+    if (
+        !isset(json_decode($row['detail'], true)['activity_message']) ||
+        (int) get_option('wp_xp_quota_delivery_' . $row['id'], 0) !== 1
+    ) {
+        throw new RuntimeException(
+            'Quota event must have one private message and one channel attempt',
+        );
+    }
 }
 $audit = WP_XP_Core_Management::audit_history();
 if (

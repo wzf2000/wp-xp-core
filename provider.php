@@ -10,7 +10,15 @@ final class WP_XP_Core_Providers
             !preg_match('/^[a-z][a-z0-9_]{0,31}$/D', $id) ||
             isset(self::$providers[$id]) ||
             count(self::$providers) >= 20 ||
-            array_diff(array_keys($definition), ['label', 'authorize', 'revoke_authorize']) ||
+            array_diff(array_keys($definition), [
+                'label',
+                'authorize',
+                'revoke_authorize',
+                'description',
+                'available',
+                'fields',
+                'facts',
+            ]) ||
             !is_string($definition['label'] ?? null) ||
             mb_strlen($definition['label']) > 80 ||
             !is_callable($definition['authorize'] ?? null) ||
@@ -19,12 +27,108 @@ final class WP_XP_Core_Providers
         ) {
             return false;
         }
+        if (
+            (isset($definition['available']) && !is_callable($definition['available'])) ||
+            (isset($definition['facts']) && !is_callable($definition['facts'])) ||
+            (isset($definition['description']) &&
+                (!is_string($definition['description']) ||
+                    mb_strlen($definition['description']) > 300)) ||
+            (isset($definition['fields']) && $definition['fields'] !== ['score'])
+        ) {
+            return false;
+        }
+        if (isset($definition['fields']) && !is_callable($definition['facts'] ?? null)) {
+            return false;
+        }
         self::$providers[$id] = $definition;
         return true;
     }
     public static function definitions(): array
     {
         return self::$providers;
+    }
+    const BOUNDARIES = 'wp_xp_core_provider_boundaries';
+    public static function available(string $id): bool
+    {
+        try {
+            return isset(self::$providers[$id]) &&
+                (!isset(self::$providers[$id]['available']) ||
+                    call_user_func(self::$providers[$id]['available']) === true);
+        } catch (Throwable $e) {
+            return false;
+        }
+    }
+    private static function boundary_rows(): array
+    {
+        global $wpdb;
+        $raw = $wpdb->get_var(
+            $wpdb->prepare(
+                "SELECT option_value FROM {$wpdb->options} WHERE option_name=%s",
+                self::BOUNDARIES,
+            ),
+        );
+        if ($wpdb->last_error !== '') {
+            throw new RuntimeException('Provider boundaries unavailable');
+        }
+        if ($raw === null || $raw === false) {
+            return [];
+        }
+        $rows = is_string($raw) ? @unserialize($raw, ['allowed_classes' => false]) : null;
+        if (!is_array($rows) || count($rows) > 20) {
+            throw new RuntimeException('Provider boundaries invalid');
+        }
+        foreach ($rows as $id => $row) {
+            if (
+                !is_string($id) ||
+                !preg_match('/^[a-z][a-z0-9_]{0,31}$/D', $id) ||
+                !is_array($row) ||
+                array_diff(array_keys($row), ['starts_ms', 'generation']) ||
+                !is_int($row['starts_ms'] ?? null) ||
+                $row['starts_ms'] < 1 ||
+                !is_int($row['generation'] ?? null) ||
+                $row['generation'] < 1
+            ) {
+                throw new RuntimeException('Provider boundary invalid');
+            }
+        }
+        return $rows;
+    }
+    public static function boundary(string $id): int
+    {
+        return (int) (self::boundary_rows()[$id]['starts_ms'] ?? 0);
+    }
+    public static function update_boundaries(array $before, array $after): void
+    {
+        if (!Reader_Experience::transaction_active()) {
+            throw new RuntimeException('Boundary transaction required');
+        }
+        $raw = self::boundary_rows();
+        $next = array_intersect_key($raw, $after['providers']);
+        foreach ($after['providers'] as $id => $policy) {
+            $old = $before['providers'][$id] ?? [];
+            $qualify = static fn($value) => [
+                'xp' => (int) ($value['xp'] ?? 0),
+                'day_limit' => $value['day_limit'] ?? null,
+                'min_score' => (int) ($value['min_score'] ?? 0),
+            ];
+            if (
+                $policy['enabled'] &&
+                (!isset($raw[$id]) ||
+                    !(bool) ($old['enabled'] ?? false) ||
+                    $qualify($old) !== $qualify($policy))
+            ) {
+                $next[$id] = [
+                    'starts_ms' => (int) floor(microtime(true) * 1000),
+                    'generation' => (int) ($raw[$id]['generation'] ?? 0) + 1,
+                ];
+            }
+        }
+        if ($next !== $raw) {
+            Reader_Experience::touch_option(self::BOUNDARIES);
+            if (!update_option(self::BOUNDARIES, $next, false)) {
+                throw new RuntimeException('Provider boundary write failed');
+            }
+        }
     }
     /** Append an exact reversal of an existing receipt, including capped or held zero awards. */
     public static function revoke(
@@ -228,12 +332,11 @@ final class WP_XP_Core_Providers
                     'enabled' => false,
                     'xp' => 0,
                 ];
-                if (!$policy['enabled']) {
-                    return new WP_Error('disabled', wp_xp_core_t('活动奖励未启用。'));
-                }
                 if (
                     !Reader_Experience::ready() ||
-                    call_user_func($definition['authorize'], $uid, $object_id, $context) !== true
+                    !self::available($provider) ||
+                    call_user_func($definition['authorize'], $uid, $object_id, $context, $event) !==
+                        true
                 ) {
                     return new WP_Error('ineligible', wp_xp_core_t('活动未通过服务端资格检查。'), [
                         'status' => 403,
@@ -261,15 +364,83 @@ final class WP_XP_Core_Providers
                     }
                     return ['event_id' => (int) $old['id'], 'duplicate' => true];
                 }
+                if (!$policy['enabled']) {
+                    return new WP_Error('disabled', wp_xp_core_t('活动奖励未启用。'));
+                }
+                $facts = isset($definition['facts'])
+                    ? call_user_func($definition['facts'], $uid, $object_id, $context)
+                    : [];
+                if (!is_array($facts) || array_diff(array_keys($facts), ['score', 'created_ms'])) {
+                    return new WP_Error('ineligible', wp_xp_core_t('活动未通过服务端资格检查。'));
+                }
+                if (
+                    isset($definition['facts']) &&
+                    (!isset($facts['created_ms']) ||
+                        (($definition['fields'] ?? []) === ['score'] && !isset($facts['score'])))
+                ) {
+                    return new WP_Error('ineligible', wp_xp_core_t('活动未通过服务端资格检查。'));
+                }
+                foreach ($facts as $value) {
+                    if (!is_int($value) || $value < 0) {
+                        return new WP_Error(
+                            'ineligible',
+                            wp_xp_core_t('活动未通过服务端资格检查。'),
+                        );
+                    }
+                }
+                if (
+                    isset($facts['created_ms']) &&
+                    (self::boundary($provider) === 0 ||
+                        $facts['created_ms'] <= self::boundary($provider))
+                ) {
+                    return new WP_Error('historical', wp_xp_core_t('本活动早于当前规则启用时间。'));
+                }
+                if (
+                    isset($policy['min_score']) &&
+                    (!isset($facts['score']) || $facts['score'] < $policy['min_score'])
+                ) {
+                    return new WP_Error('threshold', wp_xp_core_t('本次分数未达到奖励条件。'));
+                }
+                $day = Reader_Experience::day();
+                $limit = $policy['day_limit'] ?? null;
+                $quota_exhausted = false;
+                if ($limit === 0) {
+                    return new WP_Error('quota', wp_xp_core_t('此活动今日奖励次数已用完。'));
+                }
+                if ($limit !== null) {
+                    $used = $wpdb->get_var(
+                        $wpdb->prepare(
+                            'SELECT COUNT(*) FROM ' .
+                                Reader_Experience::table() .
+                                " WHERE user_id=%d AND kind='provider_reward' AND local_day=%s AND JSON_UNQUOTE(JSON_EXTRACT(IF(JSON_VALID(detail),detail,'{}'),'$.provider'))=%s",
+                            $uid,
+                            $day,
+                            $provider,
+                        ),
+                    );
+                    if ($wpdb->last_error !== '' || $used === null) {
+                        throw new RuntimeException('Provider quota unavailable');
+                    }
+                    $quota_exhausted = (int) $used >= $limit;
+                }
                 if (
                     !Reader_Experience::record(
                         $key,
                         $uid,
                         'provider_reward',
                         $object_id,
-                        $policy['xp'],
-                        Reader_Experience::day(),
-                        ['provider' => $provider, 'provider_label' => $definition['label']],
+                        $quota_exhausted ? 0 : $policy['xp'],
+                        $day,
+                        [
+                            'provider' => $provider,
+                            'provider_label' => $definition['label'],
+                            'activity_score' => $facts['score'] ?? null,
+                            'provider_quota' => [
+                                'limit' => $limit,
+                                'exhausted' => $quota_exhausted,
+                                'requested_xp' => $policy['xp'],
+                            ],
+                        ],
                     )
                 ) {
                     throw new RuntimeException('Provider reward failed');

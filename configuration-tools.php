@@ -434,6 +434,10 @@ final class WP_XP_Core_Configuration
                 $plan['growth']['streak']['start_event_id'] = $reset
                     ? (int) $boundary
                     : $previous['streak']['start_event_id'];
+                WP_XP_Core_Providers::update_boundaries(
+                    WP_XP_Core_Settings::rules(),
+                    $plan['rules'],
+                );
                 foreach (
                     [
                         WP_XP_Core_Settings::OPTION => 'rules',

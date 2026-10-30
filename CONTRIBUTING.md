@@ -98,3 +98,17 @@ CI covers PHP 8.0/8.2/8.5 basic/browser fixtures and real WordPress/MySQL instal
 The database must provide InnoDB transactions and `JSON_VALID`, `JSON_EXTRACT`, `JSON_UNQUOTE` and `JSON_TYPE`. Activation probes those functions before making installation changes. Run SELECT-failure fixtures when changing accounting reads: an unreadable claim, quota or history must never become a successful empty result.
 
 数据库须支持 InnoDB 事务及上述 JSON 函数；激活会先做只读能力探测。修改记账查询时运行 SELECT 故障夹具：去重、额度或响应历史读取失败必须中止并回滚，不能按空结果继续发奖。
+
+## Optional verified-game activity fixture / 可选验证游戏活动
+
+On an owned fresh integration lab with the candidate game pack, an explicit four-game profile and
+`easy-games/v1` REST namespace, run `tests/wordpress-game-activities.php` through WP-CLI eval-file.
+Set `WP_XP_GAME_FIXTURE_ROOT` to the maintained game source root; the test validates the generator's
+engine hashes against the installed pack. Existing database/local/owner marker guards remain required.
+The fixture simulates an engine seed and elapsed wall time only inside its synthetic game rows and
+boundary; it exercises real replay/settlement, ownership, idempotency, quota, private messages and
+post-commit failure isolation. It does not claim human play or production behavior and does not run
+in dependency-free CI combinations.
+
+仅在已配置候选游戏包的全新合成站执行上述可选夹具；显式传入维护源根并核对引擎哈希。
+种子、局耗时和边界调整只属于合成测试，不修改生产，不冒称用户真实玩过整局。

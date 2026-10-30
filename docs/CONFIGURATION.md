@@ -1,10 +1,10 @@
-<!-- wp-xp-core-version: 2.1.0-rc.1 -->
+<!-- wp-xp-core-version: 2.1.0-rc.2 -->
 
 # 服务器配置与集成
 
 简体中文 · [English](CONFIGURATION.en.md) · [返回首页](../README.md) · [使用指南](GUIDE.md)
 
-本页面向集成开发者，描述 **2.1.0-rc.1**；使用已发布版本时以其标签文档为准。**普通首次安装不需要外部配置：上传 1.4.0+ 安装包并启用即可。** 页面操作见[使用指南](GUIDE.md)。外部 JSON 只用于需要自定义存储或保留已有接入的高级部署。
+本页面向集成开发者，描述 **2.1.0-rc.2**；使用已发布版本时以其标签文档为准。**普通首次安装不需要外部配置：上传 1.4.0+ 安装包并启用即可。** 页面操作见[使用指南](GUIDE.md)。外部 JSON 只用于需要自定义存储或保留已有接入的高级部署。
 
 ## 默认安装
 
@@ -237,3 +237,26 @@ XP 先验证登录、`read` 权限和 REST nonce，再把当前会话用户传�
 通知项可带可选 `url`，最长 2048 字节，仅允许 HTTP／HTTPS；链接仍须由来源按当前可见性生成。
 
 bbPress 内部通过 `WP_XP_Core_Providers::revoke_registered_receipt()` 在账本锁内解析原获奖者，管理员改作者后仍撤销原凭据，不转移经验；可信删除钩子无需当前登录 actor。
+
+## 可配置可信活动与渠道契约
+
+provider 定义兼容原 `label/authorize/revoke_authorize`，可选增加 `description`、`available(): bool`、`fields: ['score']`、`facts($uid,$object_id,$context): array`。`authorize` 会收到可选第四参数原始 event 字符串；旧三参数用户函数保持兼容。可信 facts 必须返回整数 `created_ms`，声明 score 时还必须有非负整数 `score`；仅允许这两个字段，不持久化原始 context。声明 score 必须同时提供 facts 回调。无 facts 的旧 provider 保持其原资格校验责任，不声称能推断任意外部事件的发生时间。
+
+`rules.providers[id]` 可带 `day_limit`（0 停止，旧缺省／null 不限）、`min_score`、`inbox`、`template` 和 `channels`（至多十个稳定渠道 ID）。边界存于独立服务器 option，与规则在同一事务保存；导入／导出不携带该 option 或回调。首次启用、资格／奖励变化、重新启用会重建边界。通知文案变化不重启，旧缺省与等价显式值也不重启。新增 facts 的旧启用来源若缺边界，会拒绝记账；管理员原样保存规则即可建立起点，不自动初始化或扫历史。每日 COUNT 与写账共用锁内取得的自然日；零经验耗尽凭据不恢复额度，重复事件不消耗新次数。
+
+注册其他渠道：
+
+```php
+wp_xp_core_register_notification_channel('example', [
+    'label' => 'Example channel',
+    'available' => static fn(): bool => example_channel_ready(),
+    'deliver' => static function (int $uid, array $message) {
+        // message: event_id, kind, title, message. Verify any destination in this extension.
+        return example_deliver_activity($uid, $message); // true or WP_Error
+    },
+]);
+```
+
+最多十个渠道，稳定 ID 不可覆盖。回调只在新活动账本提交后尝试；当前用户 activity 偏好读取失败时不投递。回调异常／失败不影响经验，不自动重试，也不由相同事件重放。状态最多保留五十项，只有事件 ID、渠道、时间与受限错误码；不要把秘密或原始异常放入错误码。此接口不包含既有 task/review/level 消息，不包含邮件、webhook 或网络实现。
+
+游戏适配只调用 `site_tools_game_activity_catalog()` 与 `site_tools_game_settled_receipt($run,$uid)`，使用 `site_tools_register_game_settled_observer()` 优先接收提交后事件。`event` 必须与权威 run 相同且 object_id 为 0，避免换 event 绕过去重。最多二十项 provider，超额游戏明确显示未注册；未装新游戏包不会影响插件独立使用。

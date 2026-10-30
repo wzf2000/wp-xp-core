@@ -1,10 +1,10 @@
-<!-- wp-xp-core-version: 2.1.0-rc.1 -->
+<!-- wp-xp-core-version: 2.1.0-rc.2 -->
 
 # User guide
 
 [简体中文](GUIDE.md) · English · [Back to overview](../README.en.md)
 
-This administrator guide describes **2.1.0-rc.1**. For released versions, use the guide at the matching Release tag. From 1.4.0, new sites can install and activate with default rules, without server JSON configuration. See [Get started](../README.en.md#get-started) for installation.
+This administrator guide describes **2.1.0-rc.2**. For released versions, use the guide at the matching Release tag. From 1.4.0, new sites can install and activate with default rules, without server JSON configuration. See [Get started](../README.en.md#get-started) for installation.
 
 ## Create an experience page
 
@@ -232,3 +232,18 @@ The personal XP panel shows a notification-source selector when another source i
 **Read-only performance sample** runs manually and reads only the newest 50/500 event IDs, reporting query count, row count and local elapsed milliseconds without exposing event contents. This bounded sample and optional synthetic scale comparisons are not production load tests.
 
 Administrators can load a user's current state, then **Pause automatic XP rewards** with a reason for up to 1440 minutes; zero releases the hold. Management and target-user edit permissions, a nonce and a current revision are required. Valid activity and task honors continue while new automatic positive XP becomes zero with an idempotent receipt. Expiration is checked on access, without cron; releasing never backfills the difference. Manual adjustments, original compensation and exact reversals remain available. Users see only their own deadline and reward effect; administrative reasons stay in the management audit.
+
+## Configure optional activities and notifications
+
+Open **Settings → WP XP Core → Activities and notifications**. Choose a registered trusted source, then set reward and message rules. Administrators never enter hook names or executable code. Companion plugins are optional; another site's extension can integrate the server API once and let administrators maintain its rules here.
+
+1. Select a source and check availability. Unloaded sources retain their settings; old game packs show that the settlement adapter needs upgrading.
+2. Set fixed XP and daily count. **Zero stops new rewards.** Legacy providers without a count keep their original unlimited behavior, with an explicit option to switch to a limit. New sources start disabled with count zero. Sources declaring authoritative scores also expose a minimum-score field.
+3. Optionally enable private inbox messages. Templates are required plain text, at most 200 characters, with only `{activity}`, `{xp}` and `{score}`. HTML and unknown placeholders are rejected. Preview uses a sample award; stored messages use actual XP, including +0 after caps, holds or exhausted counts.
+4. Preview and save. Eligibility/reward changes or re-enabling establish a new server boundary; changing only message text/channels preserves it. Existing events never reward again. Users can disable activity participation/reversal messages in their own preferences.
+
+Eligible events after quota exhaustion persist zero-XP receipts. Retrying them on another day never backfills XP or repeats messages. A zero limit stops acceptance; games must have been created after the new boundary. Reversals append the original actual amount, require enough balance and do not restore daily count.
+
+Additional channels appear only when registered by an extension and default to off. This API covers activity participation/reversal messages only: one attempt after commit, without delivery guarantees, XP rollback or implicit retries. The plugin implements no email, webhook or outbound-network channel. Recent outcomes contain event IDs, channel IDs and codes, without message text or secrets.
+
+**Optional games:** PageNest Game Tools 0.2.0-rc.1 provides the public settlement facade and isolated observers. Only registered, server-replay-verified games qualify, all disabled by default. Browser-selected users, scores or XP are never authoritative; XP rereads the receipt under its own ledger lock. Scores commit and release the shared lock before XP is notified. Identical-proof retries can recover an XP receipt that never committed, but existing receipts never repeat. The game response retains `awards: []`: XP and private messages are maintained independently by WP XP Core. Browser-only tools and unverified games are outside this integration.

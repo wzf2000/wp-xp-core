@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.1.0-rc.2
+
+- 新增「活动与通知」后台页签，选择可信来源后设置固定经验、每日次数、可选最低分、私人通知文案与预览。
+- 新增活动通知偏好与可扩展渠道接口；仅新账本提交后尝试投递，失败不影响经验，不自动重放。
+- 可选接入支持公开结算门面的服务端验证游戏；旧游戏包提示升级适配，未安装时仍独立运行。
+- 来源规则边界由服务器维护，资格变更或重新启用只接纳新活动；次数耗尽留下零经验幂等凭据，跨日重试不补差。
+
+Adds a trusted activity directory, bounded reward rules, private activity messages and optional post-commit channel callbacks. Verified game receipts can opt in through the public server facade; existing data and default-disabled integrations remain preserved.
+
 ## 2.1.0-rc.1
 
 - 新增任务只读预览、禁用的新任务副本，以及讨论、组合参与和审核模板。

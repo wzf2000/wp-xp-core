@@ -3,7 +3,7 @@
 defined('ABSPATH') || exit();
 final class WP_XP_Core_Notifications
 {
-    const TYPES = ['task', 'review', 'level'];
+    const TYPES = ['task', 'review', 'level', 'activity'];
     private static function error(string $code, string $message, int $status = 400): WP_Error
     {
         return new WP_Error($code, $message, ['status' => $status]);
@@ -42,17 +42,28 @@ final class WP_XP_Core_Notifications
     }
     private static function identifier($id): array
     {
-        if (!is_string($id) || !preg_match('/^([1-9][0-9]*):(task|review|level)$/D', $id, $m)) {
+        if (
+            !is_string($id) ||
+            !preg_match('/^([1-9][0-9]*):(task|review|level|activity)$/D', $id, $m)
+        ) {
             throw new InvalidArgumentException(wp_xp_core_t('通知编号无效。'));
         }
         return [self::integer($m[1], 1, PHP_INT_MAX), array_search($m[2], self::TYPES, true)];
     }
     private static function raw(int $uid)
     {
+        global $wpdb;
         wp_cache_delete($uid, 'user_meta');
-        return metadata_exists('user', $uid, self::key())
-            ? get_user_meta($uid, self::key(), true)
-            : null;
+        $wpdb->last_error = '';
+        $exists = metadata_exists('user', $uid, self::key());
+        if ($wpdb->last_error !== '') {
+            throw new RuntimeException('Inbox state unavailable');
+        }
+        $raw = $exists ? get_user_meta($uid, self::key(), true) : null;
+        if ($wpdb->last_error !== '') {
+            throw new RuntimeException('Inbox state unavailable');
+        }
+        return $raw;
     }
     private static function state($raw): array
     {
@@ -75,6 +86,28 @@ final class WP_XP_Core_Notifications
             ? array_slice(array_filter($raw['read_ids'], 'is_string'), 0, 2000)
             : [];
         return $default;
+    }
+    public static function activity_enabled(int $uid): bool
+    {
+        global $wpdb;
+        $rows = $wpdb->get_col(
+            $wpdb->prepare(
+                "SELECT meta_value FROM {$wpdb->usermeta} WHERE user_id=%d AND meta_key=%s LIMIT 2",
+                $uid,
+                self::key(),
+            ),
+        );
+        if ($wpdb->last_error !== '' || !is_array($rows) || count($rows) > 1) {
+            throw new RuntimeException('Activity preference unavailable');
+        }
+        if (!$rows) {
+            return true;
+        }
+        $raw = @unserialize($rows[0], ['allowed_classes' => false]);
+        if (!is_array($raw)) {
+            throw new RuntimeException('Activity preference invalid');
+        }
+        return self::state($raw)['preferences']['activity'];
     }
     private static function maximum(int $uid): int
     {
@@ -146,6 +179,12 @@ final class WP_XP_Core_Notifications
                 'message' => wp_xp_core_t('已升至 Level ') . $transition['after'] . '。',
             ];
         }
+        if (
+            ($detail['activity_inbox'] ?? false) === true &&
+            is_array($detail['activity_message'] ?? null)
+        ) {
+            $messages['activity'] = $detail['activity_message'];
+        }
         $out = [];
         foreach (self::TYPES as $type) {
             if (isset($messages[$type])) {
@@ -180,13 +219,13 @@ final class WP_XP_Core_Notifications
             $where = $wpdb->prepare('user_id=%d AND id<=%d', $uid, $through);
             if ($cursor) {
                 $where .= $wpdb->prepare(
-                    $cursor[1] === 2 ? ' AND id<%d' : ' AND id<=%d',
+                    $cursor[1] === count(self::TYPES) - 1 ? ' AND id<%d' : ' AND id<=%d',
                     $cursor[0],
                 );
             }
             // Only v1 persisted notification facts are candidates. JSON_VALID protects legacy data.
             $detail = "IF(JSON_VALID(detail),detail,'{}')";
-            $where .= " AND JSON_EXTRACT($detail,'$.notification_schema')=1 AND (kind IN ('task_complete','task_grant','task_revoke','task_grant_revoke','achievement_review') OR JSON_EXTRACT($detail,'$.level_transition.after')>JSON_EXTRACT($detail,'$.level_transition.before'))";
+            $where .= " AND JSON_EXTRACT($detail,'$.notification_schema')=1 AND (JSON_EXTRACT($detail,'$.activity_inbox')=true OR kind IN ('task_complete','task_grant','task_revoke','task_grant_revoke','achievement_review') OR JSON_EXTRACT($detail,'$.level_transition.after')>JSON_EXTRACT($detail,'$.level_transition.before'))";
             $rows = $wpdb->get_results(
                 'SELECT id,kind,xp,detail,created_at,local_day FROM ' .
                     Reader_Experience::table() .
@@ -222,7 +261,7 @@ final class WP_XP_Core_Notifications
                     $next = $message['id'];
                 }
                 if (count($items) < $limit) {
-                    $next = $row['id'] . ':level';
+                    $next = $row['id'] . ':activity';
                 }
             }
             return [
@@ -264,7 +303,7 @@ final class WP_XP_Core_Notifications
                 if (
                     !is_array($input['preferences']) ||
                     array_diff(array_keys($input['preferences']), self::TYPES) ||
-                    count($input['preferences']) !== count(self::TYPES)
+                    array_diff(['task', 'review', 'level'], array_keys($input['preferences']))
                 ) {
                     return self::error('input', wp_xp_core_t('通知类型偏好无效。'));
                 }
@@ -303,7 +342,10 @@ final class WP_XP_Core_Notifications
                     );
                 }
                 if (isset($input['preferences'])) {
-                    $state['preferences'] = $input['preferences'];
+                    $state['preferences'] = array_replace(
+                        $state['preferences'],
+                        $input['preferences'],
+                    );
                 }
                 if ($through !== null) {
                     if ($through > self::maximum($uid)) {

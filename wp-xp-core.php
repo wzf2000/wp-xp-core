@@ -11,7 +11,7 @@
  * Update URI: https://github.com/wzf2000/wp-xp-core
  * Text Domain: wp-xp-core
  * Domain Path: /languages
- * Version: 2.1.0-rc.1
+ * Version: 2.1.0-rc.2
  */
 defined('ABSPATH') || exit();
 require_once __DIR__ . '/config.php';
@@ -30,6 +30,9 @@ require_once __DIR__ . '/insights-ui.php';
 require_once __DIR__ . '/configuration-tools.php';
 require_once __DIR__ . '/configuration-ui.php';
 require_once __DIR__ . '/provider.php';
+require_once __DIR__ . '/activity-notifications.php';
+require_once __DIR__ . '/activities-ui.php';
+require_once __DIR__ . '/game-activities.php';
 require_once __DIR__ . '/reward-controls.php';
 require_once __DIR__ . '/notification-sources.php';
 require_once __DIR__ . '/bbpress.php';
@@ -40,7 +43,7 @@ require_once __DIR__ . '/modules/blocks.php';
 register_activation_hook(__FILE__, [WP_XP_Core_Lifecycle::class, 'activate']);
 final class Reader_Experience
 {
-    const VERSION = '2.1.0-rc.1';
+    const VERSION = '2.1.0-rc.2';
     const BALANCE_META = 'reader_experience_balance';
     const MINS = [0, 5, 20, 60, 150, 300, 600, 1000, 1800, 3000];
     private static bool $writing = false;
@@ -286,6 +289,7 @@ final class Reader_Experience
         ) {
             throw new RuntimeException('Experience balance overflow');
         }
+        WP_XP_Core_Activity_Notifications::snapshot($kind, $xp, $detail);
         $detail['rule_revision'] = WP_XP_Core_Settings::policy_revision();
         $detail['notification_schema'] = 1;
         $detail['level_transition'] = [

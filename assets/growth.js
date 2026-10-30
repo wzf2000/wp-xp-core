@@ -516,7 +516,7 @@
       if (!append) state.through = data.through;
       panel.querySelector('.xp-inbox-more').hidden = !state.cursor;
       if (!external)
-        for (const type of ['task', 'review', 'level'])
+        for (const type of ['task', 'review', 'level', 'activity'])
           panel.querySelector(`.xp-inbox-preferences [name="${type}"]`).checked =
             data.preferences?.[type] !== false;
       panel.querySelector('.xp-inbox-message').textContent = '';
@@ -668,7 +668,7 @@
       event.preventDefault();
       if (inboxes.get(panel)?.source && inboxes.get(panel).source !== 'xp') return;
       const preferences = {};
-      for (const type of ['task', 'review', 'level'])
+      for (const type of ['task', 'review', 'level', 'activity'])
         preferences[type] = event.currentTarget.querySelector(`[name="${type}"]`).checked;
       saveInbox(panel, { preferences });
     });

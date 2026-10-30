@@ -9,6 +9,7 @@ final class WP_XP_Core_Management_UI
         'wp-xp-achievements',
         'wp-xp-insights',
         'wp-xp-configuration',
+        'wp-xp-activities',
     ];
     private static bool $retain_request = true;
     public static function boot(): void
@@ -78,6 +79,7 @@ final class WP_XP_Core_Management_UI
         if (class_exists('WP_XP_Core_Insights_UI')) {
             $links['insights'] = ['wp-xp-insights', wp_xp_core_t('激励效果'), ''];
         }
+        $links['activities'] = ['wp-xp-activities', wp_xp_core_t('活动与通知'), ''];
         $links['configuration'] = ['wp-xp-configuration', wp_xp_core_t('配置工具'), ''];
         foreach ($links as $key => [$slug, $label, $view]) {
             $url = admin_url('options-general.php?page=' . $slug . ($view ? '&view=' . $view : ''));

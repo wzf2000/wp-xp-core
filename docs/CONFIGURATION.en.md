@@ -1,10 +1,10 @@
-<!-- wp-xp-core-version: 2.1.0-rc.1 -->
+<!-- wp-xp-core-version: 2.1.0-rc.2 -->
 
 # Server configuration and integration
 
 [简体中文](CONFIGURATION.md) · English · [Back to overview](../README.en.md) · [User guide](GUIDE.en.md)
 
-This document describes **2.1.0-rc.1**. Installed releases follow their tagged documentation.
+This document describes **2.1.0-rc.2**. Installed releases follow their tagged documentation.
 
 This page is for integrators. **Ordinary first-time installation needs no external configuration: upload and activate a 1.4.0+ installation ZIP.** For page setup, see the [user guide](GUIDE.en.md). External JSON is only for advanced deployments with custom storage or existing integrations.
 
@@ -208,3 +208,13 @@ Reward holds use user metadata and the existing bounded administrative audit. Co
 Items may include an optional `url` of at most 2048 bytes, restricted to HTTP/HTTPS. Sources must generate it only after checking current visibility.
 
 The bbPress adapter resolves the original recipient under the ledger lock with `WP_XP_Core_Providers::revoke_registered_receipt()`. Author reassignment does not transfer XP or prevent reversal; trusted server deletion requires no logged-in actor.
+
+## Configurable trusted activities and channels
+
+Provider definitions retain `label/authorize/revoke_authorize` and may add `description`, `available(): bool`, `fields: ['score']`, and `facts($uid,$object_id,$context): array`. Authorization receives the original event string as an optional fourth argument; legacy three-argument user callbacks remain compatible. Facts must return integer `created_ms`; declared score fields also require nonnegative integer `score`. No other fact fields or original context are persisted. Declaring scores requires a facts callback. Legacy providers without facts retain responsibility for historical eligibility; the core cannot infer arbitrary external event times.
+
+`rules.providers[id]` may include `day_limit` (zero stops; legacy missing/null is unlimited), `min_score`, `inbox`, `template`, and up to ten stable `channels` IDs. Server boundaries live in a separate option written atomically with the rules, outside portable export/import and callback configuration. First enablement, eligibility/reward changes and re-enabling establish a boundary. Text-only changes and equivalent legacy/default representations do not restart it. An already-enabled provider gaining facts without a server boundary fails closed until an administrator saves its rules, even unchanged. No automatic initialization/history scan occurs. Quota COUNT and receipt use one local day obtained under the ledger lock; exhausted zero receipts and duplicate retries never restore or consume fresh quota.
+
+Register up to ten channels with `wp_xp_core_register_notification_channel($id, ['label'=>..., 'available'=>callable, 'deliver'=>callable])`. Stable IDs cannot be overwritten. `available()` returns a boolean; `deliver(int $uid, array $message)` receives only event_id, kind, title and message and returns true or WP_Error. The extension owns destination validation. Delivery is attempted only after a new activity receipt commits, respecting the owner's activity preference and refusing delivery when that preference cannot be read. Exceptions/failures never roll back XP, retry automatically or replay on duplicate events. At most fifty status entries retain event/channel IDs, time and restricted codes, without secrets or exception text. This API covers activity participation/reversal messages, not existing task/review/level notifications, and includes no email, webhook or network implementation.
+
+The game adapter calls only `site_tools_game_activity_catalog()` and `site_tools_game_settled_receipt($run,$uid)`, preferring isolated `site_tools_register_game_settled_observer()` delivery. The event must equal the authoritative run and object_id must be zero, preventing duplicate-key substitution. The provider registry retains its twenty-source bound and explicitly reports games that could not register. The core continues to work without the new game pack.

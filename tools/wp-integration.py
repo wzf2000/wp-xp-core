@@ -461,6 +461,7 @@ try {
         "insights",
         "storage",
         "portable",
+        "activity-rules",
     ):
         results[stage] = json.loads(
             wp("eval-file", str(ROOT / ("tests/wordpress-" + stage + ".php")))
@@ -564,7 +565,7 @@ try {
     provider_fixture = str(ROOT / "tests/wordpress-provider-concurrent.php")
     wp("eval-file", provider_fixture, mode="prepare")
     races = {}
-    for operation in ["record", "revoke", "hold"]:
+    for operation in ["record", "revoke", "quota", "hold"]:
         race_env = dict(env, WP_XP_TEST_BARRIER=str(time.time() + 1.0), WP_XP_TEST_MODE=operation)
         processes = [
             subprocess.Popen(

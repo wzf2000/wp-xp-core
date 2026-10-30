@@ -1,4 +1,4 @@
-<!-- wp-xp-core-version: 2.1.0-rc.1 -->
+<!-- wp-xp-core-version: 2.1.0-rc.2 -->
 
 <p align="center"><img src="docs/assets/hero.svg" alt="WP XP Core — 为参与积累经验，让成长有迹可循" width="100%"></p>
 
@@ -26,7 +26,7 @@
 
 ## 开始使用
 
-本分支文档对应 **2.1.0-rc.1**，包含任务条件、成就奖励、私人通知和配置工具。下载安装包时，请以 [Release](https://github.com/wzf2000/wp-xp-core/releases) 中实际发布的版本为准。
+本分支文档对应 **2.1.0-rc.2**，包含任务条件、成就奖励、私人通知和配置工具。下载安装包时，请以 [Release](https://github.com/wzf2000/wp-xp-core/releases) 中实际发布的版本为准。
 
 更新已有站点前请备份，并先在隔离环境验证；不同版本的功能以对应 Release 标签内的文档为准。新站上传安装包并启用后，插件会建立经验账本并使用默认规则，无需配置服务器 JSON，也无需安装其他经验插件。既有用户从 0 经验开始，不会根据旧文章或历史评论自动补发奖励。
 
@@ -82,7 +82,7 @@
 | 参与开发或提交改进                 | [贡献指南](CONTRIBUTING.md)         |
 | 维护 GitHub 发行                   | [发布流程](docs/RELEASING.md)       |
 
-本分支文档对应 2.1.0-rc.1。使用其他版本时，请以对应 Release 标签内的文档为准。
+本分支文档对应 2.1.0-rc.2。使用其他版本时，请以对应 Release 标签内的文档为准。
 
 遇到问题可[提交 Issue](https://github.com/wzf2000/wp-xp-core/issues/new/choose)，附上版本、现象与复现步骤。安全问题请按[安全政策](SECURITY.md)私下报告。
 
@@ -95,3 +95,5 @@
 数据库须支持 InnoDB 事务，以及 `JSON_VALID`、`JSON_EXTRACT`、`JSON_UNQUOTE`、`JSON_TYPE`。激活会在安装写入前检查；不支持时明确提示错误并保留原存储。
 
 本候选新增任务预览与副本、默认关闭的 bbPress 活动、可选私人通知源、手动性能采样与短期自动奖励暂停。无需其他主题或插件即可运行；详见[可选扩展](docs/GUIDE.md#可选扩展与运营工具)。
+
+「活动与通知」让管理员选择可信来源，配置固定经验、每日次数、最低分与私人消息。支持可选的服务端验证游戏，所有新来源默认关闭；其他渠道由扩展注册，本版不提供邮件。[操作指南](docs/GUIDE.md#从后台设置可选活动与通知)。
