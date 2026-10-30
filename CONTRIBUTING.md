@@ -85,9 +85,9 @@ WP_XP_TEST_DATABASE=wp_xp_core_ci python3 tools/wp-integration.py \
 
 Both version and SHA-256 are required. Arbitrary URLs, existing sites and old-ZIP upgrade combinations are rejected. Before installation, the runner validates the ZIP digest, safe paths, slug, version, every manifest payload digest and PHP version header; it then checks the installed version and active state. The real fixture switches between the parent-comment and reply authors, creates approved synthetic comments and suppresses mail. It compares Companion's projection, direct XP dispatch and actual JSON REST list/read routes, including cross-user 404 and independent XP behavior after disabling the source. Failure diagnostics contain only counts, booleans and error codes, without private notification content. Public CI adds Companion 1.12.0 only to the existing WordPress 7.1.3 / PHP 8.5 / MySQL 8.0 combination alongside bbPress; other combinations retain dependency-free coverage. Both optional argument groups may be used together.
 
-2.1 RC 升级夹具还保存非默认活动奖励、每日额度、最低分、消息文案与渠道、服务器规则边界、正向／零经验回执和用户通知偏好。只替换程序后及停用／重新启用后逐项比对；后续合成活动与旧奖励撤销必须各自只处理一次，历史渠道不重投递。个人导出同时验证保留的零经验原因。
+2.1 RC 升级夹具还保存非默认活动奖励、每日额度、最低分、消息文案与渠道、服务器规则边界、正向／零经验回执和用户通知偏好。只替换程序后及停用／重新启用后逐项比对；后续合成活动与旧奖励撤销必须各自只处理一次，历史渠道不重投递。个人导出同时验证保留的零经验原因。 重新启用使用显式 CLI 上下文，避免 WP-CLI 后台上下文本身创建管理员会话；仍检查全部用户元数据。
 
-The 2.1 RC upgrade fixture also retains nondefault activity policy, quotas, score thresholds, message/channel settings, server boundaries, positive/zero receipts and notification preferences. After file replacement it checks retained state, one-time future awards, exact reversals, no historical channel redelivery and explainable exports; it then checks retained state again after reactivation.
+The 2.1 RC upgrade fixture also retains nondefault activity policy, quotas, score thresholds, message/channel settings, server boundaries, positive/zero receipts and notification preferences. After file replacement it checks retained state, one-time future awards, exact reversals, no historical channel redelivery and explainable exports; it then checks retained state again after reactivation. Reactivation uses explicit CLI context to avoid WP-CLI admin-context session creation; all usermeta rows remain checked.
 
 ## Localization / 翻译
 

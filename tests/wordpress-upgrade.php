@@ -117,11 +117,15 @@ $snapshot = static function (int $page) use ($wpdb, $table, $digest): array {
         static fn($row) => array_diff_key($row, ['Cardinality' => true]),
         $read('SHOW INDEX FROM ' . $table),
     );
+    // Retain every usermeta column/row, while making failed preservation checks explainable.
+    $metadata = [];
+    foreach ($read("SELECT * FROM {$wpdb->usermeta} ORDER BY umeta_id") as $row) {
+        $metadata[$row['meta_key']][] = $row;
+    }
+    ksort($metadata);
     return [
         'ledger' => $digest($read('SELECT * FROM ' . $table . ' ORDER BY id')),
-        'balance_and_user_state' => $digest(
-            $read("SELECT * FROM {$wpdb->usermeta} ORDER BY umeta_id"),
-        ),
+        'balance_and_user_state' => array_map($digest, $metadata),
         'plugin_options_and_schema_marker' => $digest($options),
         'ledger_schema' => $digest([$read('SHOW FULL COLUMNS FROM ' . $table), $indices]),
         'manual_panel_page' => $digest(
@@ -309,7 +313,19 @@ if ($mode === 'seed') {
         is_array($state) && is_array($state['snapshot'] ?? null),
     );
     foreach ($snapshot($state['page']) as $key => $value) {
-        $verify('Upgrade preserves ' . $key, $state['snapshot'][$key] === $value);
+        $changed =
+            $key === 'balance_and_user_state'
+                ? array_unique(
+                    array_merge(
+                        array_keys(array_diff_assoc($state['snapshot'][$key], $value)),
+                        array_keys(array_diff_assoc($value, $state['snapshot'][$key])),
+                    ),
+                )
+                : [];
+        $verify(
+            'Upgrade preserves ' . $key . ($changed ? ' (' . implode(', ', $changed) . ')' : ''),
+            $state['snapshot'][$key] === $value,
+        );
     }
     if ($state['activity'] ?? []) {
         $provider_created = $state['activity']['created_ms'];
