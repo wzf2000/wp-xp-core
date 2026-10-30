@@ -219,6 +219,9 @@ final class WP_XP_Core_Growth_UI
                     'submit',
                     'notifications',
                     'notification-settings',
+                    'notification-sources',
+                    'notification-source-list',
+                    'notification-source-read',
                     'participation',
                     'participation-settings',
                 ]
@@ -243,7 +246,9 @@ final class WP_XP_Core_Growth_UI
                 return new WP_Error('input', wp_xp_core_t('请求格式无效。'), ['status' => 400]);
             }
             $allowed = match ($action) {
-                'growth', 'tasks', 'participation' => [],
+                'growth', 'tasks', 'participation', 'notification-sources' => [],
+                'notification-source-list' => ['source', 'cursor', 'limit'],
+                'notification-source-read' => ['source', 'id'],
                 'history' => ['cursor', 'kind', 'from', 'to', 'limit'],
                 'notifications' => ['cursor', 'limit'],
                 'notification-settings' => ['revision', 'preferences', 'ids', 'through'],
@@ -255,6 +260,14 @@ final class WP_XP_Core_Growth_UI
                 return new WP_Error('input', wp_xp_core_t('请求包含无效字段。'), ['status' => 400]);
             }
             return match ($action) {
+                'notification-sources',
+                'notification-source-list',
+                'notification-source-read'
+                    => WP_XP_Core_Notification_Sources::request(
+                    $action,
+                    $data,
+                    $request->get_header('X-WP-Nonce'),
+                ),
                 'growth' => WP_XP_Core_Growth::summary(get_current_user_id()),
                 'history' => WP_XP_Core_Management::personal_history($data),
                 'tasks' => WP_XP_Core_Achievements::personal(),
@@ -428,6 +441,8 @@ final class WP_XP_Core_Growth_UI
             esc_html(wp_xp_core_t('人工调整')) .
             '</option><option value="streak_reward">' .
             esc_html(wp_xp_core_t('签到阶段奖励')) .
+            '</option><option value="provider_revoke">' .
+            esc_html(wp_xp_core_t('外部活动撤销')) .
             '</option><option value="provider_reward">' .
             esc_html(wp_xp_core_t('外部活动奖励')) .
             '</option><option value="task_complete">' .

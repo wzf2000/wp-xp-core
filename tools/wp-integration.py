@@ -119,9 +119,18 @@ def main():
     parser.add_argument(
         "--scale", action="store_true", help="Opt in to owned 10k/50k synthetic read benchmarks"
     )
+    parser.add_argument(
+        "--bbpress-version", help="Opt in to a verified official stable bbPress version"
+    )
     parser.add_argument("--upgrade-from", type=Path, help="Run only an isolated old-ZIP upgrade")
     parser.add_argument("--upgrade-sha256", help="Required immutable old-ZIP SHA-256")
     args = parser.parse_args()
+    if args.bbpress_version is not None and not re.fullmatch(
+        r"(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)", args.bbpress_version
+    ):
+        raise ValueError("bbPress requires an explicit stable major.minor.patch version")
+    if args.bbpress_version and args.upgrade_from:
+        raise ValueError("Optional bbPress checks cannot be combined with an old-ZIP upgrade")
     if bool(args.upgrade_from) != bool(args.upgrade_sha256) or (args.upgrade_from and args.scale):
         raise ValueError(
             "Upgrade requires both ZIP and checksum, and cannot be combined with scale"
@@ -384,6 +393,7 @@ try {
         "product",
         "insights",
         "storage",
+        "portable",
     ):
         results[stage] = json.loads(
             wp("eval-file", str(ROOT / ("tests/wordpress-" + stage + ".php")))
@@ -484,6 +494,47 @@ try {
     )
     results["configuration-concurrency"]["clients"] = clients
     (lab / "results.json").write_text(json.dumps(results, indent=2) + "\n")
+    provider_fixture = str(ROOT / "tests/wordpress-provider-concurrent.php")
+    wp("eval-file", provider_fixture, mode="prepare")
+    races = {}
+    for operation in ["record", "revoke", "hold"]:
+        race_env = dict(env, WP_XP_TEST_BARRIER=str(time.time() + 1.0), WP_XP_TEST_MODE=operation)
+        processes = [
+            subprocess.Popen(
+                command + ["eval-file", provider_fixture],
+                env=race_env,
+                text=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+            )
+            for _ in range(2)
+        ]
+        clients = []
+        try:
+            for process in processes:
+                output, errors = process.communicate(timeout=60)
+                if process.returncode:
+                    failure(
+                        "Concurrent provider " + operation,
+                        subprocess.CompletedProcess([], process.returncode, output, errors),
+                    )
+                clients.append(json.loads(output))
+        finally:
+            for process in processes:
+                if process.poll() is None:
+                    process.terminate()
+                    process.wait(timeout=10)
+        if operation in ["record", "revoke"]:
+            if sorted(client.get("duplicate") for client in clients) != [False, True]:
+                raise RuntimeError("Provider race must commit once and return one duplicate")
+        elif (
+            sum(client.get("saved") is True for client in clients) != 1
+            or sum(client.get("error") == "conflict" for client in clients) != 1
+        ):
+            raise RuntimeError("Hold CAS must commit once and reject one stale revision")
+        races[operation] = clients
+    results["provider-concurrency"] = json.loads(wp("eval-file", provider_fixture, mode="verify"))
+    results["provider-concurrency"]["clients"] = races
     if args.scale:
         scale_env = dict(env, WP_XP_SCALE_TEST="1", WP_XP_TEST_OWNER_FILE=str(owner_file))
         scale = subprocess.run(
@@ -496,6 +547,47 @@ try {
         if scale.returncode:
             failure("Owned scale workload", scale)
         results["scale"] = json.loads(scale.stdout)
+    if args.bbpress_version:
+        # All normal dependency-free stages finish before the optional plugin is installed.
+        wp("plugin", "install", "bbpress", "--version=" + args.bbpress_version)
+        actual = wp("plugin", "get", "bbpress", "--field=version").strip()
+        if actual != args.bbpress_version:
+            raise RuntimeError("Installed bbPress version differs from the requested version")
+        checksum = wp("plugin", "verify-checksums", "bbpress", "--strict")
+        wp("plugin", "activate", "bbpress", "--user=fixture-author")
+        results["bbpress"] = json.loads(wp("eval-file", str(ROOT / "tests/wordpress-bbpress.php")))
+        results["bbpress"]["version"] = actual
+        results["bbpress"]["checksums"] = checksum.strip()
+        (lab / "results.json").write_text(json.dumps(results, indent=2) + "\n")
+        bbpress_race = str(ROOT / "tests/wordpress-bbpress-concurrent.php")
+        wp("eval-file", bbpress_race, mode="prepare")
+        processes = [
+            subprocess.Popen(
+                command + ["eval-file", bbpress_race],
+                env=dict(env, WP_XP_TEST_MODE=operation),
+                text=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+            )
+            for operation in ["reward", "moderate"]
+        ]
+        clients = []
+        try:
+            for process in processes:
+                output, errors = process.communicate(timeout=60)
+                if process.returncode:
+                    failure(
+                        "Concurrent bbPress moderation",
+                        subprocess.CompletedProcess([], process.returncode, output, errors),
+                    )
+                clients.append(json.loads(output))
+        finally:
+            for process in processes:
+                if process.poll() is None:
+                    process.terminate()
+                    process.wait(timeout=10)
+        results["bbpress-concurrency"] = json.loads(wp("eval-file", bbpress_race, mode="verify"))
+        results["bbpress-concurrency"]["clients"] = clients
     (lab / "results.json").write_text(json.dumps(results, indent=2) + "\n")
     print(
         json.dumps({key: len(value.get("checks", [])) for key, value in results.items()}, indent=2)

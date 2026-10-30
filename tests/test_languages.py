@@ -43,6 +43,9 @@ class Languages(unittest.TestCase):
             "languages/wp-xp-core-en_US.json",
             "languages/wp-xp-core.pot",
             "modules/blocks.php",
+            "notification-sources.php",
+            "reward-controls.php",
+            "bbpress.php",
         ]:
             self.assertIn(name, files)
             self.assertTrue(release.installation_name(name))

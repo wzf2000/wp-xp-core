@@ -1,10 +1,10 @@
-<!-- wp-xp-core-version: 2.0.1 -->
+<!-- wp-xp-core-version: 2.1.0-rc.1 -->
 
 # User guide
 
 [简体中文](GUIDE.md) · English · [Back to overview](../README.en.md)
 
-This administrator guide describes **2.0.1**. For released versions, use the guide at the matching Release tag. From 1.4.0, new sites can install and activate with default rules, without server JSON configuration. See [Get started](../README.en.md#get-started) for installation.
+This administrator guide describes **2.1.0-rc.1**. For released versions, use the guide at the matching Release tag. From 1.4.0, new sites can install and activate with default rules, without server JSON configuration. See [Get started](../README.en.md#get-started) for installation.
 
 ## Create an experience page
 
@@ -218,3 +218,17 @@ After an update-channel change, cached candidates are immediately checked agains
 Use InnoDB for transactional storage and a database providing `JSON_VALID`, `JSON_EXTRACT`, `JSON_UNQUOTE` and `JSON_TYPE`. Activation checks those functions before installation writes. If a check fails, ask the server administrator to provide a compatible database and retry activation; no tables are converted or adopted.
 
 When a claim, daily quota, milestone, original comment receipt or response history cannot be read, the reward operation stops and rolls back. Restore database access before retrying the original action; do not edit the balance or replay initialization. Personal-data exports include review decisions, feedback and the associated submission ID, without internal administrator identities or reasons.
+
+## Optional extensions and operations
+
+**Preview task** validates fields, dates and prerequisites and shows the expected version and whether progress is retained or counts subsequent activity, without saving configuration or calculating user progress. The draft remains editable; saving checks the task-list revision again. **Copy as new task** opens an unsaved, disabled draft. Saving creates its own ID, version 1 and future activity boundary, without copying progress, claims or reviews. Configuration tools include discussion, monthly learning and review templates with zero XP; preview and apply them explicitly.
+
+With bbPress installed, public-topic and public-reply providers appear in experience rules, disabled by default. Only newly created eligible content by registered users qualifies: the forum and its ancestors must be public, and the topic/reply must be public and password-free. Anonymous, pending, private, hidden, spam and trashed content is excluded. Closed topics can remain public. The adapter listens to official creation hooks; historical content, later moderation approval and re-enabling do not backfill rewards. Community activity contributes to XP, net standings, source statistics and private history. Task steps still cover check-ins, reading, articles and comments.
+
+Changing or deleting the topic/reply itself attempts an append-only reversal of its original actual XP. Insufficient balance rejects the whole reversal. Parent forum/topic changes never scan descendants; administrators must inspect original receipts and use the server reversal API where needed. Diagnostics retain the latest twenty adapter failure codes without automatic replay. Disabling future rewards does not disable reversals.
+
+The personal XP panel shows a notification-source selector when another source is available. Its own inbox works independently. When Companion is installed with notifications enabled, users can read and mark its recent messages here. The original source owns read state; XP does not copy messages or write external storage. Companion's bell, preference controls and existing page remain unchanged. Each source has separate pagination; Companion exposes its recent window of at most 100 items, which can shift when new messages arrive.
+
+**Read-only performance sample** runs manually and reads only the newest 50/500 event IDs, reporting query count, row count and local elapsed milliseconds without exposing event contents. This bounded sample and optional synthetic scale comparisons are not production load tests.
+
+Administrators can load a user's current state, then **Pause automatic XP rewards** with a reason for up to 1440 minutes; zero releases the hold. Management and target-user edit permissions, a nonce and a current revision are required. Valid activity and task honors continue while new automatic positive XP becomes zero with an idempotent receipt. Expiration is checked on access, without cron; releasing never backfills the difference. Manual adjustments, original compensation and exact reversals remain available. Users see only their own deadline and reward effect; administrative reasons stay in the management audit.

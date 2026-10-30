@@ -34,6 +34,9 @@ final class WP_XP_Core_Achievements_UI
         if (($input['type'] ?? '') === 'review') {
             $input['steps'] = [];
         }
+        if (!is_array($input['steps'])) {
+            throw new InvalidArgumentException(wp_xp_core_t('任务信息无效。'));
+        }
         foreach ($input['steps'] as &$step) {
             if (!is_array($step)) {
                 continue;
@@ -57,6 +60,93 @@ final class WP_XP_Core_Achievements_UI
             );
         }
         return $input;
+    }
+    /** Bounded form state preserves invalid drafts without trusting their shape or HTML. */
+    public static function draft($input): array
+    {
+        $input = is_array($input) ? $input : [];
+        $text = static fn($value, $max = 300, $multiline = false) => is_scalar($value)
+            ? mb_substr(
+                preg_replace(
+                    $multiline ? '/[\x00-\x08\x0b\x0c\x0e-\x1f]/u' : '/[\x00-\x1f]/u',
+                    '',
+                    (string) $value,
+                ) ?? '',
+                0,
+                $max,
+            )
+            : '';
+        $task = [];
+        foreach (
+            [
+                'id' => 30,
+                'title' => 60,
+                'description' => 300,
+                'icon' => 8,
+                'starts_on' => 10,
+                'ends_on' => 10,
+                'category' => 40,
+                'series' => 60,
+                'reward_xp' => 10,
+                'image_id' => 10,
+            ]
+            as $key => $max
+        ) {
+            $task[$key] = $text($input[$key] ?? '', $max, $key === 'description');
+        }
+        $task['type'] = in_array($input['type'] ?? '', ['automatic', 'review'], true)
+            ? $input['type']
+            : 'automatic';
+        $task['period'] = in_array($input['period'] ?? '', ['once', 'day', 'week', 'month'], true)
+            ? $input['period']
+            : 'once';
+        $task['enabled'] = in_array($input['enabled'] ?? false, [true, 1, '1'], true);
+        $task['steps'] = [];
+        foreach (
+            array_slice(is_array($input['steps'] ?? null) ? $input['steps'] : [], 0, 8)
+            as $step
+        ) {
+            if (!is_array($step)) {
+                continue;
+            }
+            $row = [
+                'kind' => $text($step['kind'] ?? '', 20),
+                'mode' => $text($step['mode'] ?? 'events', 20),
+                'count' => $text($step['count'] ?? '', 10),
+            ];
+            foreach (['post_ids', 'category_ids'] as $field) {
+                $raw = $step[$field] ?? [];
+                $raw = is_array($raw)
+                    ? array_slice($raw, 0, 100)
+                    : (is_string($raw)
+                        ? preg_split('/[ ,，]+/u', mb_substr($raw, 0, 2000))
+                        : []);
+                $row[$field] = array_values(
+                    array_map(
+                        static fn($value) => $text($value, 10),
+                        array_filter($raw, 'is_scalar'),
+                    ),
+                );
+            }
+            $task['steps'][] = $row;
+        }
+        $task['prerequisites'] = [];
+        foreach (
+            array_slice(
+                is_array($input['prerequisites'] ?? null) ? $input['prerequisites'] : [],
+                0,
+                8,
+            )
+            as $pre
+        ) {
+            if (is_array($pre)) {
+                $task['prerequisites'][] = [
+                    'id' => $text($pre['id'] ?? '', 30),
+                    'scope' => $text($pre['scope'] ?? '', 20),
+                ];
+            }
+        }
+        return $task;
     }
     public static function page(): void
     {
@@ -85,7 +175,8 @@ final class WP_XP_Core_Achievements_UI
                 );
             } else {
                 try {
-                    $result = WP_XP_Core_Achievements::save(
+                    $method = ($_POST['operation'] ?? '') === 'preview' ? 'preview' : 'save';
+                    $result = WP_XP_Core_Achievements::$method(
                         self::normalize(wp_unslash($_POST['task'] ?? [])),
                         $_POST['_wpnonce'] ?? '',
                         $_POST['revision'] ?? '',
@@ -109,20 +200,43 @@ final class WP_XP_Core_Achievements_UI
             'enabled' => true,
             'steps' => [['kind' => 'checkin', 'count' => 1]],
         ];
+        if (isset($_GET['copy']) && isset($all[$id])) {
+            $task = WP_XP_Core_Achievements::validate(
+                array_intersect_key(
+                    $task,
+                    array_flip([
+                        'id',
+                        'title',
+                        'description',
+                        'icon',
+                        'type',
+                        'period',
+                        'enabled',
+                        'steps',
+                        'starts_on',
+                        'ends_on',
+                        'prerequisites',
+                        'reward_xp',
+                        'image_id',
+                        'category',
+                        'series',
+                    ]),
+                ),
+                false,
+            );
+            $task['id'] = '';
+            $task['enabled'] = false;
+        }
         if (
             $_SERVER['REQUEST_METHOD'] === 'POST' &&
             !in_array($_POST['operation'] ?? '', ['review', 'grant', 'revoke'], true)
         ) {
             if (is_array($result) && isset($result['id'])) {
                 $task = $all[$result['id']];
+            } elseif (is_array($result) && isset($result['task'])) {
+                $task = $result['task'];
             } elseif (is_wp_error($result)) {
-                try {
-                    $posted = WP_XP_Core_Achievements::validate(
-                        self::normalize(wp_unslash($_POST['task'] ?? [])),
-                    );
-                    $task = $posted;
-                } catch (InvalidArgumentException $e) {
-                }
+                $task = self::draft(wp_unslash($_POST['task'] ?? []));
             }
         }
         echo '<div class="wrap wp-xp-core-admin"><header class="xp-header"><span class="xp-mark" aria-hidden="true">XP</span><div><h1>' .
@@ -131,7 +245,38 @@ final class WP_XP_Core_Achievements_UI
             esc_html(wp_xp_core_t('让参与有明确目标，为完成的事情留下荣誉。')) .
             '</p></div></header>';
         WP_XP_Core_Management_UI::nav('tasks');
-        WP_XP_Core_Growth_UI::notice($result);
+        if (!is_array($result) || empty($result['preview'])) {
+            WP_XP_Core_Growth_UI::notice($result);
+        }
+        if (is_array($result) && !empty($result['preview'])) {
+            echo '<div class="notice notice-info"><p>' .
+                esc_html(
+                    $result['new_task']
+                        ? wp_xp_core_t('新建任务，从保存后的活动累计。')
+                        : ($result['restarts']
+                            ? wp_xp_core_t('将建立新版本，并从后续活动累计。')
+                            : wp_xp_core_t('保留当前版本和进度。')),
+                ) .
+                ' · ' .
+                esc_html(wp_xp_core_t('预计版本')) .
+                ' ' .
+                (int) $result['version'] .
+                '</p></div>';
+            echo '<div class="notice notice-info"><p>' .
+                esc_html(
+                    wp_xp_core_t(
+                        '预览通过，尚未保存。修改奖励或条件将建立新版本；新任务在保存后才累计活动，不重算历史。',
+                    ),
+                ) .
+                '</p><strong>' .
+                esc_html($task['title']) .
+                '</strong><p>' .
+                esc_html(WP_XP_Core_Achievements::condition_text($task)) .
+                ' · ' .
+                (int) $task['reward_xp'] .
+                esc_html(wp_xp_core_t(' 经验')) .
+                '</p></div>';
+        }
         echo '<section class="xp-card"><div class="xp-section-heading"><div><h2>' .
             esc_html(wp_xp_core_t('任务列表')) .
             '</h2><p>' .
@@ -170,6 +315,10 @@ final class WP_XP_Core_Achievements_UI
                 esc_url(self::url(['edit' => $row['id']])) .
                 '">' .
                 esc_html(wp_xp_core_t('编辑')) .
+                '</a> · <a href="' .
+                esc_url(self::url(['edit' => $row['id'], 'copy' => 1])) .
+                '">' .
+                esc_html(wp_xp_core_t('复制为新任务')) .
                 '</a></td></tr>';
         }
         if (!$all) {
@@ -346,7 +495,9 @@ final class WP_XP_Core_Achievements_UI
                     '修改名称、说明、徽章图片、分类或系列会保留进度；修改条件、周期、开放日期、前置任务或启用状态会建立新版本，从之后的新活动累计。旧成就保留。每周从周一开始，每月从一日开始。',
                 ),
             ) .
-            '</p><button class="button button-primary">' .
+            '</p><button name="operation" value="preview" class="button">' .
+            esc_html(wp_xp_core_t('预览任务')) .
+            '</button> <button name="operation" value="save" class="button button-primary">' .
             esc_html(wp_xp_core_t('保存任务')) .
             '</button><p class="xp-task-editor-message" role="status"></p></form></section><section class="xp-card"><h2>' .
             esc_html(wp_xp_core_t('待审核说明')) .

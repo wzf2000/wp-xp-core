@@ -1,10 +1,10 @@
-<!-- wp-xp-core-version: 2.0.1 -->
+<!-- wp-xp-core-version: 2.1.0-rc.1 -->
 
 # Server configuration and integration
 
 [简体中文](CONFIGURATION.md) · English · [Back to overview](../README.en.md) · [User guide](GUIDE.en.md)
 
-This document describes **2.0.1**. Installed releases follow their tagged documentation.
+This document describes **2.1.0-rc.1**. Installed releases follow their tagged documentation.
 
 This page is for integrators. **Ordinary first-time installation needs no external configuration: upload and activate a 1.4.0+ installation ZIP.** For page setup, see the [user guide](GUIDE.en.md). External JSON is only for advanced deployments with custom storage or existing integrations.
 
@@ -192,3 +192,19 @@ After an update-channel change, cached candidates are immediately checked agains
 Use InnoDB for transactional storage and a database providing `JSON_VALID`, `JSON_EXTRACT`, `JSON_UNQUOTE` and `JSON_TYPE`. Activation checks those functions before installation writes. If a check fails, ask the server administrator to provide a compatible database and retry activation; no tables are converted or adopted.
 
 When a claim, daily quota, milestone, original comment receipt or response history cannot be read, the reward operation stops and rolls back. Restore database access before retrying the original action; do not edit the balance or replay initialization. Personal-data exports include review decisions, feedback and the associated submission ID, without internal administrator identities or reasons.
+
+## Activity reversals and private notification sources
+
+Activity-provider definitions may add an optional `revoke_authorize($user_id, $object_id, $context): bool`. The original `authorize` still controls new rewards. Call `wp_xp_core_revoke_activity($provider, $original_event, $user_id, $object_id, $context)` to append `provider_revoke` under the ledger transaction lock. It verifies provider and original ownership and reverses original actual XP, independent of the current reward policy. Its `object_id` references the original ledger event. A fixed key makes reversals idempotent. Insufficient balance returns `balance` (409) without a partial debit; database failure returns `storage` (503). Zero-XP receipts can also be reversed. Callers must provide trusted server context and must not forward browser-selected identities or amounts. A reversal does not re-enable the original reward.
+
+The bbPress adapter uses `bbp_new_topic`, `bbp_insert_topic`, `bbp_new_reply` and `bbp_insert_reply`, requiring an actual enabled-time insertion in the same request. Replaying a historical creation hook does not reward it. Only directly changed topics/replies are reversed; parent changes never scan descendants. Capability detection after `plugins_loaded` avoids plugin file-order dependencies.
+
+Register an optional inbox with `wp_xp_core_register_notification_source($id, $definition)`. The definition contains a string `label`, `available(int $uid): bool`, `listing(int $uid, string $cursor, int $limit)` and `mark(int $uid, string $id)` callbacks. XP validates login, `read` capability and REST nonce before supplying the current session user; requests cannot specify a user ID. At most ten sources may register with IDs matching `[a-z][a-z0-9_]{0,31}`; `xp` is reserved. Listing returns `items` (at most limit) and `next_cursor` (string or null). Each item has string `id/title/message/day` and boolean `read`. Cursors and IDs are at most 191 bytes; limit is an integer from 1 to 50. Sources must recheck ownership and visibility on each operation, bound their queries, omit secrets/admin reasons, and return `WP_Error` on failure. Mark callbacks validate original IDs and ownership. No cross-source transaction or combined cursor is provided.
+
+Private POST actions are `notification-sources` (no fields), `notification-source-list` (source, optional cursor/limit) and `notification-source-read` (source/id), using the existing REST namespace and private-response policy. Companion appears only when its public projection/read functions are present and notifications are enabled. The adapter calls those functions instead of changing Companion REST output or writing its storage.
+
+Reward holds use user metadata and the existing bounded administrative audit. Configuration import/export does not copy them. Persisted `reward_hold` event details contain only requested_xp, until and held; personal exports include this receipt without administrative reasons. No new table, index, cron, automatic sampling, historical recalculation or third-party request is introduced.
+
+Items may include an optional `url` of at most 2048 bytes, restricted to HTTP/HTTPS. Sources must generate it only after checking current visibility.
+
+The bbPress adapter resolves the original recipient under the ledger lock with `WP_XP_Core_Providers::revoke_registered_receipt()`. Author reassignment does not transfer XP or prevent reversal; trusted server deletion requires no logged-in actor.

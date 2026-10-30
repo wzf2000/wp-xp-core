@@ -208,6 +208,7 @@ final class WP_XP_Core_Management_UI
             'reconciliation' => wp_xp_core_t('历史校准'),
             'streak_reward' => wp_xp_core_t('签到阶段奖励'),
             'management_retry' => wp_xp_core_t('失败事件重试'),
+            'provider_revoke' => wp_xp_core_t('外部活动撤销'),
             'provider_reward' => wp_xp_core_t('外部活动奖励'),
             'task_complete' => wp_xp_core_t('完成任务'),
             'task_revoke' => wp_xp_core_t('任务奖励撤销'),
@@ -229,6 +230,14 @@ final class WP_XP_Core_Management_UI
             $action = $input['operation'] ?? '';
             $nonce = $input['_wpnonce'] ?? '';
             $result = match ($action) {
+                'reward_hold' => WP_XP_Core_Reward_Controls::save(
+                    array_intersect_key(
+                        $input,
+                        array_flip(['user_id', 'minutes', 'reason', 'revision']),
+                    ),
+                    $nonce,
+                ),
+                'measure' => null,
                 'adjust' => WP_XP_Core_Management::adjust(
                     array_intersect_key(
                         $input,
@@ -428,6 +437,93 @@ final class WP_XP_Core_Management_UI
     }
     private static function diagnostics(): void
     {
+        $adapter_failures = get_option('wp_xp_core_bbpress_failures', []);
+        if (is_array($adapter_failures) && $adapter_failures) {
+            echo '<section class="xp-card"><h2>' .
+                esc_html(wp_xp_core_t('bbPress 活动失败记录')) .
+                '</h2><p>' .
+                esc_html(
+                    wp_xp_core_t(
+                        '最近二十项，只记录对象和错误码；请核对原事件后使用服务端撤销接口处理，不自动重放。',
+                    ),
+                ) .
+                '</p><pre>' .
+                esc_html(
+                    wp_json_encode($adapter_failures, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT),
+                ) .
+                '</pre></section>';
+        }
+        echo '<section class="xp-card"><h2>' .
+            esc_html(wp_xp_core_t('只读性能采样')) .
+            '</h2><p>' .
+            esc_html(
+                wp_xp_core_t(
+                    '手动读取最新五十条和五百条编号，显示查询数及本机耗时；样本不是整站或生产压测。',
+                ),
+            ) .
+            '</p><form method="post">';
+        self::hidden('measure');
+        echo '<button class="button">' . esc_html(wp_xp_core_t('运行采样')) . '</button></form>';
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['operation'] ?? '') === 'measure') {
+            $measurement = WP_XP_Core_Reward_Controls::measure($_POST['_wpnonce'] ?? '');
+            if (is_wp_error($measurement)) {
+                self::message($measurement);
+            } else {
+                echo '<pre>' .
+                    esc_html(
+                        wp_json_encode($measurement, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT),
+                    ) .
+                    '</pre>';
+            }
+        }
+        echo '</section><section class="xp-card"><h2>' .
+            esc_html(wp_xp_core_t('暂停自动经验奖励')) .
+            '</h2><p>' .
+            esc_html(
+                wp_xp_core_t(
+                    '最长二十四小时。有效活动和任务荣誉仍记录，期间自动经验为零，解除后不补差；人工调整和原额撤销不受影响。',
+                ),
+            ) .
+            '</p><form method="get"><input type="hidden" name="page" value="wp-xp-ledger"><input type="hidden" name="view" value="diagnostics"><label>' .
+            esc_html(wp_xp_core_t('用户编号')) .
+            ' <input type="number" min="1" name="hold_user" value="' .
+            esc_attr(self::value('hold_user', '')) .
+            '"></label> <button class="button">' .
+            esc_html(wp_xp_core_t('读取状态')) .
+            '</button></form>';
+        $hold_uid = (int) self::value('hold_user', 0);
+        if (
+            $hold_uid &&
+            get_userdata($hold_uid) &&
+            WP_XP_Core_Management::permission($hold_uid) === true
+        ) {
+            try {
+                $hold = WP_XP_Core_Reward_Controls::status($hold_uid);
+            } catch (Throwable $e) {
+                self::message(new WP_Error('storage', wp_xp_core_t('暂时无法读取经验记录。')));
+                return;
+            }
+            echo '<p>' .
+                esc_html(
+                    $hold['active']
+                        ? wp_xp_core_t('自动经验奖励已暂停。')
+                        : wp_xp_core_t('自动经验奖励正常。'),
+                ) .
+                '</p><form method="post">';
+            self::hidden('reward_hold');
+            echo '<input type="hidden" name="user_id" value="' .
+                $hold_uid .
+                '"><input type="hidden" name="revision" value="' .
+                esc_attr(WP_XP_Core_Reward_Controls::revision($hold_uid)) .
+                '"><label class="xp-field">' .
+                esc_html(wp_xp_core_t('暂停分钟数（零表示解除）')) .
+                '<input type="number" min="0" max="1440" name="minutes" value="60" required></label><label class="xp-field">' .
+                esc_html(wp_xp_core_t('操作原因')) .
+                '<input name="reason" maxlength="300" required></label><button class="button">' .
+                esc_html(wp_xp_core_t('保存暂停状态')) .
+                '</button></form>';
+        }
+        echo '</section>';
         echo '<section class="xp-card"><h2>' .
             esc_html(wp_xp_core_t('账本与余额核对')) .
             '</h2><p>' .

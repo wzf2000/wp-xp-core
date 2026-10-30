@@ -14,6 +14,7 @@ final class WP_XP_Core_Insights
         'streak_reward',
         'task_complete',
         'provider_reward',
+        'provider_revoke',
         'task_revoke',
     ];
     private static function error(string $code, string $message, int $status = 400): WP_Error

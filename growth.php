@@ -386,6 +386,10 @@ final class WP_XP_Core_Growth
                         ),
                     ),
                 );
+        $state['reward_hold'] = WP_XP_Core_Reward_Controls::status($uid);
+        if ($state['reward_hold']['active']) {
+            $state['checkin_xp'] = 0;
+        }
         $state['day'] = Reader_Experience::day();
         $state['checkins'] = self::checkins($uid);
         $state['streak'] = self::streak_progress($uid);

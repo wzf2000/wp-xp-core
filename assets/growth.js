@@ -20,6 +20,7 @@
     manual_reversal: xpT('撤销人工调整'),
     streak_reward: xpT('签到阶段奖励'),
     provider_reward: xpT('外部活动奖励'),
+    provider_revoke: xpT('外部活动撤销'),
     task_complete: xpT('任务完成奖励'),
     task_revoke: xpT('任务奖励撤销'),
     task_grant: xpT('人工授予成就'),
@@ -39,7 +40,29 @@
       body: JSON.stringify(data),
     });
     const value = await response.json();
-    if (!response.ok) throw new Error(value.message || xpT('暂时无法读取，请稍后重试。'));
+    if (!response.ok) {
+      if (
+        response.status === 401 ||
+        (response.status === 403 &&
+          ['nonce', 'rest_cookie_invalid_nonce', 'login_required'].includes(value.code))
+      ) {
+        for (const panel of panels) {
+          panel.querySelector('.xp-inbox-list')?.replaceChildren();
+          const state = inboxes.get(panel);
+          if (state) {
+            state.sequence++;
+            state.revision = null;
+            state.cursor = null;
+            state.mutating = false;
+            state.deadSession = true;
+          }
+          inboxBusy(panel, false);
+          const output = panel.querySelector('.xp-inbox-message');
+          if (output) output.textContent = value.message || xpT('请先登录。');
+        }
+      }
+      throw new Error(value.message || xpT('暂时无法读取，请稍后重试。'));
+    }
     return value;
   }
   function el(tag, text, className) {
@@ -69,12 +92,23 @@
       ? xpT('签到奖励已关闭')
       : value.checked_in
         ? xpT('今日已签到')
-        : xpT('每日签到 +%1$s', value.checkin_xp);
+        : xpT('每日签到 +%1$s', value.reward_hold?.active ? 0 : value.checkin_xp);
     panel.querySelector('.xp-checkin-streak').textContent = xpT(
       '连续 %1$s 天 · 累计 %2$s 天',
       value.checkins.consecutive,
       value.checkins.cumulative,
     );
+    let hold = panel.querySelector('.xp-reward-hold');
+    if (!hold) {
+      hold = el('p', '', 'xp-reward-hold');
+      panel.querySelector('.xp-today').before(hold);
+    }
+    hold.hidden = !value.reward_hold?.active;
+    hold.textContent = value.reward_hold?.active
+      ? xpT('自动经验奖励暂时为零，有效活动和任务荣誉仍记录；恢复后不补差。') +
+        ' ' +
+        new Date(value.reward_hold.until * 1000).toLocaleString()
+      : '';
     const today = panel.querySelector('.xp-today-items');
     today.replaceChildren();
     today.append(
@@ -394,19 +428,56 @@
   }
   const inboxes = new WeakMap();
   function inboxBusy(panel, busy) {
-    panel.querySelectorAll('.xp-inbox button,.xp-inbox input').forEach((field) => {
+    panel.querySelectorAll('.xp-inbox button,.xp-inbox input,.xp-inbox select').forEach((field) => {
       field.disabled = busy;
     });
   }
   async function loadInbox(panel, append = false) {
     if (!panel.querySelector('.xp-inbox')) return;
     const state = inboxes.get(panel) || { sequence: 0, revision: null, cursor: null, through: 0 };
-    if (state.mutating) return;
+    if (state.mutating || state.deadSession) return;
     inboxes.set(panel, state);
     const sequence = ++state.sequence;
     inboxBusy(panel, true);
     try {
-      const data = await api('notifications', {
+      if (!state.sources || !append) {
+        const available = await api('notification-sources');
+        if (sequence !== state.sequence) return;
+        state.sources = available.sources;
+        panel.querySelector('.xp-inbox-source')?.parentElement.remove();
+        if (!state.sources.some((source) => source.id === (state.source || 'xp'))) {
+          state.source = 'xp';
+          state.cursor = null;
+          state.revision = null;
+          panel.querySelector('.xp-inbox-list').replaceChildren();
+        }
+        if (state.sources.length > 1) {
+          const label = el('label', xpT('通知来源'));
+          const select = el('select');
+          select.className = 'xp-inbox-source';
+          for (const source of state.sources) {
+            const option = el('option', source.label);
+            option.value = source.id;
+            select.append(option);
+          }
+          select.value = state.source || 'xp';
+          select.disabled = true;
+          label.append(select);
+          panel.querySelector('.xp-inbox-message').before(label);
+          select.addEventListener('change', () => {
+            state.source = select.value;
+            state.cursor = null;
+            state.revision = null;
+            panel.querySelector('.xp-inbox-list').replaceChildren();
+            loadInbox(panel);
+          });
+        }
+      }
+      const external = state.source && state.source !== 'xp';
+      panel.querySelector('.xp-inbox-preferences').closest('details').hidden = external;
+      panel.querySelector('.xp-inbox-read-all').hidden = external;
+      const data = await api(external ? 'notification-source-list' : 'notifications', {
+        ...(external ? { source: state.source } : {}),
         limit: 12,
         ...(append && state.cursor ? { cursor: state.cursor } : {}),
       });
@@ -415,11 +486,26 @@
       if (!append) list.replaceChildren();
       for (const item of data.items || []) {
         const row = el('li');
-        row.append(el('strong', item.title), el('p', item.message), el('small', item.day));
+        const title = el('strong', item.title);
+        if (item.url) {
+          try {
+            const url = new URL(item.url);
+            if (['http:', 'https:'].includes(url.protocol)) {
+              const link = el('a', item.title);
+              link.href = url.href;
+              title.replaceChildren(link);
+            }
+          } catch {
+            /* A source cannot introduce executable links. */
+          }
+        }
+        row.append(title, el('p', item.message), el('small', item.day));
         if (!item.read) {
           const read = el('button', xpT('标为已读'));
           read.type = 'button';
-          read.addEventListener('click', () => saveInbox(panel, { ids: [item.id] }));
+          read.addEventListener('click', () =>
+            external ? markSource(panel, item.id) : saveInbox(panel, { ids: [item.id] }),
+          );
           row.append(read);
         } else row.append(el('small', xpT(' · 已读')));
         list.append(row);
@@ -429,21 +515,39 @@
       state.cursor = data.next_cursor;
       if (!append) state.through = data.through;
       panel.querySelector('.xp-inbox-more').hidden = !state.cursor;
-      for (const type of ['task', 'review', 'level'])
-        panel.querySelector(`.xp-inbox-preferences [name="${type}"]`).checked =
-          data.preferences?.[type] !== false;
+      if (!external)
+        for (const type of ['task', 'review', 'level'])
+          panel.querySelector(`.xp-inbox-preferences [name="${type}"]`).checked =
+            data.preferences?.[type] !== false;
       panel.querySelector('.xp-inbox-message').textContent = '';
     } catch (error) {
-      if (sequence === state.sequence)
+      if (sequence === state.sequence) {
+        panel.querySelector('.xp-inbox-list').replaceChildren();
         panel.querySelector('.xp-inbox-message').textContent =
           error.message + xpT(' 可稍后重新打开面板。');
+      }
     } finally {
       if (sequence === state.sequence) inboxBusy(panel, false);
     }
   }
+  async function markSource(panel, id) {
+    const state = inboxes.get(panel);
+    if (!state || state.mutating) return;
+    state.mutating = true;
+    inboxBusy(panel, true);
+    try {
+      await api('notification-source-read', { source: state.source, id });
+      state.mutating = false;
+      await loadInbox(panel);
+    } catch (error) {
+      state.mutating = false;
+      panel.querySelector('.xp-inbox-message').textContent = error.message;
+      inboxBusy(panel, false);
+    }
+  }
   async function saveInbox(panel, changes) {
     const state = inboxes.get(panel);
-    if (!state?.revision || state.mutating) return;
+    if (!state?.revision || state.mutating || (state.source && state.source !== 'xp')) return;
     state.mutating = true;
     const sequence = ++state.sequence;
     inboxBusy(panel, true);
@@ -562,6 +666,7 @@
     panel.querySelector('.xp-inbox-more')?.addEventListener('click', () => loadInbox(panel, true));
     panel.querySelector('.xp-inbox-preferences')?.addEventListener('submit', (event) => {
       event.preventDefault();
+      if (inboxes.get(panel)?.source && inboxes.get(panel).source !== 'xp') return;
       const preferences = {};
       for (const type of ['task', 'review', 'level'])
         preferences[type] = event.currentTarget.querySelector(`[name="${type}"]`).checked;

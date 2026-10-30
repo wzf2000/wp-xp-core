@@ -2227,3 +2227,120 @@ msgstr ", with a title such as “My XP”."
 msgid "；成长变化："
 msgstr "; Growth changes: "
 
+
+msgid "bbPress 公开主题"
+msgstr "bbPress public topics"
+
+msgid "bbPress 公开回复"
+msgstr "bbPress public replies"
+
+msgid "bbPress 活动失败记录"
+msgstr "bbPress activity failures"
+
+msgid "保存暂停状态"
+msgstr "Save reward hold"
+
+msgid "参与讨论"
+msgstr "Join the discussion"
+
+msgid "只读性能采样"
+msgstr "Read-only performance sample"
+
+msgid "复制为新任务"
+msgstr "Copy as new task"
+
+msgid "外部活动撤销"
+msgstr "External activity reversal"
+
+msgid "手动读取最新五十条和五百条编号，显示查询数及本机耗时；样本不是整站或生产压测。"
+msgstr "Manually read the newest 50 and 500 IDs, reporting query count and local elapsed time. This sample is not a site-wide or production load test."
+
+msgid "提交学习成果"
+msgstr "Submit learning work"
+
+msgid "提交完成说明，由管理员审核。"
+msgstr "Submit a completion statement for administrator review."
+
+msgid "操作原因"
+msgstr "Reason for this action"
+
+msgid "暂停分钟数（零表示解除）"
+msgstr "Hold duration in minutes (zero releases)"
+
+msgid "暂停状态已更新，请重新读取。"
+msgstr "The reward hold has changed. Reload its state."
+
+msgid "暂停状态未能保存，请重试。"
+msgstr "The reward hold could not be saved. Try again."
+
+msgid "暂停自动经验奖励"
+msgstr "Pause automatic XP rewards"
+
+msgid "最近二十项，只记录对象和错误码；请核对原事件后使用服务端撤销接口处理，不自动重放。"
+msgstr "The latest 20 object IDs and error codes are retained. Inspect the original event and use the server reversal API; no automatic replay occurs."
+
+msgid "最长二十四小时。有效活动和任务荣誉仍记录，期间自动经验为零，解除后不补差；人工调整和原额撤销不受影响。"
+msgstr "Up to 24 hours. Valid activity and task honors still count, with zero automatic XP and no later backfill. Manual adjustments and exact reversals remain available."
+
+msgid "本周在两篇不同公开内容下发表评论。"
+msgstr "Comment on two different public items this week."
+
+msgid "每月学习"
+msgstr "Monthly learning"
+
+msgid "活动撤销未能记录，请重试。"
+msgstr "The activity reversal could not be recorded. Try again."
+
+msgid "活动记录不存在。"
+msgstr "The activity receipt does not exist."
+
+msgid "经验余额不足，未执行部分撤销。"
+msgstr "Insufficient XP balance. No partial reversal was made."
+
+msgid "经验通知"
+msgstr "Experience notifications"
+
+msgid "自动经验奖励已暂停。"
+msgstr "Automatic XP rewards are paused."
+
+msgid "自动经验奖励暂时为零，有效活动和任务荣誉仍记录；恢复后不补差。"
+msgstr "Automatic XP rewards are temporarily zero. Valid activity and task honors still count; there is no later backfill."
+
+msgid "自动经验奖励正常。"
+msgstr "Automatic XP rewards are active."
+
+msgid "请填写用户、原因和不超过二十四小时的暂停时间。"
+msgstr "Enter a user, reason and hold duration of at most 24 hours."
+
+msgid "读取状态"
+msgstr "Load current state"
+
+msgid "运行采样"
+msgstr "Run sample"
+
+msgid "通知来源"
+msgstr "Notification source"
+
+msgid "通知来源不可用。"
+msgstr "This notification source is unavailable."
+
+msgid "阅读五篇不同内容，并在三个自然日签到。"
+msgstr "Read five different items and check in on three calendar days."
+
+msgid "预览任务"
+msgstr "Preview task"
+
+msgid "预览通过，尚未保存。修改奖励或条件将建立新版本；新任务在保存后才累计活动，不重算历史。"
+msgstr "Preview passed; nothing has been saved. Reward or condition changes create a new version. New tasks count only activity after saving, without recalculating history."
+
+msgid "新建任务，从保存后的活动累计。"
+msgstr "New task; counts activity after saving."
+
+msgid "将建立新版本，并从后续活动累计。"
+msgstr "Creates a new version counting subsequent activity."
+
+msgid "保留当前版本和进度。"
+msgstr "Keeps the current version and progress."
+
+msgid "预计版本"
+msgstr "Expected version"

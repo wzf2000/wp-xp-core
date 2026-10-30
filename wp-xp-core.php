@@ -11,7 +11,7 @@
  * Update URI: https://github.com/wzf2000/wp-xp-core
  * Text Domain: wp-xp-core
  * Domain Path: /languages
- * Version: 2.0.1
+ * Version: 2.1.0-rc.1
  */
 defined('ABSPATH') || exit();
 require_once __DIR__ . '/config.php';
@@ -30,6 +30,9 @@ require_once __DIR__ . '/insights-ui.php';
 require_once __DIR__ . '/configuration-tools.php';
 require_once __DIR__ . '/configuration-ui.php';
 require_once __DIR__ . '/provider.php';
+require_once __DIR__ . '/reward-controls.php';
+require_once __DIR__ . '/notification-sources.php';
+require_once __DIR__ . '/bbpress.php';
 require_once __DIR__ . '/privacy.php';
 require_once __DIR__ . '/updates.php';
 require_once __DIR__ . '/i18n.php';
@@ -37,7 +40,7 @@ require_once __DIR__ . '/modules/blocks.php';
 register_activation_hook(__FILE__, [WP_XP_Core_Lifecycle::class, 'activate']);
 final class Reader_Experience
 {
-    const VERSION = '2.0.1';
+    const VERSION = '2.1.0-rc.1';
     const BALANCE_META = 'reader_experience_balance';
     const MINS = [0, 5, 20, 60, 150, 300, 600, 1000, 1800, 3000];
     private static bool $writing = false;
@@ -110,6 +113,13 @@ final class Reader_Experience
     public static function transaction_active(): bool
     {
         return self::$writing;
+    }
+    public static function touch_user(int $uid): void
+    {
+        if (!self::$writing) {
+            throw new RuntimeException('Experience transaction required');
+        }
+        self::$touched_users[$uid] = $uid;
     }
     public static function touch_option(string $option): void
     {
@@ -266,6 +276,7 @@ final class Reader_Experience
             return false;
         }
         wp_cache_delete($uid, 'user_meta');
+        $xp = WP_XP_Core_Reward_Controls::apply($uid, $kind, $xp, $detail);
         $xp = WP_XP_Core_Fairness::cap($uid, $kind, $xp, $day, $detail);
         $before = (int) get_user_meta($uid, self::balance_meta(), true);
         if (

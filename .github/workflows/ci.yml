@@ -97,6 +97,7 @@ jobs:
             wordpress: '6.8.3'
           - php: '8.5'
             wordpress: '7.1.3'
+            bbpress_version: '2.6.21'
     services:
       mysql:
         image: mysql:8.0
@@ -129,7 +130,14 @@ jobs:
           WP_XP_TEST_DB_HOST: 127.0.0.1:3306
           WP_XP_TEST_DB_USER: root
           WP_XP_TEST_DB_PASSWORD: synthetic-ci-password
-        run: python3 tools/wp-integration.py --wp-cli /tmp/wp-cli.phar --lab /tmp/wp-xp-core-ci --core-version ${{ matrix.wordpress }}
+          BBPRESS_VERSION: ${{ matrix.bbpress_version || '' }}
+          WORDPRESS_VERSION: ${{ matrix.wordpress }}
+        run: |
+          args=(--wp-cli /tmp/wp-cli.phar --lab /tmp/wp-xp-core-ci --core-version "$WORDPRESS_VERSION")
+          if [ -n "$BBPRESS_VERSION" ]; then
+            args+=(--bbpress-version "$BBPRESS_VERSION")
+          fi
+          python3 tools/wp-integration.py "${args[@]}"
       - name: Preserve synthetic WordPress evidence
         if: always()
         uses: actions/upload-artifact@v4

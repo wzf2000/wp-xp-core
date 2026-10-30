@@ -2228,6 +2228,123 @@
       "；成长变化：": [
         "; Growth changes: "
       ],
+      "bbPress 公开主题": [
+        "bbPress public topics"
+      ],
+      "bbPress 公开回复": [
+        "bbPress public replies"
+      ],
+      "bbPress 活动失败记录": [
+        "bbPress activity failures"
+      ],
+      "保存暂停状态": [
+        "Save reward hold"
+      ],
+      "参与讨论": [
+        "Join the discussion"
+      ],
+      "只读性能采样": [
+        "Read-only performance sample"
+      ],
+      "复制为新任务": [
+        "Copy as new task"
+      ],
+      "外部活动撤销": [
+        "External activity reversal"
+      ],
+      "手动读取最新五十条和五百条编号，显示查询数及本机耗时；样本不是整站或生产压测。": [
+        "Manually read the newest 50 and 500 IDs, reporting query count and local elapsed time. This sample is not a site-wide or production load test."
+      ],
+      "提交学习成果": [
+        "Submit learning work"
+      ],
+      "提交完成说明，由管理员审核。": [
+        "Submit a completion statement for administrator review."
+      ],
+      "操作原因": [
+        "Reason for this action"
+      ],
+      "暂停分钟数（零表示解除）": [
+        "Hold duration in minutes (zero releases)"
+      ],
+      "暂停状态已更新，请重新读取。": [
+        "The reward hold has changed. Reload its state."
+      ],
+      "暂停状态未能保存，请重试。": [
+        "The reward hold could not be saved. Try again."
+      ],
+      "暂停自动经验奖励": [
+        "Pause automatic XP rewards"
+      ],
+      "最近二十项，只记录对象和错误码；请核对原事件后使用服务端撤销接口处理，不自动重放。": [
+        "The latest 20 object IDs and error codes are retained. Inspect the original event and use the server reversal API; no automatic replay occurs."
+      ],
+      "最长二十四小时。有效活动和任务荣誉仍记录，期间自动经验为零，解除后不补差；人工调整和原额撤销不受影响。": [
+        "Up to 24 hours. Valid activity and task honors still count, with zero automatic XP and no later backfill. Manual adjustments and exact reversals remain available."
+      ],
+      "本周在两篇不同公开内容下发表评论。": [
+        "Comment on two different public items this week."
+      ],
+      "每月学习": [
+        "Monthly learning"
+      ],
+      "活动撤销未能记录，请重试。": [
+        "The activity reversal could not be recorded. Try again."
+      ],
+      "活动记录不存在。": [
+        "The activity receipt does not exist."
+      ],
+      "经验余额不足，未执行部分撤销。": [
+        "Insufficient XP balance. No partial reversal was made."
+      ],
+      "经验通知": [
+        "Experience notifications"
+      ],
+      "自动经验奖励已暂停。": [
+        "Automatic XP rewards are paused."
+      ],
+      "自动经验奖励暂时为零，有效活动和任务荣誉仍记录；恢复后不补差。": [
+        "Automatic XP rewards are temporarily zero. Valid activity and task honors still count; there is no later backfill."
+      ],
+      "自动经验奖励正常。": [
+        "Automatic XP rewards are active."
+      ],
+      "请填写用户、原因和不超过二十四小时的暂停时间。": [
+        "Enter a user, reason and hold duration of at most 24 hours."
+      ],
+      "读取状态": [
+        "Load current state"
+      ],
+      "运行采样": [
+        "Run sample"
+      ],
+      "通知来源": [
+        "Notification source"
+      ],
+      "通知来源不可用。": [
+        "This notification source is unavailable."
+      ],
+      "阅读五篇不同内容，并在三个自然日签到。": [
+        "Read five different items and check in on three calendar days."
+      ],
+      "预览任务": [
+        "Preview task"
+      ],
+      "预览通过，尚未保存。修改奖励或条件将建立新版本；新任务在保存后才累计活动，不重算历史。": [
+        "Preview passed; nothing has been saved. Reward or condition changes create a new version. New tasks count only activity after saving, without recalculating history."
+      ],
+      "新建任务，从保存后的活动累计。": [
+        "New task; counts activity after saving."
+      ],
+      "将建立新版本，并从后续活动累计。": [
+        "Creates a new version counting subsequent activity."
+      ],
+      "保留当前版本和进度。": [
+        "Keeps the current version and progress."
+      ],
+      "预计版本": [
+        "Expected version"
+      ],
       "": {
         "domain": "wp-xp-core",
         "lang": "en_US"

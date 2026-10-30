@@ -2227,3 +2227,120 @@ msgstr ""
 msgid "；成长变化："
 msgstr ""
 
+
+msgid "bbPress 公开主题"
+msgstr ""
+
+msgid "bbPress 公开回复"
+msgstr ""
+
+msgid "bbPress 活动失败记录"
+msgstr ""
+
+msgid "保存暂停状态"
+msgstr ""
+
+msgid "参与讨论"
+msgstr ""
+
+msgid "只读性能采样"
+msgstr ""
+
+msgid "复制为新任务"
+msgstr ""
+
+msgid "外部活动撤销"
+msgstr ""
+
+msgid "手动读取最新五十条和五百条编号，显示查询数及本机耗时；样本不是整站或生产压测。"
+msgstr ""
+
+msgid "提交学习成果"
+msgstr ""
+
+msgid "提交完成说明，由管理员审核。"
+msgstr ""
+
+msgid "操作原因"
+msgstr ""
+
+msgid "暂停分钟数（零表示解除）"
+msgstr ""
+
+msgid "暂停状态已更新，请重新读取。"
+msgstr ""
+
+msgid "暂停状态未能保存，请重试。"
+msgstr ""
+
+msgid "暂停自动经验奖励"
+msgstr ""
+
+msgid "最近二十项，只记录对象和错误码；请核对原事件后使用服务端撤销接口处理，不自动重放。"
+msgstr ""
+
+msgid "最长二十四小时。有效活动和任务荣誉仍记录，期间自动经验为零，解除后不补差；人工调整和原额撤销不受影响。"
+msgstr ""
+
+msgid "本周在两篇不同公开内容下发表评论。"
+msgstr ""
+
+msgid "每月学习"
+msgstr ""
+
+msgid "活动撤销未能记录，请重试。"
+msgstr ""
+
+msgid "活动记录不存在。"
+msgstr ""
+
+msgid "经验余额不足，未执行部分撤销。"
+msgstr ""
+
+msgid "经验通知"
+msgstr ""
+
+msgid "自动经验奖励已暂停。"
+msgstr ""
+
+msgid "自动经验奖励暂时为零，有效活动和任务荣誉仍记录；恢复后不补差。"
+msgstr ""
+
+msgid "自动经验奖励正常。"
+msgstr ""
+
+msgid "请填写用户、原因和不超过二十四小时的暂停时间。"
+msgstr ""
+
+msgid "读取状态"
+msgstr ""
+
+msgid "运行采样"
+msgstr ""
+
+msgid "通知来源"
+msgstr ""
+
+msgid "通知来源不可用。"
+msgstr ""
+
+msgid "阅读五篇不同内容，并在三个自然日签到。"
+msgstr ""
+
+msgid "预览任务"
+msgstr ""
+
+msgid "预览通过，尚未保存。修改奖励或条件将建立新版本；新任务在保存后才累计活动，不重算历史。"
+msgstr ""
+
+msgid "新建任务，从保存后的活动累计。"
+msgstr ""
+
+msgid "将建立新版本，并从后续活动累计。"
+msgstr ""
+
+msgid "保留当前版本和进度。"
+msgstr ""
+
+msgid "预计版本"
+msgstr ""

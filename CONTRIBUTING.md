@@ -50,6 +50,25 @@ Validate target permissions, append-only corrections, duplicate/rollback behavio
 
 在现有合成安装命令后加 `--scale`，才会运行有界的 1 万／5 万行查询规模检查。保护条件包括临时目录所有权标记、专用数据库、local 环境及回环数据库连接；不能对现有站点补标记接管。记录查询数与本机耗时，不将热缓存或共享主机的绝对耗时解释为生产性能。没有测量依据时不新增索引或宣称提速。
 
+## Optional real bbPress integration / 可选真实 bbPress 验证
+
+在专用空数据库及全新 `/tmp` 合成站运行既有安装检查时，可显式指定官方稳定版本：
+When running the existing installation checks against an empty dedicated database and a fresh `/tmp` lab, opt in to a pinned official stable version:
+
+```sh
+WP_XP_TEST_DATABASE=wp_xp_core_ci python3 tools/wp-integration.py \
+  --wp-cli /tmp/wp-cli.phar --lab /tmp/wp-xp-core-bbpress-ci \
+  --core-version 7.1.3 --bbpress-version 2.6.21
+```
+
+沿用安装运行器的 `WP_XP_TEST_DB_HOST`、`WP_XP_TEST_DB_USER` 和 `WP_XP_TEST_DB_PASSWORD` 环境配置；只连接回环服务或已有的临时 Unix socket。该选项只接受明确的 `major.minor.patch` 稳定版本，不能与旧 ZIP 升级模式组合。运行器先完成无依赖的安装、权限、记账及并发检查，再从 WordPress 官方目录安装指定 bbPress，核对实际版本并执行 WP-CLI `plugin verify-checksums --strict`，验证成功后才激活。随后运行真实新建／可见性／撤销测试，以及奖励已插入但尚未提交时另一进程审核的竞争检查。版本、校验输出和断言保存在合成站 `results.json`；不接管现有站点或生产数据库。
+
+Use the runner's existing `WP_XP_TEST_DB_HOST`, `WP_XP_TEST_DB_USER` and `WP_XP_TEST_DB_PASSWORD` environment settings, restricted to loopback or an existing temporary Unix socket. The option accepts an explicit stable `major.minor.patch` version and cannot be combined with old-ZIP upgrades. All dependency-free installation, permission, accounting and concurrency checks finish first. The runner then installs that bbPress version from the official WordPress directory, checks the installed version and runs WP-CLI `plugin verify-checksums --strict` before activation. It exercises real creation, visibility and reversal hooks, including moderation in another process while a reward is inserted but uncommitted. The lab's `results.json` records the version, checksum output and checks. Existing sites and production databases cannot be adopted.
+
+公共 CI 仅在现有 WordPress 7.1.3／PHP 8.5／MySQL 8.0 组合增加 bbPress 2.6.21；其他组合继续不安装它，覆盖独立运行。此固定组合不代表所有 bbPress 历史版本、主题或其他社区插件均已验证；本地额外验证与公共 CI 实际运行结果分别记录。
+
+Public CI adds bbPress 2.6.21 only to the existing WordPress 7.1.3 / PHP 8.5 / MySQL 8.0 combination. Other combinations keep bbPress absent to cover independent operation. This pinned combination does not imply coverage of every historical bbPress version, theme or community plugin; local checks and actual public CI runs are separate evidence.
+
 ## Localization / 翻译
 
 Edit reviewed `languages/wp-xp-core-{locale}.po` entries and run `python3 tools/languages.py`; `--check` verifies MO/JSON bytes. Fixed PHP strings use `wp_xp_core_t` (gettext extraction keyword) or `__` with domain `wp-xp-core`; the small JS bridge uses `languages/js-strings.json`. Keep positional placeholders and user snapshots verbatim. Run the catalog/ZIP tests and verify both locales when changing UI text.
