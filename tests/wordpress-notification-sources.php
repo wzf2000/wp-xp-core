@@ -51,6 +51,7 @@ $post = wp_insert_post([
     'post_type' => 'post',
     'post_status' => 'publish',
     'post_title' => 'Synthetic community discussion',
+    'post_content' => 'Synthetic public material for the owned notification integration test.',
     'post_author' => $users['author'],
     'comment_status' => 'open',
 ]);
@@ -64,12 +65,15 @@ try {
             'comment_post_ID' => $post,
             'user_id' => $users['recipient'],
             'comment_author' => 'Synthetic recipient',
+            'comment_author_email' => get_userdata($users['recipient'])->user_email,
+            'comment_author_IP' => '192.0.2.10',
             'comment_content' => 'Synthetic question',
             'comment_type' => 'comment',
             'comment_approved' => 1,
         ],
         true,
     );
+    $diagnostic['parent_create_error'] = $code($parent);
     $verify('Parent comment created', !is_wp_error($parent) && $parent > 0);
     wp_set_current_user($users['author']);
     $reply = wp_new_comment(
@@ -78,12 +82,15 @@ try {
             'comment_parent' => $parent,
             'user_id' => $users['author'],
             'comment_author' => 'Synthetic author',
+            'comment_author_email' => get_userdata($users['author'])->user_email,
+            'comment_author_IP' => '192.0.2.11',
             'comment_content' => 'Synthetic answer',
             'comment_type' => 'comment',
             'comment_approved' => 1,
         ],
         true,
     );
+    $diagnostic['reply_create_error'] = $code($reply);
     $verify('Reply comment created', !is_wp_error($reply) && $reply > 0);
 } finally {
     remove_filter('pre_comment_approved', $approve, PHP_INT_MAX);
@@ -93,6 +100,16 @@ $comment = get_comment($reply);
 $parent_comment = get_comment($parent);
 $diagnostic = [
     'seed_exists' => is_array($seed),
+    'seed_recipient_matches' => (int) ($seed['recipient'] ?? 0) === $users['recipient'],
+    'seed_author_matches' => (int) ($seed['author'] ?? -1) === (int) $comment->user_id,
+    'seed_post_matches' => (int) ($seed['post'] ?? 0) === (int) $comment->comment_post_ID,
+    'seed_parent_matches' => (int) ($seed['parent'] ?? 0) === (int) $parent_comment->comment_ID,
+    'reply_parent_matches' => (int) $comment->comment_parent === (int) $parent_comment->comment_ID,
+    'parent_post_matches' =>
+        (int) $parent_comment->comment_post_ID === (int) $comment->comment_post_ID,
+    'different_authors' => (int) $comment->user_id !== $users['recipient'],
+    'parent_public' => pagenest_notifications_public($parent_comment),
+    'reply_public' => pagenest_notifications_public($comment),
     'recipient_matches' =>
         (int) get_comment_meta($reply, '_pagenest_notification_recipient', true) ===
         $users['recipient'],
