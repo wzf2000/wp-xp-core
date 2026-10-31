@@ -89,6 +89,16 @@ Open **成长中心** (Growth center) to set level names, character icons, color
 
 Extra check-in stage rewards start disabled. Choose consecutive or cumulative counting, add day thresholds and rewards, then save. Enabling or changing stage rules starts counting with the next new check-in, without historical awards. Each tier can be claimed once per rule generation. Breaking a streak resets its count but does not deduct earned XP. Check-in and any triggered stage awards commit together. Viewing the page or calendar awards nothing.
 
+## Receipt explanations and read-only simulation
+
+Under **Diagnostics → Activity integrations and reward explanations**, review built-in activities, registered extensions and saved sources whose dependency is absent. The list distinguishes enabled, disabled and missing integrations. Registration does not verify a real activity's eligibility.
+
+Enter an existing event ID, or choose **Explain receipt** in the ledger. Results use the original XP, quota, hold and daily/weekly cap snapshots. Missing historical facts say “Not saved in the original receipt”; current policy never recalculates the past. A reversed provider activity keeps its original receipt and reversal ID. Target-user management permission is required.
+
+**Simulate a new activity** reads current state only. Select the target user, activity and object. Extension activities additionally accept a registered source, optional stable event ID and hypothetical score. Results show quota, hold and cap effects with passed, blocked or unverified conditions. No provider callbacks run: scores and authoritative creation times remain unverified. Real reading dwell, password access and creation requests still require the actual activity entry point. Duplicate identities show their existing receipt; comment recovery/compensation is outside this new-primary simulation and should be investigated through the original receipt and compensation records.
+
+Only the selected primary receipt is simulated. Streak rewards, author milestones, task achievements and notification delivery are excluded. Subsequent activity or policy changes can alter the outcome. The result explicitly says it is read-only and records no reward, policy or user state, and opens no transaction.
+
 ## Create tasks and achievements
 
 Open **任务与成就** (Tasks and achievements), enter a title, description and character icon, then choose activation and a once-only, daily, weekly or monthly period. Periods follow the experience time zone; weeks start Monday and months start on the first. At most **50 tasks including disabled tasks** can be stored.
@@ -195,7 +205,7 @@ Open **Settings → WP XP Core → Configuration tools**. Export produces copyab
 
 Choose an import mode and **Preview configuration** first. Same-site updates match existing task IDs; external templates remap tasks and prerequisites. Preview shows old/new rule and growth values, milestone changes, and tasks that are new, display-only modifications, new versions or preserved. **Apply previewed configuration** commits all changes together; any intervening relevant revision change rejects the entire application. Unlisted tasks remain. Reusing a template preserves earned claims and never backfills rewards. External milestones matching an existing threshold retain its local identity; retired identities cannot be reused. Unknown tasks receive local IDs; external versions, event boundaries and generations are rejected.
 
-**Task templates** include Reading starter and Weekly participation, with zero-XP honors by default. Selecting a template only previews it; explicit application is required. Edit its presentation or conditions afterward in Tasks and achievements.
+**Task templates** include Reading starter and Weekly participation, with zero-XP honors by default. Selecting a template only previews it; explicit application is required. Edit its presentation or conditions afterward in Tasks and achievements. Each registered source also offers monthly templates for three events or three distinct local days, disabled by default with zero XP. No source is enabled automatically.
 
 **GitHub update checks** default to off. Opt into stable releases or stable plus prereleases. Only the official `wzf2000/wp-xp-core` Release attachment `wp-xp-core-{version}.zip` is accepted, never GitHub Source code archives or arbitrary URLs. Version comparison prevents downgrading a current RC to an older stable release. Successful responses cache for at most six hours; failures for fifteen minutes. No cron job is added. Turning checks off ignores stale plugin update entries and performs no publication or deployment.
 

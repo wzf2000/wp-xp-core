@@ -85,6 +85,7 @@ class ReleasePipeline(unittest.TestCase):
                 "configuration-ui.php",
                 "provider.php",
                 "reward-controls.php",
+                "reward-inspector.php",
                 "notification-sources.php",
                 "bbpress.php",
                 "activities-ui.php",

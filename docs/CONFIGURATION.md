@@ -197,6 +197,16 @@ wp_xp_core_record_activity('course', 'completion-123', $uid, $course_id, []);
 
 注册项须有 label 与 authorize，可选字段见下方活动与通知接口；不能在调用中指定 XP 或任意事件 kind。管理员在经验规则中显式启用提供者并保存 XP（0–1000000），默认关闭。规则 `providers` 为至多 20 个标识到 `{enabled, xp}` 的映射。回调必须严格返回 `true`，在锁内检查；context 不保存到账本。固定 `provider_reward` 使用提供者与稳定事件 ID 哈希幂等，复用 ID 改用户或对象拒绝；错误回滚且可重试。该来源属于首次活动，纳入日／周 gross 上限、来源统计、周／月活动榜和私人记录；可以作为按来源区分的自动任务步骤；任务完成奖励本身不会反向触发提供者任务循环。记录只保存提供者标识／名称及标准奖励／上限快照。
 
+## 管理员奖励解释接口
+
+`WP_XP_Core_Reward_Inspector::inspect($input, $nonce)` 要求管理权限、`wp_xp_core_manage` nonce、系统就绪及目标用户权限。`{mode: "receipt", event_id}` 只读取原事件与白名单奖励快照；不返回 context、私人通知正文或管理员原因，不套用当前规则。`{mode: "simulate", user_id, kind, object_id, provider_id?, event?, score?}` 只模拟四类内置活动或 `provider_reward` 的新主体回执，活动日期使用当前经验时区。稳定扩展事件编号用于读取去重；分数仅是假设输入。内置对象按目标用户、归属与范围核对，真实请求和扩展权威资格仍待验证。
+
+输出包含 `checks`（通过／不满足／待验证／已有回执／零经验）、规则请求额、次数限制后、暂停后及 `hypothetical_xp`；`may_record` 为 false（已知不新增）、true（签到当前条件允许）或 null（存在未验证资格）。扩展的 `authorize`、`facts`、`available` 与通知 `deliver` 均不调用；清单 `capabilities($nonce)` 只检查注册元数据和已保存配置／任务引用。结果是当前非锁定观察，不承诺之后实际发奖。
+
+暂停 `Reward_Controls::evaluate()` 与经验上限 `Fairness::evaluate()` 为复用的纯计算，`Fairness::totals()` 只读当前 gross；真实 `apply()`／`cap()` 的事务要求保持。模拟不调用记账、保存或事务入口；查询失败返回 storage 错误，不当作空额度。原始暂停、额度、余额、任务、配置与历史规则均不改变。
+
+`Configuration::templates()` 为每个已注册来源生成稳定身份的 events／days 月度任务模板；默认 `enabled:false`、`reward_xp:0`，不改变来源政策。沿用既有模板预览、HMAC proof、revision 和显式 apply；新模板来源缺失时校验拒绝，不暗建来源、不补旧经验。
+
 ## 翻译、隐私与更新接口
 
 Text Domain 为 `wp-xp-core`，catalog 位于 `languages/`，支持 `zh_CN` 和 `en_US`；`wp_xp_core_t()` 对固定文案调用标准 gettext。`tools/languages.py` 离线编译已审核 PO 为 MO 和 JSON，`--check` 验证生成一致性。JS 通过小型 `WPXPI18n` 桥获取 gettext 文案与带位置占位符的格式串，不转换用户内容或整个 HTML。语言文件与 `modules/` 均列入发布 ZIP、独立发布校验和真实 WP 安装白名单。

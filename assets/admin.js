@@ -7,6 +7,28 @@
 
   const root = document.querySelector('.wp-xp-core-admin');
   if (!root) return;
+  const inspection = root.querySelector('[data-xp-reward-simulation]');
+  if (inspection) {
+    const kind = inspection.querySelector('[data-xp-inspection-kind]');
+    const sourceGroup = inspection.querySelector('[data-xp-inspection-source]');
+    const source = sourceGroup.querySelector('select');
+    const scoreGroup = inspection.querySelector('[data-xp-inspection-score]');
+    const updateInspection = () => {
+      const provider = kind.value === 'provider_reward';
+      sourceGroup.hidden = !provider;
+      sourceGroup.open = provider;
+      sourceGroup.querySelectorAll('input,select').forEach((field) => {
+        field.disabled = !provider;
+      });
+      const scored = provider && source.selectedOptions[0]?.dataset.score === '1';
+      scoreGroup.hidden = !scored;
+      scoreGroup.querySelector('input').disabled = !scored;
+    };
+    kind.addEventListener('change', updateInspection);
+    source.addEventListener('change', updateInspection);
+    updateInspection();
+  }
+
   root.querySelectorAll('.xp-milestone-group').forEach((group) => {
     const rows = group.querySelector('.xp-milestone-rows');
     const add = group.querySelector('.xp-milestone-add');

@@ -27,6 +27,11 @@ final class WP_XP_Core_Fairness
         if (!Reader_Experience::transaction_active()) {
             throw new RuntimeException('Reward caps require the ledger lock');
         }
+        return self::evaluate($xp, $limits, self::totals($uid, $day), $detail);
+    }
+    /** Read the same gross totals for accounting and explicit administrator simulation. */
+    public static function totals(int $uid, string $day): array
+    {
         global $wpdb;
         $from = (new DateTimeImmutable($day, new DateTimeZone('UTC')))
             ->modify('monday this week')
@@ -53,6 +58,14 @@ final class WP_XP_Core_Fairness
         if ($wpdb->last_error !== '' || !is_array($used)) {
             throw new RuntimeException('Activity cap totals unavailable');
         }
+        return $used + ['week_from' => $from, 'week_to' => $to];
+    }
+    /** Pure rule calculation; callers supply their own observed or locked facts. */
+    public static function evaluate(int $xp, array $limits, array $used, array &$detail): int
+    {
+        if ($xp <= 0 || (!$limits['day'] && !$limits['week'])) {
+            return $xp;
+        }
         $actual = min(
             $xp,
             $limits['day'] ? max(0, $limits['day'] - (int) $used['daily']) : $xp,
@@ -65,8 +78,8 @@ final class WP_XP_Core_Fairness
             'weekly_limit' => $limits['week'],
             'daily_gross_before' => (int) $used['daily'],
             'weekly_gross_before' => (int) $used['weekly'],
-            'week_from' => $from,
-            'week_to' => $to,
+            'week_from' => $used['week_from'],
+            'week_to' => $used['week_to'],
             'truncated' => $actual < $xp,
         ];
         return $actual;

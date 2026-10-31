@@ -2494,3 +2494,219 @@ msgstr ""
 
 msgid "个不同对象"
 msgstr ""
+
+msgid "三天参与"
+msgstr ""
+
+msgid "三次活动"
+msgstr ""
+
+msgid "事件编号"
+msgstr ""
+
+msgid "仅模拟当前主体回执，不包含签到阶段、作者里程碑或任务派生奖励；实际记账会重新检查。"
+msgstr ""
+
+msgid "仅累计启用后由所选可信来源记录的新活动。"
+msgstr ""
+
+msgid "今日已记录次数"
+msgstr ""
+
+msgid "今日次数尚未用完。"
+msgstr ""
+
+msgid "今日次数已用完，不新增活动回执。"
+msgstr ""
+
+msgid "今日次数已用完，合法新活动仍可保留零经验回执。"
+msgstr ""
+
+msgid "依赖缺失"
+msgstr ""
+
+msgid "假设分数（可选）"
+msgstr ""
+
+msgid "假设实际经验"
+msgstr ""
+
+msgid "假设服务端资格满足；未调用来源验证或读取权威发生时间。"
+msgstr ""
+
+msgid "内置活动留空"
+msgstr ""
+
+msgid "分数仅为模拟输入，须由来源核实。"
+msgstr ""
+
+msgid "原回执未保存"
+msgstr ""
+
+msgid "原实际经验"
+msgstr ""
+
+msgid "原每周经验上限"
+msgstr ""
+
+msgid "原每日次数上限"
+msgstr ""
+
+msgid "原每日经验上限"
+msgstr ""
+
+msgid "原活动已撤销，历史回执保留。"
+msgstr ""
+
+msgid "原请求经验"
+msgstr ""
+
+msgid "只读模拟"
+msgstr ""
+
+msgid "只读模拟，不提交活动或奖励。扩展资格、真实阅读停留与新建请求仍须由实际来源验证。"
+msgstr ""
+
+msgid "只读结果，未记录奖励。"
+msgstr ""
+
+msgid "对象编号（签到填 0）"
+msgstr ""
+
+msgid "已接入并启用"
+msgstr ""
+
+msgid "已接入，配置关闭"
+msgstr ""
+
+msgid "已有相同活动回执，不会新增经验。"
+msgstr ""
+
+msgid "已有评论回执的恢复或补偿不在新活动模拟范围，请解释原回执并查看对应补偿记录。"
+msgstr ""
+
+msgid "已注册表示接口已接入；运行资格待来源验证，此清单不调用来源回调。"
+msgstr ""
+
+msgid "当前条件下不会新增回执。"
+msgstr ""
+
+msgid "当前条件允许记录，实际请求仍会重新检查。"
+msgstr ""
+
+msgid "当前来源启用边界"
+msgstr ""
+
+msgid "当前状态"
+msgstr ""
+
+msgid "扩展活动输入"
+msgstr ""
+
+msgid "按原回执快照解释；未保存的事实显示为空，不用当前规则重算。"
+msgstr ""
+
+msgid "按目标用户的对象访问资格、归属与内容范围核对。"
+msgstr ""
+
+msgid "暂停检查后"
+msgstr ""
+
+msgid "暂时无法解释或模拟奖励，请重试。"
+msgstr ""
+
+msgid "未填写稳定活动编号，无法核对是否重复。"
+msgstr ""
+
+msgid "未验证真实阅读停留或新建请求，只模拟所选主体回执。"
+msgstr ""
+
+msgid "本次解释结果"
+msgstr ""
+
+msgid "来源发生时间须晚于当前服务器边界，此处尚未验证。"
+msgstr ""
+
+msgid "来源已注册，运行资格尚未由来源验证。"
+msgstr ""
+
+msgid "来源未加载。"
+msgstr ""
+
+msgid "来源缺少服务器边界，请先由管理员保存活动规则。"
+msgstr ""
+
+msgid "查看活动接入清单"
+msgstr ""
+
+msgid "查看记账事实"
+msgstr ""
+
+msgid "模拟一条新活动"
+msgstr ""
+
+msgid "次数限制后"
+msgstr ""
+
+msgid "活动接入与奖励解释"
+msgstr ""
+
+msgid "活动日期"
+msgstr ""
+
+msgid "活动编号无效。"
+msgstr ""
+
+msgid "活动记录已启用。"
+msgstr ""
+
+msgid "活动记录未启用。"
+msgstr ""
+
+msgid "稳定活动编号（可选）"
+msgstr ""
+
+msgid "签到的对象编号须为零。"
+msgstr ""
+
+msgid "经验余额将溢出，不能记账。"
+msgstr ""
+
+msgid "规则经验"
+msgstr ""
+
+msgid "解释回执"
+msgstr ""
+
+msgid "解释已有回执"
+msgstr ""
+
+msgid "请填写有效的用户、对象或事件编号。"
+msgstr ""
+
+msgid "资格尚未验证，以上经验仅为假设计算。"
+msgstr ""
+
+msgid "通过"
+msgstr ""
+
+msgid "不满足"
+msgstr ""
+
+msgid "待验证"
+msgstr ""
+
+msgid "已有回执"
+msgstr ""
+
+msgid "零经验"
+msgstr ""
+
+msgid "原次数额度已耗尽"
+msgstr ""
+
+msgid "原奖励处于暂停期"
+msgstr ""
+
+msgid "原经验受日周上限截断"
+msgstr ""

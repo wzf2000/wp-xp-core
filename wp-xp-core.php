@@ -34,6 +34,7 @@ require_once __DIR__ . '/activity-notifications.php';
 require_once __DIR__ . '/activities-ui.php';
 require_once __DIR__ . '/game-activities.php';
 require_once __DIR__ . '/reward-controls.php';
+require_once __DIR__ . '/reward-inspector.php';
 require_once __DIR__ . '/notification-sources.php';
 require_once __DIR__ . '/bbpress.php';
 require_once __DIR__ . '/privacy.php';
