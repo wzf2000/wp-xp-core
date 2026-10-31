@@ -469,6 +469,7 @@ try {
         "reward-inspector",
         "widgets",
         "delivery",
+        "provider-insights",
     ):
         results[stage] = json.loads(
             wp("eval-file", str(ROOT / ("tests/wordpress-" + stage + ".php")))

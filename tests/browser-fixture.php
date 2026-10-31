@@ -251,6 +251,37 @@ class WP_XP_Core_Insights
             ],
         ];
     }
+    public static function provider_sources($input = [], $task_rates = null)
+    {
+        $rates = $task_rates ?? self::task_rates();
+        return [
+            'period' => 'week',
+            'from' => '2026-10-19',
+            'to' => '2026-10-24',
+            'timezone' => 'Asia/Shanghai',
+            'more' => false,
+            'limit' => 100,
+            'task_scope' => 'current_definition_period',
+            'rows' => [
+                [
+                    'provider' => 'fixture_provider',
+                    'label' => '合成扩展 <img src=x>',
+                    'activity_count' => 2,
+                    'reversal_count' => 1,
+                    'user_count' => 2,
+                    'positive_xp' => 5,
+                    'negative_xp' => -5,
+                    'net_xp' => 0,
+                    'zero_quota' => 1,
+                    'zero_hold' => 0,
+                    'zero_cap' => 0,
+                    'zero_rule' => 0,
+                    'zero_other' => 0,
+                    'tasks' => [$rates['rows'][0] + ['mixed_sources' => true]],
+                ],
+            ],
+        ];
+    }
     public static function trends($input = [])
     {
         return [
@@ -289,6 +320,7 @@ class WP_XP_Core_Insights
                     'type' => 'automatic',
                     'version' => 2,
                     'period' => 'week',
+                    'period_key' => '2026-43',
                     'from' => '2026-10-19',
                     'to' => '2026-10-24',
                     'participants' => 2,
@@ -331,6 +363,17 @@ file_put_contents(
     $head . '<link rel="stylesheet" href="' . $assets['admin_css'] . '">' . $insights,
 );
 
+class WP_XP_Core_Providers
+{
+    public static function definitions(): array
+    {
+        return ['fixture_provider' => ['label' => '合成扩展来源']];
+    }
+    public static function available(string $id): bool
+    {
+        return isset(self::definitions()[$id]);
+    }
+}
 class WP_XP_Core_Achievements
 {
     public static function definitions(): array

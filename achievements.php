@@ -615,10 +615,7 @@ final class WP_XP_Core_Achievements
                 " AND JSON_UNQUOTE(JSON_EXTRACT($detail,'$.provider'))=%s",
                 $step['provider_id'],
             );
-            $sql .=
-                ' AND NOT EXISTS (SELECT 1 FROM ' .
-                Reader_Experience::table() .
-                " r WHERE r.kind='provider_revoke' AND r.object_id=e.id AND r.user_id=e.user_id AND r.event_key=CONCAT('provider-revoke:',e.id))";
+            $sql .= ' AND ' . WP_XP_Core_Providers::unreversed_condition();
             if (($step['mode'] ?? 'events') === 'objects') {
                 $sql .= ' AND e.object_id>0';
             }
@@ -1630,15 +1627,24 @@ final class WP_XP_Core_Achievements
             ])
             : [];
         $terms = is_wp_error($terms) ? [] : array_column($terms, null, 'term_id');
+        $source_availability = [];
         foreach ($definitions as $task) {
             if (!$task['enabled']) {
                 continue;
             }
             foreach ($progress[$task['id']]['steps'] as &$step) {
                 $step['label'] = self::step_label($step);
-                $step['source_available'] =
-                    $step['kind'] !== 'provider_reward' ||
-                    WP_XP_Core_Providers::available($step['provider_id']);
+                if ($step['kind'] === 'provider_reward') {
+                    $provider = $step['provider_id'];
+                    if (!array_key_exists($provider, $source_availability)) {
+                        $source_availability[$provider] = WP_XP_Core_Providers::available(
+                            $provider,
+                        );
+                    }
+                    $step['source_available'] = $source_availability[$provider];
+                } else {
+                    $step['source_available'] = true;
+                }
                 $step['scope_links'] = self::scope_links($step, $posts, $terms);
                 $step['scoped'] = !empty($step['post_ids']) || !empty($step['category_ids']);
                 unset($step['post_ids'], $step['category_ids']);

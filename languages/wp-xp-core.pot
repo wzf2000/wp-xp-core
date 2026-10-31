@@ -1,5 +1,5 @@
 msgid ""
-msgstr "Project-Id-Version: WP XP Core 2.0.0-rc.3\nContent-Type: text/plain; charset=UTF-8\n"
+msgstr "Project-Id-Version: WP XP Core 2.2.0-rc.1\nContent-Type: text/plain; charset=UTF-8\n"
 
 msgid " · +%1$s 经验"
 msgstr ""
@@ -2883,4 +2883,67 @@ msgid "强调色（可选十六进制）"
 msgstr ""
 
 msgid "系列筛选（可选）"
+msgstr ""
+
+msgid "暂时无法生成统计导出。"
+msgstr ""
+
+msgid "暂时无法读取扩展活动统计。"
+msgstr ""
+
+msgid "来源超过一百项，请缩短日期范围后导出。"
+msgstr ""
+
+msgid "没有导出统计的权限。"
+msgstr ""
+
+msgid "下载来源汇总 CSV"
+msgstr ""
+
+msgid "仅展示前一百项来源；请缩短日期范围查看或导出。"
+msgstr ""
+
+msgid "关联任务按各自当前版本与当前周期展示。包含其他来源或内置活动的任务是混合目标，不表示该来源单独带来完成；完成率不相加。"
+msgstr ""
+
+msgid "其他或旧回执缺少原因"
+msgstr ""
+
+msgid "原始活动"
+msgstr ""
+
+msgid "奖励暂停"
+msgstr ""
+
+msgid "扩展活动明细"
+msgstr ""
+
+msgid "按可信来源分别汇总原始活动、撤销与净经验。人数已在每个来源内去重，不同来源人数不能相加。零经验原因只统计截至现在未撤销的零经验原回执；正向部分截断不算零经验。"
+msgstr ""
+
+msgid "撤销"
+msgstr ""
+
+msgid "次数耗尽"
+msgstr ""
+
+msgid "没有当前启用的关联任务。"
+msgstr ""
+
+msgid "混合目标"
+msgstr ""
+
+msgid "经验上限"
+msgstr ""
+
+msgid "规则为零经验"
+msgstr ""
+
+msgid "零经验原因与关联任务"
+msgstr ""
+
+msgid "选择完整面板页面后，组件才会显示跳转入口；签到、领取和通知偏好在完整面板操作。"
+msgstr ""
+
+msgid "第 %1$s 版"
 msgstr ""

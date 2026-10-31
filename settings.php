@@ -615,6 +615,12 @@ final class WP_XP_Core_Settings
             esc_html(wp_xp_core_t('添加经验面板')) .
             '</h2><p>' .
             esc_html(wp_xp_core_t('经验面板放在普通 WordPress 页面中，无需已有账户插件。')) .
+            ' ' .
+            esc_html(
+                wp_xp_core_t(
+                    '选择完整面板页面后，组件才会显示跳转入口；签到、领取和通知偏好在完整面板操作。',
+                ),
+            ) .
             '</p><ol><li>' .
             esc_html(wp_xp_core_t('进入 ')) .
             '<strong>' .

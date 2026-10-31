@@ -5,10 +5,12 @@ final class WP_XP_Core_Widgets
 {
     const TYPES = ['summary', 'tasks', 'badges', 'notifications', 'path'];
     private static int $owner = 0;
+    private static string $context = '';
     private static array $snapshot = [];
     public static function clear(): void
     {
         self::$owner = 0;
+        self::$context = '';
         self::$snapshot = [];
     }
     public static function boot(): void
@@ -24,6 +26,7 @@ final class WP_XP_Core_Widgets
         }
         add_action('wp_xp_core_event_committed', [self::class, 'clear'], 99);
         add_action('set_current_user', [self::class, 'clear']);
+        add_action('switch_blog', [self::class, 'clear']);
         foreach (['added_user_meta', 'updated_user_meta', 'deleted_user_meta'] as $hook) {
             add_action(
                 $hook,
@@ -58,9 +61,11 @@ final class WP_XP_Core_Widgets
     private static function data(string $type): array
     {
         $uid = get_current_user_id();
-        if ($uid !== self::$owner) {
+        $context = get_current_blog_id() . ':' . $GLOBALS['wpdb']->prefix . ':' . $uid;
+        if ($context !== self::$context) {
             self::clear();
             self::$owner = $uid;
+            self::$context = $context;
         }
         if (!isset(self::$snapshot[$type])) {
             $value = match ($type) {
@@ -77,6 +82,28 @@ final class WP_XP_Core_Widgets
             self::$snapshot[$type] = $value;
         }
         return self::$snapshot[$type];
+    }
+    public static function panel_url(): ?string
+    {
+        $id = reader_experience_native()
+            ? (int) get_option(WP_XP_Core_Settings::PANEL_OPTION, 0)
+            : reader_experience_config('panel_page_id');
+        if ($id < 1) {
+            return null;
+        }
+        if (reader_experience_native()) {
+            $page = get_post($id);
+            if (
+                !$page ||
+                $page->post_type !== 'page' ||
+                $page->post_status !== 'publish' ||
+                $page->post_password !== ''
+            ) {
+                return null;
+            }
+        }
+        $url = get_permalink($id);
+        return is_string($url) && $url !== '' ? $url : null;
     }
     public static function attributes(): array
     {
@@ -242,10 +269,10 @@ final class WP_XP_Core_Widgets
                         esc_html($status) .
                         '<p>' .
                         esc_html($task['condition_text']) .
-                        '</p><small>v' .
-                        (int) $task['version'] .
+                        '</p><small>' .
+                        esc_html(sprintf(wp_xp_core_t('第 %1$s 版'), (int) $task['version'])) .
                         ' · ' .
-                        esc_html($task['period_key']) .
+                        esc_html(WP_XP_Core_Achievements_UI::period_label($task['period'])) .
                         '</small>';
                     if ($type === 'tasks') {
                         $html .= '<ul>';
@@ -283,12 +310,16 @@ final class WP_XP_Core_Widgets
                     $html .= '<p>' . esc_html(wp_xp_core_t('暂无可展示的任务。')) . '</p>';
                 }
             }
-            return $html .
-                '<p><a href="' .
-                esc_url(reader_experience_panel_url()) .
-                '">' .
-                esc_html(wp_xp_core_t('打开完整成长面板')) .
-                '</a></p></section>';
+            $panel = self::panel_url();
+            if ($panel !== null) {
+                $html .=
+                    '<p><a href="' .
+                    esc_url($panel) .
+                    '">' .
+                    esc_html(wp_xp_core_t('打开完整成长面板')) .
+                    '</a></p>';
+            }
+            return $html . '</section>';
         } catch (InvalidArgumentException $e) {
             return '<p>' . esc_html(wp_xp_core_t('成长组件设置无效。')) . '</p>';
         } catch (Throwable $e) {

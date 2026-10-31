@@ -1,10 +1,10 @@
-<!-- wp-xp-core-version: 2.1.0 -->
+<!-- wp-xp-core-version: 2.2.0-rc.1 -->
 
 # User guide
 
 [简体中文](GUIDE.md) · English · [Back to overview](../README.en.md)
 
-This administrator guide describes **2.1.0**. For released versions, use the guide at the matching Release tag. From 1.4.0, new sites can install and activate with default rules, without server JSON configuration. See [Get started](../README.en.md#get-started) for installation.
+This administrator guide describes **2.2.0-rc.1**. For released versions, use the guide at the matching Release tag. From 1.4.0, new sites can install and activate with default rules, without server JSON configuration. See [Get started](../README.en.md#get-started) for installation.
 
 ## Create an experience page
 
@@ -95,7 +95,7 @@ In the page editor's Widgets category, choose **My growth summary, My tasks, My 
 
 Lists default to five items; `limit` accepts 1–20. Use `density="compact"` for tighter spacing, or the default `comfortable`. `title` sets the heading and `accent="#3856b0"` accepts a three- or six-digit hex color. Paths optionally filter an exact task `series`, for example `[xp_path series="Getting started" limit="10"]`. Fonts and text colors inherit from the theme; the accent affects only the border and progress bar.
 
-Tasks and paths show the current version, cycle, progress and prerequisites, distinguishing completed, ready and locked items. Achievements retain their awarded snapshots. Notification widgets do not mark anything as read. Use **Open the full growth panel** for check-in, claims, submissions, notification read actions and preferences. Existing `[reader_experience]`, growth blocks and old pages remain supported.
+Tasks and paths show the current version, cycle, progress and prerequisites, distinguishing completed, ready and locked items. Achievements retain their awarded snapshots. Notification widgets do not mark anything as read. First create and select a full panel page manually in settings. Then use **Open the full growth panel** for check-in, claims, submissions, notification read actions and preferences. Standalone widgets omit that link when no valid panel page is configured. Existing `[reader_experience]`, growth blocks and old pages remain supported.
 
 ## Receipt explanations and read-only simulation
 
@@ -266,7 +266,7 @@ Open **Settings → WP XP Core → Activities and notifications**. Choose a regi
 
 Eligible events after quota exhaustion persist zero-XP receipts. Retrying them on another day never backfills XP or repeats messages. A zero limit stops acceptance; games must have been created after the new boundary. Reversals append the original actual amount, require enough balance and do not restore daily count.
 
-Additional channels appear only when registered by an extension and default to off. This API covers activity participation/reversal messages only: one attempt after commit, without delivery guarantees, XP rollback or implicit retries. The plugin implements no email, webhook or outbound-network channel. Recent outcomes contain event IDs, channel IDs and codes, without message text or secrets.
+Other channels appear only after registration and default to off. The API covers activity participation/reversal messages, with an initial post-commit attempt, no delivery guarantee and no implicit retry; failure never rolls back XP. No email, webhook or outbound network implementation is built in. The dashboard shows event ID, channel, delivery state and error code. Explicit retries require a reason; retained state also records attempt count, actor and reason, without message content, secret configuration or raw exception text. Legacy rows remain read-only; explicit retry is described below. Delivery results are separate from failed XP accounting entries.
 
 **Optional games:** PageNest Game Tools 0.2.0-rc.1 provides the public settlement facade and isolated observers. Only registered, server-replay-verified games qualify, all disabled by default. Browser-selected users, scores or XP are never authoritative; XP rereads the receipt under its own ledger lock. Scores commit and release the shared lock before XP is notified. Identical-proof retries can recover an XP receipt that never committed, but existing receipts never repeat. The game response retains `awards: []`: XP and private messages are maintained independently by WP XP Core. Browser-only tools and unverified games are outside this integration.
 
@@ -277,3 +277,13 @@ Under **Activities and notifications → Recent channel results and manual retry
 Successful messages cannot be resent. Exceptions, indeterminate callback results or process interruption leave an **unknown** outcome. Check the external channel first; direct retry is blocked. Concurrent administrators sharing one failed revision make at most one external attempt. A subsequent explicit failure requires reloading its new state before another decision. Channels must still deduplicate the same `event_id`; the plugin cannot guarantee exactly-once effects in an external system.
 
 Retrying never changes XP, balances or reward rules and never invokes activity accounting. There is no default email, webhook, outbound implementation or cron. Old results remain readable; new state is created only for new delivery or explicit retry, never on loading or upgrade. Messages outside the retained window are not eligible for resend.
+
+## Inspect provider details and export aggregates
+
+Under **Insights → Extension activity details**, choose this week, this month or a custom range of at most 366 days. Each source shows original activity count, reversals, distinct participants, and positive/negative/net XP. Zero-XP reversals count as reversals. People can participate in several sources; row participant counts must not be added together.
+
+Expand a source to inspect effective zero-XP originals: exhausted counts, administrator holds, daily/weekly caps, zero-XP policy, or missing historical reasons. Partially reduced positive awards are excluded. Reversed originals are excluded even if their reversal happened outside the selected dates. Net XP still includes only changes occurring inside the selected dates.
+
+Associated tasks retain their own current-version/current-cycle completion-rate semantics, independent of source dates. Tasks mixing several sources or built-in activities are labeled. Their completion is not attributed to one source, and rates are not added together.
+
+**Download provider summary CSV** exports source-level numbers and dates only, without user IDs, email, individual events or administrator reasons. Downloads require administrator permission and a valid nonce. Exports are limited to 100 sources; shorten the range if necessary. UTF-8 text cells are protected against spreadsheet formulas while quotes and line breaks remain valid CSV. Existing source statistics, public standings and personal exports remain available.

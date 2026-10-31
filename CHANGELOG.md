@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.2.0-rc.1
+
+- 自动任务可选择已注册的可信扩展活动，按活动、对象或自然日累计；撤销影响未领取进度，已有荣誉保留，旧四类任务及经验规则保持。
+- 运行诊断新增原回执解释与只读假设模拟，复用真实暂停／上限算法；扩展资格与发生时间须由真实来源验证，不调用来源或投递回调，不保存奖励。
+- 新增五个私人成长短代码与动态区块，以及默认停用、零经验的来源任务模板；原完整面板、登录与私人权限契约保持。
+- 注册通知渠道支持管理员带原因重试明确失败的原消息；独立锁、revision 与持久 unknown 防止并发或中断后直接重投，不重新记账或默认外发。
+- 激励效果新增具体来源汇总、有效零经验原因、关联任务完成率与受保护的汇总 CSV；不导出个人事件、身份或管理原因。
+- 同次个人进度只观察每个来源一次；匿名页保留原资源句柄、全局配置、翻译桥和 CSS，减少不需要的应用脚本请求。没有新增索引、统计缓存或定时任务。
+- 增加真实来源任务、只读模拟、组件隐私、通知并发／中断、来源聚合和可选 bbPress 覆盖；新增正式 2.1.0 ZIP 的保留数据升级组合，投递状态不在加载或升级时创建。
+
+Adds source-specific tasks, read-only receipt explanations and hypothetical reward inspection, five private widgets, explicit failed-message retry, provider aggregates and bounded protected CSV. Existing rules, balances, history and optional-adapter boundaries remain. Delivery outcomes use independent locking and durable unknown state, without replaying rewards. Request-local source observations and anonymous script loading are reduced while preserving public handles and globals. No new schema, historical backfill, index or cron is introduced.
+
 ## 2.1.0
 
 - 整合 2.1 预发行版的可配置活动、可选游戏与 bbPress 接入、任务预览／副本、私人通知源和管理诊断；默认开关、已有规则和用户数据保持。

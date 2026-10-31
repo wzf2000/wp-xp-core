@@ -193,5 +193,86 @@ $verify(
         static fn($item) => $item['object_id'] === $insufficient && $item['code'] === 'balance',
     ),
 );
+$original_tasks = WP_XP_Core_Achievements::definitions();
+try {
+    $task_uid = wp_insert_user([
+        'user_login' => 'fixture-bbpress-task',
+        'user_email' => 'bbpress-task@example.invalid',
+        'user_pass' => wp_generate_password(32),
+        'role' => 'subscriber',
+    ]);
+    $verify('Real bbPress task subject exists', !is_wp_error($task_uid));
+    $task_uid = (int) $task_uid;
+    $task_ids = [];
+    foreach (['honor' => 1, 'pending' => 1000] as $key => $count) {
+        $saved = WP_XP_Core_Achievements::save(
+            [
+                'id' => '',
+                'title' => 'Real bbPress topic task ' . $key,
+                'description' => '',
+                'icon' => '◇',
+                'type' => 'automatic',
+                'period' => 'once',
+                'enabled' => true,
+                'reward_xp' => 0,
+                'steps' => [
+                    [
+                        'kind' => 'provider_reward',
+                        'provider_id' => 'bbpress_topic',
+                        'mode' => 'objects',
+                        'count' => $count,
+                    ],
+                ],
+            ],
+            wp_create_nonce('wp_xp_core_achievements'),
+            WP_XP_Core_Achievements::revision(),
+        );
+        $verify('Topic-only zero XP task saves ' . $key, !is_wp_error($saved));
+        $task_ids[$key] = $saved['id'];
+    }
+    $task_progress = static fn($key) => WP_XP_Core_Achievements::progress(
+        WP_XP_Core_Achievements::definitions()[$task_ids[$key]],
+        $task_uid,
+    );
+    $task_topic = $topic('Real topic task activity', 'publish', $task_uid);
+    $verify(
+        'bbPress topic object counts without WordPress post filtering',
+        get_post_type($task_topic) === bbp_get_topic_post_type() &&
+            get_post_type($task_topic) !== 'post' &&
+            $task_progress('honor')['earned'] &&
+            $task_progress('pending')['steps'][0]['current'] === 1,
+    );
+    $task_reply = $reply($task_topic, 'publish', $task_uid);
+    $verify(
+        'Reply activity does not advance a topic-specific step',
+        $receipt('bbpress_reply', $task_reply) &&
+            $task_progress('pending')['steps'][0]['current'] === 1,
+    );
+    do_action('bbp_new_topic', $task_topic, $forum, [], $task_uid);
+    $task_key = 'task:' . $task_ids['honor'] . ':1:once:' . $task_uid;
+    $verify(
+        'Repeated topic hook grants the zero XP honor only once',
+        (int) $wpdb->get_var(
+            $wpdb->prepare(
+                "SELECT COUNT(*) FROM $ledger WHERE event_key=%s AND kind='task_complete' AND xp=0",
+                $task_key,
+            ),
+        ) === 1,
+    );
+    bbp_spam_topic($task_topic);
+    $verify(
+        'Actual topic reversal reduces unclaimed progress and retains earned honor',
+        $task_progress('pending')['steps'][0]['current'] === 0 &&
+            !$task_progress('pending')['earned'] &&
+            $task_progress('honor')['earned'],
+    );
+} finally {
+    update_option(WP_XP_Core_Achievements::OPTION, $original_tasks, false);
+    WP_XP_Core_Achievements::clear_cache();
+}
+$verify(
+    'Original task definitions restored after real bbPress coverage',
+    WP_XP_Core_Achievements::definitions() === $original_tasks,
+);
 $verify('Original rules restored', !is_wp_error($save($original)));
 echo wp_json_encode(['count' => count($checks), 'checks' => $checks]);

@@ -35,13 +35,14 @@ add_action('init', function () {
         if ($type === 'path') {
             $attributes['series'] = ['type' => 'string', 'default' => ''];
         }
+        $attributes_schema = $attributes;
         register_block_type('wp-xp-core/' . $type, [
             'api_version' => 2,
             'editor_script' => 'wp-xp-core-blocks',
             'attributes' => $attributes,
             'render_callback' => static fn($attributes) => WP_XP_Core_Widgets::render(
                 $type,
-                $attributes,
+                array_intersect_key($attributes, $attributes_schema),
             ),
             'supports' => ['html' => false, 'customClassName' => false],
         ]);

@@ -19,6 +19,7 @@ $verify = static function ($name, $value) use (&$checks): void {
 $admin = get_user_by('login', 'fixture-author');
 wp_set_current_user($admin->ID);
 $original = WP_XP_Core_Achievements::definitions();
+$original_panel = get_option(WP_XP_Core_Settings::PANEL_OPTION, null);
 update_option(WP_XP_Core_Achievements::OPTION, [], false);
 WP_XP_Core_Achievements::clear_cache();
 $users = [];
@@ -59,6 +60,35 @@ try {
     $locked['steps'] = [];
     $locked['prerequisites'] = [['id' => $id, 'scope' => 'current']];
     $verify('Widget prerequisite task saves', !is_wp_error($save($locked)));
+    $panel = (int) wp_insert_post([
+        'post_type' => 'page',
+        'post_title' => 'Synthetic full growth panel',
+        'post_status' => 'publish',
+        'post_author' => $admin->ID,
+        'post_content' => '[reader_experience]',
+    ]);
+    $save_panel = static fn($id) => WP_XP_Core_Settings::save_panel_page(
+        $id,
+        wp_create_nonce('wp_xp_core_panel'),
+        WP_XP_Core_Settings::panel_revision(get_option(WP_XP_Core_Settings::PANEL_OPTION, null)),
+    );
+    $verify(
+        'Widget fixture can explicitly leave the native panel unconfigured',
+        $save_panel(0) === true,
+    );
+    wp_set_current_user($users[0]);
+    $verify(
+        'Unconfigured standalone widgets do not advertise a full-panel self-link',
+        !str_contains(do_shortcode('[xp_tasks]'), '打开完整成长面板'),
+    );
+    wp_set_current_user($admin->ID);
+    $verify('Widget fixture explicitly selects its full panel page', $save_panel($panel) === true);
+    wp_set_current_user($users[0]);
+    $verify(
+        'Configured widget full-panel link uses the chosen page',
+        str_contains(do_shortcode('[xp_summary]'), esc_url(get_permalink($panel))),
+    );
+    WP_XP_Core_Widgets::clear();
     $snapshot = static fn() => [
         $wpdb->get_results('SELECT * FROM ' . Reader_Experience::table() . ' ORDER BY id', ARRAY_A),
         $wpdb->get_results("SELECT * FROM {$wpdb->usermeta} ORDER BY umeta_id", ARRAY_A),
@@ -104,6 +134,13 @@ try {
             str_contains($tasks, '0 / 3'),
     );
     $verify(
+        'Task and path metadata show a natural version and period label',
+        str_contains($tasks, '第 1 版 · 一次性') &&
+            str_contains($path, '第 1 版 · 一次性') &&
+            !str_contains($tasks, '<small>v') &&
+            !str_contains($path, '· once'),
+    );
+    $verify(
         'Validated style and title render safely',
         str_contains($tasks, 'xp-widget--compact') &&
             str_contains($tasks, '--xp-growth-accent:#123abc') &&
@@ -133,6 +170,14 @@ try {
             str_contains($block, 'xp-widget'),
         );
     }
+    $metadata_block = do_blocks(
+        '<!-- wp:wp-xp-core/tasks {"metadata":{"name":"Renamed widget"},"className":"custom-standard-class","anchor":"widget-target"} /-->',
+    );
+    $verify(
+        'Standard Gutenberg metadata does not invalidate private business attributes',
+        str_contains($metadata_block, 'Synthetic widget check-in') &&
+            !str_contains($metadata_block, '成长组件设置无效'),
+    );
     $verify('Widget reads do not alter ledger, users or tasks', $snapshot() === $before);
     $verify(
         'Target user argument is rejected',
@@ -177,6 +222,27 @@ try {
         'Switching back observes the original owner again',
         str_contains(do_shortcode('[xp_tasks limit="20"]'), '1 / 3'),
     );
+    $switch_scans = 0;
+    $observe_switch = static function ($sql) use (&$switch_scans) {
+        if (str_contains($sql, 'COUNT(DISTINCT CASE')) {
+            $switch_scans++;
+        }
+        return $sql;
+    };
+    add_filter('query', $observe_switch);
+    try {
+        do_shortcode('[xp_tasks limit="20"]');
+        $cached_scans = $switch_scans;
+        // Synthetic hook only: not a network installation or a real table switch.
+        do_action('switch_blog', get_current_blog_id() + 1, get_current_blog_id(), 'switch');
+        $after_switch = do_shortcode('[xp_tasks limit="20"]');
+    } finally {
+        remove_filter('query', $observe_switch);
+    }
+    $verify(
+        'Synthetic switch_blog hook invalidates same-user request projections',
+        $cached_scans === 0 && $switch_scans === 1 && str_contains($after_switch, '1 / 3'),
+    );
     WP_XP_Core_Widgets::clear();
     $faulted = false;
     $fault = static function ($sql) use (&$faulted) {
@@ -214,5 +280,10 @@ try {
     update_option(WP_XP_Core_Achievements::OPTION, $original, false);
     WP_XP_Core_Achievements::clear_cache();
     WP_XP_Core_Widgets::clear();
+    if ($original_panel === null) {
+        delete_option(WP_XP_Core_Settings::PANEL_OPTION);
+    } else {
+        update_option(WP_XP_Core_Settings::PANEL_OPTION, $original_panel, false);
+    }
 }
 echo wp_json_encode(['count' => count($checks), 'checks' => $checks]);

@@ -26,8 +26,21 @@ test('administrative metrics show zero-XP participation and explain task denomin
   await page.goto('/insights.html');
   await expect(page.locator('.xp-insight-totals')).toContainText('参与人数');
   await expect(page.locator('.xp-insight-totals dd').first()).toHaveText('2');
-  await expect(page.locator('.xp-card').nth(1)).toContainText('50.0%');
-  await expect(page.locator('.xp-card').nth(1)).toContainText('这不是曝光转化率');
+  const tasks = page
+    .locator('.xp-card')
+    .filter({ has: page.getByRole('heading', { name: '当前任务完成率', exact: true }) });
+  await expect(tasks).toContainText('50.0%');
+  await expect(tasks).toContainText('这不是曝光转化率');
+  const providers = page
+    .locator('.xp-card')
+    .filter({ has: page.getByRole('heading', { name: '扩展活动明细', exact: true }) });
+  await expect(providers).toContainText('合成扩展 <img src=x>');
+  await expect(providers.locator('img')).toHaveCount(0);
+  await expect(providers.getByRole('button', { name: '下载来源汇总 CSV' })).toBeVisible();
+  await providers.getByText('零经验原因与关联任务', { exact: true }).click();
+  await expect(providers).toContainText('次数耗尽: 1');
+  await expect(providers).toContainText('混合目标');
+  await expect(providers).toContainText('50.0%');
   await page.setViewportSize({ width: 390, height: 844 });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
