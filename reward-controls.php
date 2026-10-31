@@ -44,8 +44,12 @@ final class WP_XP_Core_Reward_Controls
         if (!Reader_Experience::transaction_active()) {
             throw new RuntimeException('Reward hold requires transaction');
         }
-        $state = self::status($uid);
-        if (!$state['active']) {
+        return self::evaluate($xp, self::status($uid), $detail);
+    }
+    /** Pure hold calculation shared with explicit administrator simulation. */
+    public static function evaluate(int $xp, array $state, array &$detail): int
+    {
+        if ($xp <= 0 || !$state['active']) {
             return $xp;
         }
         $detail['reward_hold'] = [

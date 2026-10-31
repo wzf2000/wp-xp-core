@@ -11,7 +11,7 @@
  * Update URI: https://github.com/wzf2000/wp-xp-core
  * Text Domain: wp-xp-core
  * Domain Path: /languages
- * Version: 2.1.0
+ * Version: 2.2.0-rc.1
  */
 defined('ABSPATH') || exit();
 require_once __DIR__ . '/config.php';
@@ -34,6 +34,9 @@ require_once __DIR__ . '/activity-notifications.php';
 require_once __DIR__ . '/activities-ui.php';
 require_once __DIR__ . '/game-activities.php';
 require_once __DIR__ . '/reward-controls.php';
+require_once __DIR__ . '/reward-inspector.php';
+require_once __DIR__ . '/widgets.php';
+require_once __DIR__ . '/notification-delivery.php';
 require_once __DIR__ . '/notification-sources.php';
 require_once __DIR__ . '/bbpress.php';
 require_once __DIR__ . '/privacy.php';
@@ -43,7 +46,7 @@ require_once __DIR__ . '/modules/blocks.php';
 register_activation_hook(__FILE__, [WP_XP_Core_Lifecycle::class, 'activate']);
 final class Reader_Experience
 {
-    const VERSION = '2.1.0';
+    const VERSION = '2.2.0-rc.1';
     const BALANCE_META = 'reader_experience_balance';
     const MINS = [0, 5, 20, 60, 150, 300, 600, 1000, 1800, 3000];
     private static bool $writing = false;
@@ -939,9 +942,12 @@ final class Reader_Experience
             [],
             null,
         );
+        if (!is_user_logged_in()) {
+            wp_register_script('reader_experience', false, [], null, true);
+        }
         wp_enqueue_script(
             'reader_experience',
-            plugins_url('assets/' . $manifest['js'], __FILE__),
+            is_user_logged_in() ? plugins_url('assets/' . $manifest['js'], __FILE__) : false,
             [],
             null,
             true,

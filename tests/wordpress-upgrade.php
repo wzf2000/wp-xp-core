@@ -298,6 +298,7 @@ if ($mode === 'seed') {
     }
     $state = [
         'old_version' => Reader_Experience::VERSION,
+        'had_delivery_state' => get_option('wp_xp_core_channel_delivery', null) !== null,
         'page' => (int) $page,
         'has_tasks' => $has_tasks,
         'activity' => $activity_state,
@@ -325,6 +326,13 @@ if ($mode === 'seed') {
         $verify(
             'Upgrade preserves ' . $key . ($changed ? ' (' . implode(', ', $changed) . ')' : ''),
             $state['snapshot'][$key] === $value,
+        );
+    }
+    if ($mode === 'verify') {
+        $verify(
+            'Code-only upgrade never creates notification delivery state',
+            (get_option('wp_xp_core_channel_delivery', null) !== null) ===
+                ($state['had_delivery_state'] ?? false),
         );
     }
     if ($state['activity'] ?? []) {

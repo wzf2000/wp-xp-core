@@ -1,5 +1,5 @@
 msgid ""
-msgstr "Project-Id-Version: WP XP Core 2.0.0-rc.3\nContent-Type: text/plain; charset=UTF-8\nLanguage: en_US\nMIME-Version: 1.0\nContent-Transfer-Encoding: 8bit\n"
+msgstr "Project-Id-Version: WP XP Core 2.2.0-rc.1\nContent-Type: text/plain; charset=UTF-8\nLanguage: en_US\nMIME-Version: 1.0\nContent-Transfer-Encoding: 8bit\n"
 
 msgid " · +%1$s 经验"
 msgstr " · +%1$s XP"
@@ -2464,3 +2464,486 @@ msgstr "Configure optional activities and notifications"
 
 msgid "预览规则与通知"
 msgstr "Preview rules and message"
+
+msgid "请选择已注册的活动来源。"
+msgstr "Select a registered activity source."
+
+msgid "扩展活动不支持文章或分类范围。"
+msgstr "Extension activities do not support post or category scopes."
+
+msgid "只有扩展活动可以指定来源。"
+msgstr "Only extension activities can specify a source."
+
+msgid "扩展活动"
+msgstr "Extension activity"
+
+msgid "请选择活动来源"
+msgstr "Select an activity source"
+
+msgid "（来源暂不可用）"
+msgstr " (source unavailable)"
+
+msgid "活动来源暂不可用，已有进度与成就保留。"
+msgstr "The activity source is unavailable. Existing progress and achievements are retained."
+
+msgid " · %1$s：还需 %2$s %3$s"
+msgstr " · %1$s: %2$s %3$s remaining"
+
+msgid "不同对象"
+msgstr "Distinct objects"
+
+msgid "个不同对象"
+msgstr "distinct objects"
+
+msgid "三天参与"
+msgstr "Participate on three days"
+
+msgid "三次活动"
+msgstr "Three activities"
+
+msgid "事件编号"
+msgstr "Event ID"
+
+msgid "仅模拟当前主体回执，不包含签到阶段、作者里程碑或任务派生奖励；实际记账会重新检查。"
+msgstr "Only this primary receipt is simulated, excluding streak, author milestone and task rewards. Actual accounting rechecks eligibility."
+
+msgid "仅累计启用后由所选可信来源记录的新活动。"
+msgstr "Count new activities recorded by the selected trusted source after activation."
+
+msgid "今日已记录次数"
+msgstr "Activities recorded today"
+
+msgid "今日次数尚未用完。"
+msgstr "The daily activity quota remains available."
+
+msgid "今日次数已用完，不新增活动回执。"
+msgstr "The daily quota is exhausted; no new activity receipt is recorded."
+
+msgid "今日次数已用完，合法新活动仍可保留零经验回执。"
+msgstr "The daily quota is exhausted; an eligible new activity can still retain a zero-XP receipt."
+
+msgid "依赖缺失"
+msgstr "Dependency missing"
+
+msgid "假设分数（可选）"
+msgstr "Hypothetical score (optional)"
+
+msgid "假设实际经验"
+msgstr "Hypothetical actual XP"
+
+msgid "假设服务端资格满足；未调用来源验证或读取权威发生时间。"
+msgstr "Assuming server eligibility: source verification and authoritative event time have not been checked."
+
+msgid "内置活动留空"
+msgstr "Leave empty for built-in activities"
+
+msgid "分数仅为模拟输入，须由来源核实。"
+msgstr "The score is hypothetical and must be verified by the source."
+
+msgid "原回执未保存"
+msgstr "Not saved in the original receipt"
+
+msgid "原实际经验"
+msgstr "Original actual XP"
+
+msgid "原每周经验上限"
+msgstr "Original weekly XP cap"
+
+msgid "原每日次数上限"
+msgstr "Original daily activity limit"
+
+msgid "原每日经验上限"
+msgstr "Original daily XP cap"
+
+msgid "原活动已撤销，历史回执保留。"
+msgstr "The original activity has been reversed; its receipt is retained."
+
+msgid "原请求经验"
+msgstr "Original requested XP"
+
+msgid "只读模拟"
+msgstr "Read-only simulation"
+
+msgid "只读模拟，不提交活动或奖励。扩展资格、真实阅读停留与新建请求仍须由实际来源验证。"
+msgstr "Read-only simulation records no activity or reward. Extension eligibility, real reading dwell and creation requests still require source verification."
+
+msgid "只读结果，未记录奖励。"
+msgstr "Read-only result. No reward was recorded."
+
+msgid "对象编号（签到填 0）"
+msgstr "Object ID (0 for check-in)"
+
+msgid "已接入并启用"
+msgstr "Integrated and enabled"
+
+msgid "已接入，配置关闭"
+msgstr "Integrated, disabled in settings"
+
+msgid "已有相同活动回执，不会新增经验。"
+msgstr "An identical activity receipt exists; no new XP is added."
+
+msgid "已有评论回执的恢复或补偿不在新活动模拟范围，请解释原回执并查看对应补偿记录。"
+msgstr "Recovery or compensation of an existing comment receipt is outside this new-activity simulation. Explain the original receipt and inspect its compensation records."
+
+msgid "已注册表示接口已接入；运行资格待来源验证，此清单不调用来源回调。"
+msgstr "Registered means the interface is integrated. Runtime eligibility still requires source verification; this list invokes no source callbacks."
+
+msgid "当前条件下不会新增回执。"
+msgstr "Current conditions do not add a new receipt."
+
+msgid "当前条件允许记录，实际请求仍会重新检查。"
+msgstr "Current conditions allow recording; the actual request will recheck them."
+
+msgid "当前来源启用边界"
+msgstr "Current source activation boundary"
+
+msgid "当前状态"
+msgstr "Current state"
+
+msgid "扩展活动输入"
+msgstr "Extension activity inputs"
+
+msgid "按原回执快照解释；未保存的事实显示为空，不用当前规则重算。"
+msgstr "Explained using the original receipt snapshots. Unsaved facts are empty; current rules never recalculate the past."
+
+msgid "按目标用户的对象访问资格、归属与内容范围核对。"
+msgstr "Check object access, ownership and content scope for the target user."
+
+msgid "暂停检查后"
+msgstr "After reward hold"
+
+msgid "暂时无法解释或模拟奖励，请重试。"
+msgstr "Reward explanation or simulation is temporarily unavailable. Please retry."
+
+msgid "未填写稳定活动编号，无法核对是否重复。"
+msgstr "No stable activity ID was supplied; duplicate identity cannot be checked."
+
+msgid "未验证真实阅读停留或新建请求，只模拟所选主体回执。"
+msgstr "Real reading dwell and creation requests are unverified; only the selected primary receipt is simulated."
+
+msgid "本次解释结果"
+msgstr "Inspection result"
+
+msgid "来源发生时间须晚于当前服务器边界，此处尚未验证。"
+msgstr "The source event must occur after the current server boundary; its time is unverified here."
+
+msgid "来源已注册，运行资格尚未由来源验证。"
+msgstr "The source is registered; runtime eligibility remains unverified."
+
+msgid "来源未加载。"
+msgstr "The source is not loaded."
+
+msgid "来源缺少服务器边界，请先由管理员保存活动规则。"
+msgstr "The source has no server boundary. An administrator must save its activity rules first."
+
+msgid "查看活动接入清单"
+msgstr "View activity integrations"
+
+msgid "查看记账事实"
+msgstr "View accounting facts"
+
+msgid "模拟一条新活动"
+msgstr "Simulate a new activity"
+
+msgid "次数限制后"
+msgstr "After activity quota"
+
+msgid "活动接入与奖励解释"
+msgstr "Activity integrations and reward explanations"
+
+msgid "活动日期"
+msgstr "Activity date"
+
+msgid "活动编号无效。"
+msgstr "The activity ID is invalid."
+
+msgid "活动记录已启用。"
+msgstr "Activity recording is enabled."
+
+msgid "活动记录未启用。"
+msgstr "Activity recording is disabled."
+
+msgid "稳定活动编号（可选）"
+msgstr "Stable activity ID (optional)"
+
+msgid "签到的对象编号须为零。"
+msgstr "Check-in requires object ID zero."
+
+msgid "经验余额将溢出，不能记账。"
+msgstr "The XP balance would overflow; recording is blocked."
+
+msgid "规则经验"
+msgstr "Policy XP"
+
+msgid "解释回执"
+msgstr "Explain receipt"
+
+msgid "解释已有回执"
+msgstr "Explain an existing receipt"
+
+msgid "请填写有效的用户、对象或事件编号。"
+msgstr "Enter a valid user, object or event ID."
+
+msgid "资格尚未验证，以上经验仅为假设计算。"
+msgstr "Eligibility is unverified. The XP above is hypothetical."
+
+msgid "通过"
+msgstr "Passed"
+
+msgid "不满足"
+msgstr "Blocked"
+
+msgid "待验证"
+msgstr "Unverified"
+
+msgid "已有回执"
+msgstr "Existing receipt"
+
+msgid "零经验"
+msgstr "Zero XP"
+
+msgid "原次数额度已耗尽"
+msgstr "The original activity quota was exhausted"
+
+msgid "原奖励处于暂停期"
+msgstr "The original reward was held"
+
+msgid "原经验受日周上限截断"
+msgstr "The original XP was reduced by daily or weekly caps"
+
+msgid "今日尚未签到"
+msgstr "Not checked in today"
+
+msgid "前置任务："
+msgstr "Prerequisite: "
+
+msgid "原活动没有可重试的渠道消息快照。"
+msgstr "The original activity has no retryable channel message snapshot."
+
+msgid "原消息已投递；经验与规则保持不变。"
+msgstr "The original message was delivered. XP and policy remain unchanged."
+
+msgid "只能重试明确失败的最近消息，成功或结果未知的消息不能重投。"
+msgstr "Only recent explicitly failed messages can be retried. Successful or uncertain deliveries cannot be resent."
+
+msgid "只重试最近明确失败的原消息，不重新发奖。成功、异常或中断后结果未知的投递不能重投；渠道须按相同事件编号幂等处理。"
+msgstr "Retry only recent explicitly failed original messages, without awarding XP. Successful, exceptional or interrupted deliveries with uncertain outcomes cannot be resent. Channels must deduplicate the same event ID."
+
+msgid "可继续"
+msgstr "Ready to continue"
+
+msgid "已完成"
+msgstr "Completed"
+
+msgid "已投递"
+msgstr "Delivered"
+
+msgid "已撤销"
+msgstr "Revoked"
+
+msgid "已读"
+msgstr "Read"
+
+msgid "成长内容暂时无法读取，请重试。"
+msgstr "Growth information is temporarily unavailable. Please retry."
+
+msgid "成长组件设置无效。"
+msgstr "The growth widget settings are invalid."
+
+msgid "我的任务"
+msgstr "My tasks"
+
+msgid "我的成就"
+msgstr "My achievements"
+
+msgid "我的成长概览"
+msgstr "My growth summary"
+
+msgid "我的成长路径"
+msgstr "My growth path"
+
+msgid "我的通知"
+msgstr "My notifications"
+
+msgid "打开完整成长面板"
+msgstr "Open the full growth panel"
+
+msgid "投递未能完成；若结果未知，请核对渠道，勿直接重投。"
+msgstr "Delivery could not finish. If the result is uncertain, check the channel before attempting any resend."
+
+msgid "投递状态已改变，请重新读取后再操作。"
+msgstr "Delivery state changed. Reload it before trying again."
+
+msgid "投递结果未知，请先核对渠道；不能直接重投。"
+msgstr "The delivery outcome is unknown. Check the channel; direct resend is blocked."
+
+msgid "按当前任务版本与周期显示。"
+msgstr "Showing the current task version and cycle."
+
+msgid "明确失败"
+msgstr "Explicit failure"
+
+msgid "暂无可展示的任务。"
+msgstr "No tasks to display."
+
+msgid "暂无已获成就。"
+msgstr "No earned achievements yet."
+
+msgid "暂无渠道投递记录。"
+msgstr "No channel delivery records yet."
+
+msgid "暂无通知。"
+msgstr "No notifications yet."
+
+msgid "最近渠道结果与手动重试"
+msgstr "Recent channel results and manual retry"
+
+msgid "未解锁"
+msgstr "Locked"
+
+msgid "未读"
+msgstr "Unread"
+
+msgid "本人已关闭活动通知，未尝试投递。"
+msgstr "The recipient disabled activity notifications. Delivery was not attempted."
+
+msgid "没有查看通知投递的权限。"
+msgstr "You cannot view notification deliveries."
+
+msgid "没有管理通知投递的权限。"
+msgstr "You cannot manage notification deliveries."
+
+msgid "渠道"
+msgstr "Channel"
+
+msgid "渠道不属于原活动消息快照。"
+msgstr "This channel is not in the original activity message snapshot."
+
+msgid "渠道当前不可用，未尝试重投。"
+msgstr "The channel is unavailable. No resend was attempted."
+
+msgid "渠道明确返回失败，可重新读取状态后决定是否重试。"
+msgstr "The channel explicitly reported failure. Reload the state before deciding whether to retry."
+
+msgid "登录后查看我的成长"
+msgstr "Log in to view my growth"
+
+msgid "等级进度"
+msgstr "Level progress"
+
+msgid "结果未知"
+msgstr "Unknown outcome"
+
+msgid "请填写原事件、渠道、当前状态与重试原因。"
+msgstr "Provide the original event, channel, current state and retry reason."
+
+msgid "通知投递状态暂不可读。"
+msgstr "Notification delivery state is temporarily unavailable."
+
+msgid "重试原因"
+msgstr "Retry reason"
+
+msgid "重试原消息"
+msgstr "Retry original message"
+
+msgid "显示本人经验、等级和今日签到状态。"
+msgstr "Show your XP, level and check-in status for today."
+
+msgid "显示本人当前任务进度，操作在完整成长面板完成。"
+msgstr "Show your current task progress. Use the full growth panel for actions."
+
+msgid "显示本人最近获得的成就。"
+msgstr "Show your recently earned achievements."
+
+msgid "显示本人的站内通知快照，不自动标为已读。"
+msgstr "Show a snapshot of your private notifications without marking them as read."
+
+msgid "按系列和前置任务查看本人当前成长路径。"
+msgstr "View your current growth path by series and prerequisites."
+
+msgid "成长组件设置"
+msgstr "Growth widget settings"
+
+msgid "标题（可选）"
+msgstr "Title (optional)"
+
+msgid "显示条数"
+msgstr "Items to display"
+
+msgid "显示密度"
+msgstr "Display density"
+
+msgid "舒适"
+msgstr "Comfortable"
+
+msgid "紧凑"
+msgstr "Compact"
+
+msgid "强调色（可选十六进制）"
+msgstr "Accent color (optional hex)"
+
+msgid "系列筛选（可选）"
+msgstr "Series filter (optional)"
+
+msgid "暂时无法生成统计导出。"
+msgstr "The statistics export is temporarily unavailable."
+
+msgid "暂时无法读取扩展活动统计。"
+msgstr "Extension activity statistics are temporarily unavailable."
+
+msgid "来源超过一百项，请缩短日期范围后导出。"
+msgstr "More than 100 sources match. Shorten the date range before exporting."
+
+msgid "没有导出统计的权限。"
+msgstr "You cannot export statistics."
+
+msgid "下载来源汇总 CSV"
+msgstr "Download provider summary CSV"
+
+msgid "仅展示前一百项来源；请缩短日期范围查看或导出。"
+msgstr "Only the first 100 sources are shown. Shorten the date range to inspect or export them."
+
+msgid "关联任务按各自当前版本与当前周期展示。包含其他来源或内置活动的任务是混合目标，不表示该来源单独带来完成；完成率不相加。"
+msgstr "Associated tasks use their own current version and cycle. Tasks containing other sources or built-in activities are mixed goals, not completion attributed to this source alone. Do not add rates together."
+
+msgid "其他或旧回执缺少原因"
+msgstr "Other or missing historical reason"
+
+msgid "原始活动"
+msgstr "Original activities"
+
+msgid "奖励暂停"
+msgstr "Reward hold"
+
+msgid "扩展活动明细"
+msgstr "Extension activity details"
+
+msgid "按可信来源分别汇总原始活动、撤销与净经验。人数已在每个来源内去重，不同来源人数不能相加。零经验原因只统计截至现在未撤销的零经验原回执；正向部分截断不算零经验。"
+msgstr "Aggregate original activities, reversals and net XP by trusted source. People are distinct within each source and cannot be added across sources. Zero reasons count only currently unreversed zero-XP originals; positive partial reductions are excluded."
+
+msgid "撤销"
+msgstr "Reversals"
+
+msgid "次数耗尽"
+msgstr "Quota exhausted"
+
+msgid "没有当前启用的关联任务。"
+msgstr "No currently enabled associated tasks."
+
+msgid "混合目标"
+msgstr "Mixed goal"
+
+msgid "经验上限"
+msgstr "XP cap"
+
+msgid "规则为零经验"
+msgstr "Zero-XP policy"
+
+msgid "零经验原因与关联任务"
+msgstr "Zero-XP reasons and associated tasks"
+
+msgid "选择完整面板页面后，组件才会显示跳转入口；签到、领取和通知偏好在完整面板操作。"
+msgstr "After selecting a full panel page, widgets display a link to it. Check-in, claims and notification preferences are handled in the full panel."
+
+msgid "第 %1$s 版"
+msgstr "Version %1$s"

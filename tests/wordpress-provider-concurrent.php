@@ -13,6 +13,19 @@ wp_set_current_user($admin->ID);
 $mode = getenv('WP_XP_TEST_MODE');
 $fixture_key = 'wp_xp_core_provider_race_fixture';
 global $wpdb;
+$register_sources = static function (int $uid): void {
+    wp_xp_core_register_activity_provider('race_fixture', [
+        'label' => 'Synthetic provider race',
+        'authorize' => static fn($user, $object, $context) => $user === $uid && $object === 99,
+        'revoke_authorize' => static fn($user, $object, $context) => $user === $uid &&
+            $object === 99,
+    ]);
+    wp_xp_core_register_activity_provider('quota_race', [
+        'label' => 'Quota race',
+        'authorize' => static fn($user, $object) => $user === $uid && $object === 99,
+        'revoke_authorize' => static fn($user, $object) => $user === $uid && $object === 99,
+    ]);
+};
 if ($mode === 'prepare') {
     if (get_option($fixture_key, false) !== false) {
         throw new RuntimeException('Race subject must be fresh');
@@ -47,6 +60,44 @@ if ($mode === 'prepare') {
     ) {
         throw new RuntimeException('Race policy unavailable');
     }
+    $register_sources((int) $uid);
+    $original_tasks = WP_XP_Core_Achievements::definitions();
+    $tasks = [];
+    foreach (
+        [
+            'record' => ['race_fixture', 1],
+            'quota' => ['quota_race', 2],
+            'pending' => ['quota_race', 3],
+        ]
+        as $name => [$provider, $count]
+    ) {
+        $saved = WP_XP_Core_Achievements::save(
+            [
+                'id' => '',
+                'title' => 'Synthetic concurrent provider task ' . $name,
+                'description' => '',
+                'icon' => '★',
+                'type' => 'automatic',
+                'period' => 'once',
+                'enabled' => true,
+                'reward_xp' => 0,
+                'steps' => [
+                    [
+                        'kind' => 'provider_reward',
+                        'provider_id' => $provider,
+                        'mode' => 'events',
+                        'count' => $count,
+                    ],
+                ],
+            ],
+            wp_create_nonce('wp_xp_core_achievements'),
+            WP_XP_Core_Achievements::revision(),
+        );
+        if (is_wp_error($saved)) {
+            throw new RuntimeException('Concurrent provider task unavailable');
+        }
+        $tasks[$name] = $saved['id'];
+    }
     $audit = WP_XP_Core_Management::audit_history();
     if (is_wp_error($audit)) {
         throw new RuntimeException('Race audit unavailable');
@@ -54,6 +105,8 @@ if ($mode === 'prepare') {
     $fixture = [
         'uid' => (int) $uid,
         'rules' => $rules,
+        'original_tasks' => $original_tasks,
+        'tasks' => $tasks,
         'hold_revision' => WP_XP_Core_Reward_Controls::revision((int) $uid),
         'audit_before' => count(
             array_filter($audit, static fn($row) => $row['action'] === 'reward_hold'),
@@ -70,15 +123,7 @@ if (!is_array($fixture) || !get_userdata($fixture['uid'])) {
     throw new RuntimeException('Race marker required');
 }
 $uid = $fixture['uid'];
-wp_xp_core_register_activity_provider('race_fixture', [
-    'label' => 'Synthetic provider race',
-    'authorize' => static fn($user, $object, $context) => $user === $uid && $object === 99,
-    'revoke_authorize' => static fn($user, $object, $context) => $user === $uid && $object === 99,
-]);
-wp_xp_core_register_activity_provider('quota_race', [
-    'label' => 'Quota race',
-    'authorize' => static fn($user, $object) => $user === $uid && $object === 99,
-]);
+$register_sources((int) $uid);
 wp_xp_core_register_notification_channel('race_channel', [
     'label' => 'Race channel',
     'available' => static fn() => true,
@@ -111,6 +156,18 @@ if (in_array($mode, ['record', 'revoke', 'quota', 'hold'], true)) {
             wp_create_nonce('wp_xp_core_manage'),
         ),
     };
+    if ($mode === 'quota' && !is_wp_error($result)) {
+        if (
+            !add_option(
+                'wp_xp_quota_identity_' . $result['event_id'],
+                'quota-' . getmypid(),
+                '',
+                false,
+            )
+        ) {
+            throw new RuntimeException('Synthetic quota identity marker unavailable');
+        }
+    }
     echo wp_json_encode(is_wp_error($result) ? ['error' => $result->get_error_code()] : $result);
     return;
 }
@@ -161,6 +218,60 @@ foreach ($quota as $row) {
         );
     }
 }
+$definitions = WP_XP_Core_Achievements::definitions();
+$task_progress = static fn($name) => WP_XP_Core_Achievements::progress(
+    $definitions[$fixture['tasks'][$name]],
+    $uid,
+);
+foreach (['record', 'quota'] as $name) {
+    $task_id = $fixture['tasks'][$name];
+    $key = 'task:' . $task_id . ':' . $definitions[$task_id]['version'] . ':once:' . $uid;
+    if (
+        (int) $wpdb->get_var(
+            $wpdb->prepare(
+                'SELECT COUNT(*) FROM ' .
+                    Reader_Experience::table() .
+                    " WHERE user_id=%d AND kind='task_complete' AND event_key=%s AND xp=0",
+                $uid,
+                $key,
+            ),
+        ) !== 1 ||
+        !$task_progress($name)['earned']
+    ) {
+        throw new RuntimeException(
+            'Concurrent provider source must grant exactly one zero XP task honor: ' . $name,
+        );
+    }
+}
+if (
+    $task_progress('record')['steps'][0]['current'] !== 0 ||
+    $task_progress('quota')['steps'][0]['current'] !== 2 ||
+    $task_progress('pending')['steps'][0]['current'] !== 2 ||
+    $task_progress('pending')['earned']
+) {
+    throw new RuntimeException(
+        'Concurrent provider progress must count valid zero receipts and exclude reversed originals',
+    );
+}
+// Reverse the zero-XP quota receipt after the original four-XP balance assertion.
+// Its task honor remains, while the still-unearned task loses that activity.
+$quota_identity = get_option('wp_xp_quota_identity_' . $quota[0]['id'], '');
+if (!is_string($quota_identity) || $quota_identity === '') {
+    throw new RuntimeException('Synthetic original quota identity required');
+}
+$reversed = wp_xp_core_revoke_activity('quota_race', $quota_identity, $uid, 99);
+if (
+    is_wp_error($reversed) ||
+    !$task_progress('quota')['earned'] ||
+    $task_progress('quota')['steps'][0]['current'] !== 1 ||
+    $task_progress('pending')['earned'] ||
+    $task_progress('pending')['steps'][0]['current'] !== 1 ||
+    (int) get_user_meta($uid, Reader_Experience::balance_meta(), true) !== 4
+) {
+    throw new RuntimeException(
+        'Quota reversal must retain earned honor and reduce unclaimed progress without changing balance',
+    );
+}
 $audit = WP_XP_Core_Management::audit_history();
 if (
     is_wp_error($audit) ||
@@ -181,6 +292,14 @@ if (
 ) {
     throw new RuntimeException('Original race policy restore failed');
 }
+foreach ($quota as $row) {
+    delete_option('wp_xp_quota_identity_' . $row['id']);
+}
+update_option(WP_XP_Core_Achievements::OPTION, $fixture['original_tasks'], false);
+WP_XP_Core_Achievements::clear_cache();
+if (WP_XP_Core_Achievements::definitions() !== $fixture['original_tasks']) {
+    throw new RuntimeException('Original race task definitions restore failed');
+}
 echo wp_json_encode([
     'checks' => [
         'Exactly one provider reward',
@@ -189,5 +308,9 @@ echo wp_json_encode([
         'Exactly one winning hold audit',
         'Winning hold is active',
         'Original policy restored',
+        'Concurrent duplicate source grants exactly one task honor',
+        'Concurrent positive and zero XP quota receipts grant exactly one task honor',
+        'Provider reversals retain earned honors and reduce unclaimed progress',
+        'Original task definitions restored',
     ],
 ]);

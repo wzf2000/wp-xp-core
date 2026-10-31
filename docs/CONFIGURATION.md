@@ -1,10 +1,10 @@
-<!-- wp-xp-core-version: 2.1.0 -->
+<!-- wp-xp-core-version: 2.2.0-rc.1 -->
 
 # 服务器配置与集成
 
 简体中文 · [English](CONFIGURATION.en.md) · [返回首页](../README.md) · [使用指南](GUIDE.md)
 
-本页面向集成开发者，描述 **2.1.0**；使用已发布版本时以其标签文档为准。**普通首次安装不需要外部配置：上传 1.4.0+ 安装包并启用即可。** 页面操作见[使用指南](GUIDE.md)。外部 JSON 只用于需要自定义存储或保留已有接入的高级部署。
+本页面向集成开发者，描述 **2.2.0-rc.1**；使用已发布版本时以其标签文档为准。**普通首次安装不需要外部配置：上传 1.4.0+ 安装包并启用即可。** 页面操作见[使用指南](GUIDE.md)。外部 JSON 只用于需要自定义存储或保留已有接入的高级部署。
 
 ## 默认安装
 
@@ -101,6 +101,10 @@ Companion 原子保存点赞总数与新用户记录，经验记账另属独立�
 
 个人历史、任务提交及审核状态按当前用户隔离；不要将带登录信息的个人响应用于公共缓存。额外签到奖励默认关闭，无 cron、全历史扫描或自动补发流程。前端初始个人信息由服务端生成，交互和分页由 JavaScript 增强。
 
+提供者步骤使用 `{kind: "provider_reward", provider_id: "course", mode: "events"|"objects"|"days", count: 1..1000}`，旧四类步骤的结构保持。`provider_id` 必须来自已注册来源，已保存任务可保留原有但暂缺的来源；新增任务或新模板不得引入未知来源。预览、保存和配置导入共用校验。提供者步骤拒绝 `post_ids`／`category_ids` 范围；对象计数只统计该来源的 `object_id>0`，不把它当作 WordPress 文章。
+
+进度与任务参与统计复用同一 SQL 资格谓词：用户、来源、`start_event_id`、日期／周期，以及不存在对应 `provider_revoke` 的原始 `provider_reward`。0 XP 有效回执计入；重复事件和已撤销原记录不计入未领取进度。来源是否加载不改变已有账本资格，读取失败须报错，不能视为空进度。提交后仅匹配相同来源的新回执触发任务处理，撤销使下一次读取反映有效活动；已获得的成就不级联撤销。无新存储、迁移、旧奖励重算或前端任意事件入口。
+
 `reward_xp` 为 0–1000000 整数，缺失按 0；变更建立新任务版本，已有成就不补奖。`image_id` 为 0 或有效的公开图片 attachment ID；只接受 JPEG/PNG/GIF/WebP/AVIF，父内容须公开无密码，读取时重新检查并回退字符。`category`／`series` 分别最多 40／60 字符，属于展示资料，不改变版本。授予事件保留展示与条件快照、原 XP，获取时间取原事件时间。
 
 自动／审核使用 `task_complete`，人工授予使用 `task_grant`；共享 `task:{id}:{version}:{period}:{user}` 幂等键，成就与奖励在一个事务提交。管理员 `WP_XP_Core_Achievements::manage()` 要求有效管理 nonce、目标用户权限、原因和 UUID 请求编号；授予还要求当前任务版本与周期、日期和前置条件。重复请求绑定规范化输入摘要，不能改目标或金额。所有奖励检查整数溢出；人工授予经验排除活动榜。
@@ -191,7 +195,17 @@ add_action('init', function () {
 wp_xp_core_record_activity('course', 'completion-123', $uid, $course_id, []);
 ```
 
-注册项仅含 label 与 authorize；不能在调用中指定 XP 或任意事件 kind。管理员在经验规则中显式启用提供者并保存 XP（0–1000000），默认关闭。规则 `providers` 为至多 20 个标识到 `{enabled, xp}` 的映射。回调必须严格返回 `true`，在锁内检查；context 不保存到账本。固定 `provider_reward` 使用提供者与稳定事件 ID 哈希幂等，复用 ID 改用户或对象拒绝；错误回滚且可重试。该来源属于首次活动，纳入日／周 gross 上限、来源统计、周／月活动榜和私人记录；不会作为自动任务步骤或反向触发任务循环。记录只保存提供者标识／名称及标准奖励／上限快照。
+注册项须有 label 与 authorize，可选字段见下方活动与通知接口；不能在调用中指定 XP 或任意事件 kind。管理员在经验规则中显式启用提供者并保存 XP（0–1000000），默认关闭。规则 `providers` 为至多 20 个标识到 `{enabled, xp}` 的映射。回调必须严格返回 `true`，在锁内检查；context 不保存到账本。固定 `provider_reward` 使用提供者与稳定事件 ID 哈希幂等，复用 ID 改用户或对象拒绝；错误回滚且可重试。该来源属于首次活动，纳入日／周 gross 上限、来源统计、周／月活动榜和私人记录；可以作为按来源区分的自动任务步骤；任务完成奖励本身不会反向触发提供者任务循环。记录只保存提供者标识／名称及标准奖励／上限快照。
+
+## 管理员奖励解释接口
+
+`WP_XP_Core_Reward_Inspector::inspect($input, $nonce)` 要求管理权限、`wp_xp_core_manage` nonce、系统就绪及目标用户权限。`{mode: "receipt", event_id}` 只读取原事件与白名单奖励快照；不返回 context、私人通知正文或管理员原因，不套用当前规则。`{mode: "simulate", user_id, kind, object_id, provider_id?, event?, score?}` 只模拟四类内置活动或 `provider_reward` 的新主体回执，活动日期使用当前经验时区。稳定扩展事件编号用于读取去重；分数仅是假设输入。内置对象按目标用户、归属与范围核对，真实请求和扩展权威资格仍待验证。
+
+输出包含 `checks`（通过／不满足／待验证／已有回执／零经验）、规则请求额、次数限制后、暂停后及 `hypothetical_xp`；`may_record` 为 false（已知不新增）、true（签到当前条件允许）或 null（存在未验证资格）。扩展的 `authorize`、`facts`、`available` 与通知 `deliver` 均不调用；清单 `capabilities($nonce)` 只检查注册元数据和已保存配置／任务引用。结果是当前非锁定观察，不承诺之后实际发奖。
+
+暂停 `Reward_Controls::evaluate()` 与经验上限 `Fairness::evaluate()` 为复用的纯计算，`Fairness::totals()` 只读当前 gross；真实 `apply()`／`cap()` 的事务要求保持。模拟不调用记账、保存或事务入口；查询失败返回 storage 错误，不当作空额度。原始暂停、额度、余额、任务、配置与历史规则均不改变。
+
+`Configuration::templates()` 为每个已注册来源生成稳定身份的 events／days 月度任务模板；默认 `enabled:false`、`reward_xp:0`，不改变来源政策。沿用既有模板预览、HMAC proof、revision 和显式 apply；新模板来源缺失时校验拒绝，不暗建来源、不补旧经验。
 
 ## 翻译、隐私与更新接口
 
@@ -257,6 +271,28 @@ wp_xp_core_register_notification_channel('example', [
 ]);
 ```
 
-最多十个渠道，稳定 ID 不可覆盖。回调只在新活动账本提交后尝试；当前用户 activity 偏好读取失败时不投递。回调异常／失败不影响经验，不自动重试，也不由相同事件重放。状态最多保留五十项，只有事件 ID、渠道、时间与受限错误码；不要把秘密或原始异常放入错误码。此接口不包含既有 task/review/level 消息，不包含邮件、webhook 或网络实现。
+最多十个渠道，稳定 ID 不可覆盖。回调只在新活动账本提交后尝试；当前用户 activity 偏好读取失败时不投递。回调异常／失败不影响经验，不自动重试，也不由相同事件重放。旧结果行只保留事件 ID、渠道、时间与受限错误码，继续只读兼容。新投递状态与显式重试的 revision、次数、操作人及原因保留见下方 “通知投递与显式重试”，不保存秘密、消息正文或原始异常；不要把这些内容放入错误码。此接口不包含既有 task/review/level 消息，不包含邮件、webhook 或网络实现。
 
 游戏适配只调用 `site_tools_game_activity_catalog()` 与 `site_tools_game_settled_receipt($run,$uid)`，使用 `site_tools_register_game_settled_observer()` 优先接收提交后事件。`event` 必须与权威 run 相同且 object_id 为 0，避免换 event 绕过去重。最多二十项 provider，超额游戏明确显示未注册；未装新游戏包不会影响插件独立使用。
+
+## 私人成长组件接口
+
+`WP_XP_Core_Widgets::render($type, $attributes)` 与短代码 `xp_summary`／`xp_tasks`／`xp_badges`／`xp_notifications`／`xp_path`、动态区块 `wp-xp-core/{summary,tasks,badges,notifications,path}` 共用渲染。要求当前用户 `read`、服务就绪及私人缓存响应；匿名仅登录入口。无目标用户参数。属性只有 `limit`（1–20，默认 5）、`density`（compact／comfortable）、`title`（纯文字 ≤80）、`accent`（#RGB／#RRGGBB），path 可加 `series`（精确匹配 ≤60）；不支持 HTML 或任意 CSS。
+
+个人任务、概览、通知投影只在当前请求缓存成功结果；按当前用户、子站编号与表前缀隔离；切用户、switch_blog、提交后事件、本人元数据与相关配置变更失效。读取失败不缓存为空。多个任务／成就／路径组件复用同一 personal 投影；通知组件只读既有 XP 私人消息，不遍历其他外部通知源，不提交已读，也不加载完整交互面板脚本。编辑器只显示静态说明。
+
+## 通知投递与显式重试
+
+`WP_XP_Core_Notification_Delivery::recent($nonce)` 合并读取旧 `wp_xp_core_channel_results` 与惰性创建的 `wp_xp_core_channel_delivery`，最多展示 50 项。新 option 保存 ≤50 个 event/channel 状态、revision、次数、管理员原因与 actor、顺序和淘汰边界；旧格式不迁移、不改写。`retry({event_id,channel,revision,reason}, $nonce)` 要求管理权限、`wp_xp_core_manage` nonce、原接收人权限、原 `activity_message/activity_channels` 快照、当前本人 activity 偏好及渠道可用。无需当前 provider 代码或当前文案；不调用 record、provider 或奖励保存入口。
+
+独立命名锁覆盖状态检查与调用，revision 拒绝同时重试同一失败状态。调用前持久保存 unknown；true 记 delivered，明确 false／WP_Error 记 failed，其余结果、异常、中断或终态写失败保持 unknown。只有当前明确 failed 可以显式再试；delivered／unknown 不允许。淘汰后的旧消息不重新投递，仍保留的明确失败行不受淘汰边界阻挡。外部回调可在提交后记录另一个可信事件；终态合并最新持久状态，内层淘汰的外层条目不会复活。渠道必须以相同 event_id 幂等，不保证跨系统严格一次。默认提交后投递的锁／存储异常被隔离，不阻断后续任务观察者，也不自动重试或新增 cron。
+
+## 具体来源聚合与汇总导出
+
+`Insights::provider_sources($input)` 使用与 sources 相同的 week／month／custom（≤366 天）日期校验，通过一次有界 GROUP BY 按 `detail.provider` 汇总，最多 100 行并返回 more。活动／撤销数含 0 XP，人数在来源内去重，正／负／净经验按所选时段的真实事件统计；不输出用户或个人事件。有效零经验原因只分类未撤销的 `provider_reward` 且 `xp=0`，优先级为额度、暂停、上限、规则零 XP、其他；不将正向部分截断误计为零，不用当前配置推断旧原因。撤销资格判断与任务步骤共用原始回执谓词。
+
+来源关联当前启用任务的既有 task_rates；混合来源标记 mixed_sources，不作单来源归因。页面复用已获取的 task_rates；CSV 内部跳过任务统计和映射，仅执行相同来源聚合。`provider_csv($input,$nonce)` 要求 manage_options 及 wp_xp_core_insights_export nonce，超过 100 个来源拒绝导出；后台通过受保护的 admin_post_wp_xp_core_provider_csv 下载。固定列仅含来源、日期和汇总数字，UTF-8 BOM、标准 CSV 引号／换行、文本公式与控制字符处理，数字负值保持数字。
+
+每次 personal () 内按 provider_id 复用一次 available 观察，包含 false 和异常结果；下一次调用重新观察，不做跨请求或跨用户缓存。匿名前台保留 reader_experience 已注册句柄、ReaderExperience、WPXPI18n／WPXPLocale 和 CSS，通过无 src 句柄输出兼容 inline，省略不需要的 app.js 网络资源；登录行为与原配置保持。小组件动态块筛选业务属性后调用严格渲染器，允许 WordPress metadata，短代码仍不接受目标 user_id。未配置有效完整面板时不生成指向自身的完整面板链接；原 URL helper 的回退契约保持。
+
+可选 scale 沿原 1 万／5 万行读负载核对来源聚合和 CSV 查询数；合成种子不代表真实奖励。查询、统计和导出不建表、索引、统计缓存或定时任务；来源和任务读取失败均返回错误。

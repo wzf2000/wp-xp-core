@@ -1,5 +1,5 @@
 msgid ""
-msgstr "Project-Id-Version: WP XP Core 2.0.0-rc.3\nContent-Type: text/plain; charset=UTF-8\n"
+msgstr "Project-Id-Version: WP XP Core 2.2.0-rc.1\nContent-Type: text/plain; charset=UTF-8\n"
 
 msgid " · +%1$s 经验"
 msgstr ""
@@ -2463,4 +2463,487 @@ msgid "配置可选活动与通知"
 msgstr ""
 
 msgid "预览规则与通知"
+msgstr ""
+
+msgid "请选择已注册的活动来源。"
+msgstr ""
+
+msgid "扩展活动不支持文章或分类范围。"
+msgstr ""
+
+msgid "只有扩展活动可以指定来源。"
+msgstr ""
+
+msgid "扩展活动"
+msgstr ""
+
+msgid "请选择活动来源"
+msgstr ""
+
+msgid "（来源暂不可用）"
+msgstr ""
+
+msgid "活动来源暂不可用，已有进度与成就保留。"
+msgstr ""
+
+msgid " · %1$s：还需 %2$s %3$s"
+msgstr ""
+
+msgid "不同对象"
+msgstr ""
+
+msgid "个不同对象"
+msgstr ""
+
+msgid "三天参与"
+msgstr ""
+
+msgid "三次活动"
+msgstr ""
+
+msgid "事件编号"
+msgstr ""
+
+msgid "仅模拟当前主体回执，不包含签到阶段、作者里程碑或任务派生奖励；实际记账会重新检查。"
+msgstr ""
+
+msgid "仅累计启用后由所选可信来源记录的新活动。"
+msgstr ""
+
+msgid "今日已记录次数"
+msgstr ""
+
+msgid "今日次数尚未用完。"
+msgstr ""
+
+msgid "今日次数已用完，不新增活动回执。"
+msgstr ""
+
+msgid "今日次数已用完，合法新活动仍可保留零经验回执。"
+msgstr ""
+
+msgid "依赖缺失"
+msgstr ""
+
+msgid "假设分数（可选）"
+msgstr ""
+
+msgid "假设实际经验"
+msgstr ""
+
+msgid "假设服务端资格满足；未调用来源验证或读取权威发生时间。"
+msgstr ""
+
+msgid "内置活动留空"
+msgstr ""
+
+msgid "分数仅为模拟输入，须由来源核实。"
+msgstr ""
+
+msgid "原回执未保存"
+msgstr ""
+
+msgid "原实际经验"
+msgstr ""
+
+msgid "原每周经验上限"
+msgstr ""
+
+msgid "原每日次数上限"
+msgstr ""
+
+msgid "原每日经验上限"
+msgstr ""
+
+msgid "原活动已撤销，历史回执保留。"
+msgstr ""
+
+msgid "原请求经验"
+msgstr ""
+
+msgid "只读模拟"
+msgstr ""
+
+msgid "只读模拟，不提交活动或奖励。扩展资格、真实阅读停留与新建请求仍须由实际来源验证。"
+msgstr ""
+
+msgid "只读结果，未记录奖励。"
+msgstr ""
+
+msgid "对象编号（签到填 0）"
+msgstr ""
+
+msgid "已接入并启用"
+msgstr ""
+
+msgid "已接入，配置关闭"
+msgstr ""
+
+msgid "已有相同活动回执，不会新增经验。"
+msgstr ""
+
+msgid "已有评论回执的恢复或补偿不在新活动模拟范围，请解释原回执并查看对应补偿记录。"
+msgstr ""
+
+msgid "已注册表示接口已接入；运行资格待来源验证，此清单不调用来源回调。"
+msgstr ""
+
+msgid "当前条件下不会新增回执。"
+msgstr ""
+
+msgid "当前条件允许记录，实际请求仍会重新检查。"
+msgstr ""
+
+msgid "当前来源启用边界"
+msgstr ""
+
+msgid "当前状态"
+msgstr ""
+
+msgid "扩展活动输入"
+msgstr ""
+
+msgid "按原回执快照解释；未保存的事实显示为空，不用当前规则重算。"
+msgstr ""
+
+msgid "按目标用户的对象访问资格、归属与内容范围核对。"
+msgstr ""
+
+msgid "暂停检查后"
+msgstr ""
+
+msgid "暂时无法解释或模拟奖励，请重试。"
+msgstr ""
+
+msgid "未填写稳定活动编号，无法核对是否重复。"
+msgstr ""
+
+msgid "未验证真实阅读停留或新建请求，只模拟所选主体回执。"
+msgstr ""
+
+msgid "本次解释结果"
+msgstr ""
+
+msgid "来源发生时间须晚于当前服务器边界，此处尚未验证。"
+msgstr ""
+
+msgid "来源已注册，运行资格尚未由来源验证。"
+msgstr ""
+
+msgid "来源未加载。"
+msgstr ""
+
+msgid "来源缺少服务器边界，请先由管理员保存活动规则。"
+msgstr ""
+
+msgid "查看活动接入清单"
+msgstr ""
+
+msgid "查看记账事实"
+msgstr ""
+
+msgid "模拟一条新活动"
+msgstr ""
+
+msgid "次数限制后"
+msgstr ""
+
+msgid "活动接入与奖励解释"
+msgstr ""
+
+msgid "活动日期"
+msgstr ""
+
+msgid "活动编号无效。"
+msgstr ""
+
+msgid "活动记录已启用。"
+msgstr ""
+
+msgid "活动记录未启用。"
+msgstr ""
+
+msgid "稳定活动编号（可选）"
+msgstr ""
+
+msgid "签到的对象编号须为零。"
+msgstr ""
+
+msgid "经验余额将溢出，不能记账。"
+msgstr ""
+
+msgid "规则经验"
+msgstr ""
+
+msgid "解释回执"
+msgstr ""
+
+msgid "解释已有回执"
+msgstr ""
+
+msgid "请填写有效的用户、对象或事件编号。"
+msgstr ""
+
+msgid "资格尚未验证，以上经验仅为假设计算。"
+msgstr ""
+
+msgid "通过"
+msgstr ""
+
+msgid "不满足"
+msgstr ""
+
+msgid "待验证"
+msgstr ""
+
+msgid "已有回执"
+msgstr ""
+
+msgid "零经验"
+msgstr ""
+
+msgid "原次数额度已耗尽"
+msgstr ""
+
+msgid "原奖励处于暂停期"
+msgstr ""
+
+msgid "原经验受日周上限截断"
+msgstr ""
+
+msgid "今日尚未签到"
+msgstr ""
+
+msgid "前置任务："
+msgstr ""
+
+msgid "原活动没有可重试的渠道消息快照。"
+msgstr ""
+
+msgid "原消息已投递；经验与规则保持不变。"
+msgstr ""
+
+msgid "只能重试明确失败的最近消息，成功或结果未知的消息不能重投。"
+msgstr ""
+
+msgid "只重试最近明确失败的原消息，不重新发奖。成功、异常或中断后结果未知的投递不能重投；渠道须按相同事件编号幂等处理。"
+msgstr ""
+
+msgid "可继续"
+msgstr ""
+
+msgid "已完成"
+msgstr ""
+
+msgid "已投递"
+msgstr ""
+
+msgid "已撤销"
+msgstr ""
+
+msgid "已读"
+msgstr ""
+
+msgid "成长内容暂时无法读取，请重试。"
+msgstr ""
+
+msgid "成长组件设置无效。"
+msgstr ""
+
+msgid "我的任务"
+msgstr ""
+
+msgid "我的成就"
+msgstr ""
+
+msgid "我的成长概览"
+msgstr ""
+
+msgid "我的成长路径"
+msgstr ""
+
+msgid "我的通知"
+msgstr ""
+
+msgid "打开完整成长面板"
+msgstr ""
+
+msgid "投递未能完成；若结果未知，请核对渠道，勿直接重投。"
+msgstr ""
+
+msgid "投递状态已改变，请重新读取后再操作。"
+msgstr ""
+
+msgid "投递结果未知，请先核对渠道；不能直接重投。"
+msgstr ""
+
+msgid "按当前任务版本与周期显示。"
+msgstr ""
+
+msgid "明确失败"
+msgstr ""
+
+msgid "暂无可展示的任务。"
+msgstr ""
+
+msgid "暂无已获成就。"
+msgstr ""
+
+msgid "暂无渠道投递记录。"
+msgstr ""
+
+msgid "暂无通知。"
+msgstr ""
+
+msgid "最近渠道结果与手动重试"
+msgstr ""
+
+msgid "未解锁"
+msgstr ""
+
+msgid "未读"
+msgstr ""
+
+msgid "本人已关闭活动通知，未尝试投递。"
+msgstr ""
+
+msgid "没有查看通知投递的权限。"
+msgstr ""
+
+msgid "没有管理通知投递的权限。"
+msgstr ""
+
+msgid "渠道"
+msgstr ""
+
+msgid "渠道不属于原活动消息快照。"
+msgstr ""
+
+msgid "渠道当前不可用，未尝试重投。"
+msgstr ""
+
+msgid "渠道明确返回失败，可重新读取状态后决定是否重试。"
+msgstr ""
+
+msgid "登录后查看我的成长"
+msgstr ""
+
+msgid "等级进度"
+msgstr ""
+
+msgid "结果未知"
+msgstr ""
+
+msgid "请填写原事件、渠道、当前状态与重试原因。"
+msgstr ""
+
+msgid "通知投递状态暂不可读。"
+msgstr ""
+
+msgid "重试原因"
+msgstr ""
+
+msgid "重试原消息"
+msgstr ""
+
+msgid "显示本人经验、等级和今日签到状态。"
+msgstr ""
+
+msgid "显示本人当前任务进度，操作在完整成长面板完成。"
+msgstr ""
+
+msgid "显示本人最近获得的成就。"
+msgstr ""
+
+msgid "显示本人的站内通知快照，不自动标为已读。"
+msgstr ""
+
+msgid "按系列和前置任务查看本人当前成长路径。"
+msgstr ""
+
+msgid "成长组件设置"
+msgstr ""
+
+msgid "标题（可选）"
+msgstr ""
+
+msgid "显示条数"
+msgstr ""
+
+msgid "显示密度"
+msgstr ""
+
+msgid "舒适"
+msgstr ""
+
+msgid "紧凑"
+msgstr ""
+
+msgid "强调色（可选十六进制）"
+msgstr ""
+
+msgid "系列筛选（可选）"
+msgstr ""
+
+msgid "暂时无法生成统计导出。"
+msgstr ""
+
+msgid "暂时无法读取扩展活动统计。"
+msgstr ""
+
+msgid "来源超过一百项，请缩短日期范围后导出。"
+msgstr ""
+
+msgid "没有导出统计的权限。"
+msgstr ""
+
+msgid "下载来源汇总 CSV"
+msgstr ""
+
+msgid "仅展示前一百项来源；请缩短日期范围查看或导出。"
+msgstr ""
+
+msgid "关联任务按各自当前版本与当前周期展示。包含其他来源或内置活动的任务是混合目标，不表示该来源单独带来完成；完成率不相加。"
+msgstr ""
+
+msgid "其他或旧回执缺少原因"
+msgstr ""
+
+msgid "原始活动"
+msgstr ""
+
+msgid "奖励暂停"
+msgstr ""
+
+msgid "扩展活动明细"
+msgstr ""
+
+msgid "按可信来源分别汇总原始活动、撤销与净经验。人数已在每个来源内去重，不同来源人数不能相加。零经验原因只统计截至现在未撤销的零经验原回执；正向部分截断不算零经验。"
+msgstr ""
+
+msgid "撤销"
+msgstr ""
+
+msgid "次数耗尽"
+msgstr ""
+
+msgid "没有当前启用的关联任务。"
+msgstr ""
+
+msgid "混合目标"
+msgstr ""
+
+msgid "经验上限"
+msgstr ""
+
+msgid "规则为零经验"
+msgstr ""
+
+msgid "零经验原因与关联任务"
+msgstr ""
+
+msgid "选择完整面板页面后，组件才会显示跳转入口；签到、领取和通知偏好在完整面板操作。"
+msgstr ""
+
+msgid "第 %1$s 版"
 msgstr ""

@@ -179,6 +179,20 @@ try {
                 $n = $seeded + $j;
                 $index = $n % 10;
                 $kind = $kinds[$n % 5];
+                if ($kind === 'manual_adjust') {
+                    $kind = 'provider_reward';
+                }
+                $zero_provider = $kind === 'provider_reward' && intdiv($n, 5) % 3 === 0;
+                $provider_detail =
+                    $kind === 'provider_reward'
+                        ? wp_json_encode([
+                            'provider' => $n % 20 < 10 ? 'scale_fixture_one' : 'scale_fixture_two',
+                            'provider_quota' => [
+                                'requested_xp' => 1,
+                                'exhausted' => $zero_provider,
+                            ],
+                        ])
+                        : '{}';
                 $object =
                     $kind === 'comment'
                         ? $comments[$index]
@@ -193,9 +207,9 @@ try {
                     $kind,
                     $object,
                     $day,
-                    1,
+                    $zero_provider ? 0 : 1,
                     time(),
-                    '{}',
+                    $provider_detail,
                 );
             }
             if (
@@ -234,6 +248,49 @@ try {
             'sources',
             static fn() => WP_XP_Core_Insights::sources(['period' => 'month']),
         );
+        $provider_queries = [];
+        $observe_providers = static function ($sql) use (&$provider_queries) {
+            if (str_contains($sql, 'GROUP BY provider ORDER BY provider')) {
+                $provider_queries[] = $sql;
+            }
+            return $sql;
+        };
+        add_filter('query', $observe_providers);
+        try {
+            $metrics['provider_aggregate'] = $measure('provider_sources', static function () {
+                $data = WP_XP_Core_Insights::provider_sources(['period' => 'month'], false);
+                if (is_wp_error($data)) {
+                    return $data;
+                }
+                $rows = array_column($data['rows'], null, 'provider');
+                if (
+                    !isset($rows['scale_fixture_one'], $rows['scale_fixture_two']) ||
+                    count($rows) > 100 ||
+                    $rows['scale_fixture_one']['activity_count'] < 1 ||
+                    $rows['scale_fixture_two']['activity_count'] < 1
+                ) {
+                    throw new RuntimeException(
+                        'Scale provider aggregates differ or exceed their bound.',
+                    );
+                }
+                return $data;
+            });
+        } finally {
+            remove_filter('query', $observe_providers);
+        }
+        if (count($provider_queries) !== 1 || $metrics['provider_aggregate']['queries'] > 3) {
+            throw new RuntimeException('Scale providers must share one aggregate query.');
+        }
+        $metrics['provider_csv'] = $measure(
+            'provider_csv',
+            static fn() => WP_XP_Core_Insights::provider_csv(
+                ['period' => 'month'],
+                wp_create_nonce('wp_xp_core_insights_export'),
+            ),
+        );
+        if ($metrics['provider_csv']['queries'] > 3) {
+            throw new RuntimeException('Aggregate export must not scan task participants.');
+        }
         $metrics['trends'] = $measure(
             'trends',
             static fn() => WP_XP_Core_Insights::trends(['period' => 'month']),

@@ -426,10 +426,10 @@ $verify(
         json_decode($event['detail'], true)['activity_cap']['requested_xp'] === 3,
 );
 $verify(
-    'Provider source is included in public activity and cap kinds',
+    'Provider source is included in public activity, cap and source-specific task kinds',
     in_array('provider_reward', WP_XP_Core_Insights::ACTIVITY_KINDS, true) &&
         in_array('provider_reward', WP_XP_Core_Fairness::FIRST_REWARD_KINDS, true) &&
-        !in_array('provider_reward', WP_XP_Core_Achievements::KINDS, true),
+        in_array('provider_reward', WP_XP_Core_Achievements::KINDS, true),
 );
 $verify(
     'Provider cannot reassign an existing event',

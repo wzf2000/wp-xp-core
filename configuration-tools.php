@@ -473,7 +473,7 @@ final class WP_XP_Core_Configuration
     }
     public static function templates(): array
     {
-        return [
+        $templates = [
             'reading' => [
                 'id' => 't_0000000000000001',
                 'title' => wp_xp_core_t('阅读起步'),
@@ -528,6 +528,47 @@ final class WP_XP_Core_Configuration
                 'steps' => [['kind' => 'checkin', 'count' => 3, 'mode' => 'days']],
             ],
         ];
+        foreach (WP_XP_Core_Providers::definitions() as $provider => $definition) {
+            foreach (['events', 'days'] as $mode) {
+                $key = 'provider_' . $provider . '_' . $mode;
+                $templates[$key] = [
+                    'id' =>
+                        't_' .
+                        substr(
+                            hash('sha256', 'provider-template:' . $provider . ':' . $mode),
+                            0,
+                            16,
+                        ),
+                    'title' =>
+                        mb_substr(
+                            preg_replace(
+                                '/[<>\x00-\x1f]/u',
+                                '',
+                                wp_strip_all_tags($definition['label']),
+                            ),
+                            0,
+                            35,
+                        ) .
+                        ' · ' .
+                        ($mode === 'events' ? wp_xp_core_t('三次活动') : wp_xp_core_t('三天参与')),
+                    'description' => wp_xp_core_t('仅累计启用后由所选可信来源记录的新活动。'),
+                    'icon' => '◇',
+                    'type' => 'automatic',
+                    'period' => 'month',
+                    'enabled' => false,
+                    'reward_xp' => 0,
+                    'steps' => [
+                        [
+                            'kind' => 'provider_reward',
+                            'provider_id' => $provider,
+                            'mode' => $mode,
+                            'count' => 3,
+                        ],
+                    ],
+                ];
+            }
+        }
+        return $templates;
     }
     public static function template_document(string $name): string
     {

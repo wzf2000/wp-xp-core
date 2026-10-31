@@ -188,7 +188,15 @@ final class WP_XP_Core_Management_UI
                     ) .
                     '</pre></details>';
             }
-            echo '</td></tr>';
+            echo '<form method="post" action="' .
+                esc_url(self::url(['view' => 'diagnostics'])) .
+                '#xp-reward-inspector">';
+            self::hidden('inspect_reward');
+            echo '<input type="hidden" name="inspection[mode]" value="receipt"><input type="hidden" name="inspection[event_id]" value="' .
+                (int) $item['id'] .
+                '"><button class="button button-small">' .
+                esc_html(wp_xp_core_t('解释回执')) .
+                '</button></form></td></tr>';
         }
         echo '</tbody></table></div>';
     }
@@ -239,7 +247,7 @@ final class WP_XP_Core_Management_UI
                     ),
                     $nonce,
                 ),
-                'measure' => null,
+                'measure', 'inspect_reward' => null,
                 'adjust' => WP_XP_Core_Management::adjust(
                     array_intersect_key(
                         $input,
@@ -437,8 +445,273 @@ final class WP_XP_Core_Management_UI
             esc_html(wp_xp_core_t('记录撤销')) .
             '</button></form></section></div>';
     }
+    private static function reward_inspector(): void
+    {
+        $draft = is_array($_POST['inspection'] ?? null) ? wp_unslash($_POST['inspection']) : [];
+        $field = static fn($name, $fallback = '') => is_scalar($draft[$name] ?? null)
+            ? mb_substr((string) $draft[$name], 0, 191)
+            : $fallback;
+        $nonce = wp_create_nonce('wp_xp_core_manage');
+        $capabilities = WP_XP_Core_Reward_Inspector::capabilities($nonce);
+        echo '<section class="xp-card" id="xp-reward-inspector"><h2>' .
+            esc_html(wp_xp_core_t('活动接入与奖励解释')) .
+            '</h2>';
+        if (is_wp_error($capabilities)) {
+            self::message($capabilities);
+        } else {
+            echo '<details><summary>' .
+                esc_html(wp_xp_core_t('查看活动接入清单')) .
+                '</summary><p>' .
+                esc_html($capabilities['note']) .
+                '</p><table class="widefat"><thead><tr><th>' .
+                esc_html(wp_xp_core_t('活动来源')) .
+                '</th><th>' .
+                esc_html(wp_xp_core_t('当前状态')) .
+                '</th></tr></thead><tbody>';
+            foreach ($capabilities['rows'] as $row) {
+                $status = !$row['registered']
+                    ? wp_xp_core_t('依赖缺失')
+                    : ($row['enabled']
+                        ? wp_xp_core_t('已接入并启用')
+                        : wp_xp_core_t('已接入，配置关闭'));
+                echo '<tr><td>' .
+                    esc_html($row['label']) .
+                    '</td><td>' .
+                    esc_html($status) .
+                    '</td></tr>';
+            }
+            echo '</tbody></table></details>';
+        }
+        echo '<h3>' .
+            esc_html(wp_xp_core_t('解释已有回执')) .
+            '</h3><form method="post" class="xp-filter-form">';
+        self::hidden('inspect_reward');
+        echo '<input type="hidden" name="inspection[mode]" value="receipt"><label>' .
+            esc_html(wp_xp_core_t('事件编号')) .
+            '<input name="inspection[event_id]" type="number" min="1" value="' .
+            esc_attr($field('event_id')) .
+            '" required></label> <button class="button">' .
+            esc_html(wp_xp_core_t('解释回执')) .
+            '</button></form><h3>' .
+            esc_html(wp_xp_core_t('模拟一条新活动')) .
+            '</h3><p>' .
+            esc_html(
+                wp_xp_core_t(
+                    '只读模拟，不提交活动或奖励。扩展资格、真实阅读停留与新建请求仍须由实际来源验证。',
+                ),
+            ) .
+            '</p><form method="post" class="xp-management-form" data-xp-reward-simulation>';
+        self::hidden('inspect_reward');
+        echo '<input type="hidden" name="inspection[mode]" value="simulate"><label>' .
+            esc_html(wp_xp_core_t('用户编号')) .
+            '<input name="inspection[user_id]" type="number" min="1" value="' .
+            esc_attr($field('user_id')) .
+            '" required></label><label>' .
+            esc_html(wp_xp_core_t('参与活动')) .
+            '<select name="inspection[kind]" data-xp-inspection-kind>';
+        foreach (WP_XP_Core_Achievements::KINDS as $kind) {
+            echo '<option value="' .
+                esc_attr($kind) .
+                '"' .
+                selected($field('kind', 'checkin'), $kind, false) .
+                '>' .
+                esc_html(
+                    $kind === 'provider_reward'
+                        ? wp_xp_core_t('扩展活动')
+                        : WP_XP_Core_Achievements::step_label(['kind' => $kind]),
+                ) .
+                '</option>';
+        }
+        echo '</select></label><label>' .
+            esc_html(wp_xp_core_t('对象编号（签到填 0）')) .
+            '<input name="inspection[object_id]" type="number" min="0" value="' .
+            esc_attr($field('object_id', '0')) .
+            '" required></label><details data-xp-inspection-source><summary>' .
+            esc_html(wp_xp_core_t('扩展活动输入')) .
+            '</summary><label>' .
+            esc_html(wp_xp_core_t('活动来源')) .
+            '<select name="inspection[provider_id]"><option value="">' .
+            esc_html(wp_xp_core_t('内置活动留空')) .
+            '</option>';
+        if (!is_wp_error($capabilities)) {
+            foreach ($capabilities['rows'] as $row) {
+                if ($row['eligibility'] === 'unverified') {
+                    echo '<option value="' .
+                        esc_attr($row['id']) .
+                        '"' .
+                        selected($field('provider_id'), $row['id'], false) .
+                        ' data-score="' .
+                        (isset(WP_XP_Core_Providers::definitions()[$row['id']]['fields'])
+                            ? '1'
+                            : '0') .
+                        '">' .
+                        esc_html($row['label']) .
+                        '</option>';
+                }
+            }
+        }
+        echo '</select></label><label>' .
+            esc_html(wp_xp_core_t('稳定活动编号（可选）')) .
+            '<input name="inspection[event]" maxlength="191" value="' .
+            esc_attr($field('event')) .
+            '"></label><label data-xp-inspection-score>' .
+            esc_html(wp_xp_core_t('假设分数（可选）')) .
+            '<input name="inspection[score]" type="number" min="0" value="' .
+            esc_attr($field('score')) .
+            '"></label></details><button class="button">' .
+            esc_html(wp_xp_core_t('只读模拟')) .
+            '</button></form>';
+        if (
+            $_SERVER['REQUEST_METHOD'] === 'POST' &&
+            ($_POST['operation'] ?? '') === 'inspect_reward'
+        ) {
+            $input = wp_unslash($_POST['inspection'] ?? []);
+            $result = WP_XP_Core_Reward_Inspector::inspect(
+                is_array($input) ? $input : [],
+                $_POST['_wpnonce'] ?? '',
+            );
+            if (is_wp_error($result)) {
+                self::message($result);
+            } else {
+                echo '<p role="status">' .
+                    esc_html(wp_xp_core_t('只读结果，未记录奖励。')) .
+                    '</p><h3>' .
+                    esc_html(wp_xp_core_t('本次解释结果')) .
+                    '</h3><p>' .
+                    esc_html($result['note']) .
+                    '</p><table class="widefat"><tbody>';
+                $fields =
+                    $result['mode'] === 'receipt'
+                        ? [
+                            'event_id' => wp_xp_core_t('事件编号'),
+                            'local_day' => wp_xp_core_t('活动日期'),
+                            'actual_xp' => wp_xp_core_t('原实际经验'),
+                        ]
+                        : [
+                            'local_day' => wp_xp_core_t('活动日期'),
+                            'requested_xp' => wp_xp_core_t('规则经验'),
+                            'after_quota' => wp_xp_core_t('次数限制后'),
+                            'after_hold' => wp_xp_core_t('暂停检查后'),
+                            'hypothetical_xp' => wp_xp_core_t('假设实际经验'),
+                        ];
+                foreach ($fields as $key => $label) {
+                    echo '<tr><th>' .
+                        esc_html($label) .
+                        '</th><td>' .
+                        esc_html((string) $result[$key]) .
+                        '</td></tr>';
+                }
+                echo '</tbody></table>';
+                if ($result['mode'] === 'receipt') {
+                    $snapshots = $result['snapshots'];
+                    echo '<ul>';
+                    foreach (
+                        [
+                            wp_xp_core_t('原请求经验') =>
+                                $snapshots['provider_quota']['requested_xp'] ??
+                                ($snapshots['reward_hold']['requested_xp'] ??
+                                    ($snapshots['activity_cap']['requested_xp'] ?? null)),
+                            wp_xp_core_t('原每日次数上限') =>
+                                $snapshots['provider_quota']['limit'] ?? null,
+                            wp_xp_core_t('原每日经验上限') =>
+                                $snapshots['activity_cap']['daily_limit'] ?? null,
+                            wp_xp_core_t('原每周经验上限') =>
+                                $snapshots['activity_cap']['weekly_limit'] ?? null,
+                        ]
+                        as $label => $value
+                    ) {
+                        echo '<li>' .
+                            esc_html($label) .
+                            ': ' .
+                            esc_html(
+                                $value === null ? wp_xp_core_t('原回执未保存') : (string) $value,
+                            ) .
+                            '</li>';
+                    }
+                    foreach (
+                        [
+                            wp_xp_core_t('原次数额度已耗尽') =>
+                                $snapshots['provider_quota']['exhausted'] ?? null,
+                            wp_xp_core_t('原奖励处于暂停期') =>
+                                $snapshots['reward_hold']['held'] ?? null,
+                            wp_xp_core_t('原经验受日周上限截断') =>
+                                $snapshots['activity_cap']['truncated'] ?? null,
+                        ]
+                        as $label => $value
+                    ) {
+                        if ($value === true) {
+                            echo '<li>' . esc_html($label) . '</li>';
+                        }
+                    }
+                    if ($result['reversal']) {
+                        echo '<li>' .
+                            esc_html(wp_xp_core_t('原活动已撤销，历史回执保留。')) .
+                            ' #' .
+                            (int) $result['reversal']['event_id'] .
+                            '</li>';
+                    }
+                    echo '</ul>';
+                }
+                if ($result['mode'] === 'simulate') {
+                    echo '<p>' .
+                        esc_html(
+                            $result['may_record'] === false
+                                ? wp_xp_core_t('当前条件下不会新增回执。')
+                                : ($result['may_record'] === true
+                                    ? wp_xp_core_t('当前条件允许记录，实际请求仍会重新检查。')
+                                    : wp_xp_core_t('资格尚未验证，以上经验仅为假设计算。')),
+                        ) .
+                        '</p><ul>';
+                    $states = [
+                        'pass' => wp_xp_core_t('通过'),
+                        'blocked' => wp_xp_core_t('不满足'),
+                        'unknown' => wp_xp_core_t('待验证'),
+                        'duplicate' => wp_xp_core_t('已有回执'),
+                        'zero' => wp_xp_core_t('零经验'),
+                    ];
+                    foreach ($result['checks'] as $check) {
+                        echo '<li><strong>' .
+                            esc_html($states[$check['state']] ?? $check['state']) .
+                            '</strong> · ' .
+                            esc_html($check['message']) .
+                            '</li>';
+                    }
+                    if ($result['quota'] !== null) {
+                        echo '<li>' .
+                            esc_html(wp_xp_core_t('今日已记录次数')) .
+                            ': ' .
+                            (int) $result['quota']['used'] .
+                            ' / ' .
+                            (int) $result['quota']['limit'] .
+                            '</li>';
+                    }
+                    echo '</ul>';
+                    if ($result['source_boundary_ms']) {
+                        echo '<p>' .
+                            esc_html(wp_xp_core_t('当前来源启用边界')) .
+                            ': ' .
+                            esc_html(
+                                wp_date(
+                                    'Y-m-d H:i:s T',
+                                    (int) floor($result['source_boundary_ms'] / 1000),
+                                    new DateTimeZone(WP_XP_Core_Settings::rules()['timezone']),
+                                ),
+                            ) .
+                            '</p>';
+                    }
+                }
+                echo '<details><summary>' .
+                    esc_html(wp_xp_core_t('查看记账事实')) .
+                    '</summary><pre>' .
+                    esc_html(wp_json_encode($result, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT)) .
+                    '</pre></details>';
+            }
+        }
+        echo '</section>';
+    }
     private static function diagnostics(): void
     {
+        self::reward_inspector();
         $adapter_failures = get_option('wp_xp_core_bbpress_failures', []);
         if (is_array($adapter_failures) && $adapter_failures) {
             echo '<section class="xp-card"><h2>' .

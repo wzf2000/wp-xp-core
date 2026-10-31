@@ -8,6 +8,7 @@ final class WP_XP_Core_Insights_UI
         add_action('admin_menu', [self::class, 'menu']);
         add_action('admin_enqueue_scripts', [self::class, 'assets']);
         add_action('rest_api_init', [self::class, 'routes']);
+        add_action('admin_post_wp_xp_core_provider_csv', [self::class, 'export_providers']);
         if (reader_experience_configured()) {
             add_shortcode('xp_leaderboard', [self::class, 'board']);
         }
@@ -38,6 +39,132 @@ final class WP_XP_Core_Insights_UI
     private static function signed(int $value): string
     {
         return ($value > 0 ? '+' : '') . number_format_i18n($value);
+    }
+    public static function export_providers(): void
+    {
+        $raw = wp_unslash($_POST);
+        $input = array_intersect_key($raw, array_flip(['period', 'from', 'to']));
+        $csv = WP_XP_Core_Insights::provider_csv($input, $raw['_wpnonce'] ?? '');
+        if (is_wp_error($csv)) {
+            wp_die(esc_html($csv->get_error_message()), '', [
+                'response' => (int) ($csv->get_error_data()['status'] ?? 400),
+            ]);
+        }
+        nocache_headers();
+        header('Content-Type: text/csv; charset=UTF-8');
+        header('Content-Disposition: attachment; filename="wp-xp-provider-summary.csv"');
+        header('Cache-Control: private, no-store');
+        header('Vary: Cookie', false);
+        header('X-Content-Type-Options: nosniff');
+        echo $csv;
+        exit();
+    }
+    private static function providers(array $input, $tasks): void
+    {
+        $data = WP_XP_Core_Insights::provider_sources($input, $tasks);
+        echo '<section class="xp-card"><h2>' .
+            esc_html(wp_xp_core_t('扩展活动明细')) .
+            '</h2><p>' .
+            esc_html(
+                wp_xp_core_t(
+                    '按可信来源分别汇总原始活动、撤销与净经验。人数已在每个来源内去重，不同来源人数不能相加。零经验原因只统计截至现在未撤销的零经验原回执；正向部分截断不算零经验。',
+                ),
+            ) .
+            '</p>';
+        if (is_wp_error($data)) {
+            WP_XP_Core_Growth_UI::notice($data);
+            echo '</section>';
+            return;
+        }
+        echo '<form method="post" action="' .
+            esc_url(admin_url('admin-post.php')) .
+            '"><input type="hidden" name="action" value="wp_xp_core_provider_csv">';
+        wp_nonce_field('wp_xp_core_insights_export');
+        foreach ($input as $key => $value) {
+            echo '<input type="hidden" name="' .
+                esc_attr($key) .
+                '" value="' .
+                esc_attr($value) .
+                '">';
+        }
+        echo '<button class="button">' .
+            esc_html(wp_xp_core_t('下载来源汇总 CSV')) .
+            '</button></form><div class="xp-table-scroll" tabindex="0"><table class="widefat striped"><thead><tr>';
+        $columns = [
+            'label' => wp_xp_core_t('活动来源'),
+            'activity_count' => wp_xp_core_t('原始活动'),
+            'reversal_count' => wp_xp_core_t('撤销'),
+            'user_count' => wp_xp_core_t('参与人数'),
+            'positive_xp' => wp_xp_core_t('发放'),
+            'negative_xp' => wp_xp_core_t('扣回'),
+            'net_xp' => wp_xp_core_t('净经验'),
+        ];
+        foreach ($columns as $label) {
+            echo '<th>' . esc_html($label) . '</th>';
+        }
+        echo '</tr></thead><tbody>';
+        foreach ($data['rows'] as $row) {
+            echo '<tr>';
+            foreach ($columns as $key => $label) {
+                echo '<td>' . esc_html((string) $row[$key]) . '</td>';
+            }
+            echo '</tr><tr><td colspan="7"><details><summary>' .
+                esc_html(wp_xp_core_t('零经验原因与关联任务')) .
+                '</summary><ul>';
+            foreach (
+                [
+                    'zero_quota' => wp_xp_core_t('次数耗尽'),
+                    'zero_hold' => wp_xp_core_t('奖励暂停'),
+                    'zero_cap' => wp_xp_core_t('经验上限'),
+                    'zero_rule' => wp_xp_core_t('规则为零经验'),
+                    'zero_other' => wp_xp_core_t('其他或旧回执缺少原因'),
+                ]
+                as $key => $label
+            ) {
+                echo '<li>' . esc_html($label) . ': ' . (int) $row[$key] . '</li>';
+            }
+            echo '</ul><p>' .
+                esc_html(
+                    wp_xp_core_t(
+                        '关联任务按各自当前版本与当前周期展示。包含其他来源或内置活动的任务是混合目标，不表示该来源单独带来完成；完成率不相加。',
+                    ),
+                ) .
+                '</p><ul>';
+            foreach ($row['tasks'] as $task) {
+                echo '<li>' .
+                    esc_html($task['title']) .
+                    ' · v' .
+                    (int) $task['version'] .
+                    ' · ' .
+                    esc_html($task['period_key']) .
+                    ' · ' .
+                    (int) $task['completed'] .
+                    ' / ' .
+                    (int) $task['participants'] .
+                    ' · ' .
+                    ($task['rate'] === null
+                        ? esc_html(wp_xp_core_t('尚无参与'))
+                        : esc_html(number_format_i18n($task['rate'] * 100, 1) . '%')) .
+                    ($task['mixed_sources'] ? ' · ' . esc_html(wp_xp_core_t('混合目标')) : '') .
+                    '</li>';
+            }
+            if (!$row['tasks']) {
+                echo '<li>' . esc_html(wp_xp_core_t('没有当前启用的关联任务。')) . '</li>';
+            }
+            echo '</ul></details></td></tr>';
+        }
+        if (!$data['rows']) {
+            echo '<tr><td colspan="7">' .
+                esc_html(wp_xp_core_t('本期尚无符合条件的活动记录。')) .
+                '</td></tr>';
+        }
+        echo '</tbody></table></div>';
+        if ($data['more']) {
+            echo '<p>' .
+                esc_html(wp_xp_core_t('仅展示前一百项来源；请缩短日期范围查看或导出。')) .
+                '</p>';
+        }
+        echo '</section>';
     }
     public static function page(): void
     {
@@ -170,7 +297,9 @@ final class WP_XP_Core_Insights_UI
                 ) .
                 '</p>';
         }
-        echo '</section><section class="xp-card"><h2>' .
+        echo '</section>';
+        self::providers($input, $tasks);
+        echo '<section class="xp-card"><h2>' .
             esc_html(wp_xp_core_t('当前任务完成率')) .
             '</h2><p>' .
             esc_html(

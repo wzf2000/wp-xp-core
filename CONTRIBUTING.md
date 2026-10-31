@@ -95,9 +95,9 @@ Edit reviewed `languages/wp-xp-core-{locale}.po` entries and run `python3 tools/
 
 修改 PO 后离线编译 MO／JSON，同步 POT 与 JS 文案列表；保留位置占位符，不翻译用户文字或整段输出 HTML。新增语言文件必须通过实际安装 ZIP 的白名单与验证。
 
-CI covers PHP 8.0/8.2/8.5 basic/browser fixtures and real WordPress/MySQL installation/concurrency on WordPress 6.0 + PHP 8.0, WordPress 6.8.3 + PHP 8.0/8.2 and WordPress 7.1.3 + PHP 8.5. Separate upgrade fixtures install verified official 1.4.1, 2.0.0-rc.3, 2.0.1 and 2.1.0-rc.2 ZIPs, seed synthetic account state, replace only plugin files, and verify unchanged data plus idempotent future awards. These combinations define tested coverage, not every historical environment.
+CI covers PHP 8.0/8.2/8.5 basic/browser fixtures and real WordPress/MySQL installation/concurrency on WordPress 6.0 + PHP 8.0, WordPress 6.8.3 + PHP 8.0/8.2 and WordPress 7.1.3 + PHP 8.5. Separate upgrade fixtures install verified official 1.4.1, 2.0.0-rc.3, 2.0.1, 2.1.0-rc.2 and 2.1.0 ZIPs, seed synthetic account state, replace only plugin files, and verify unchanged data plus idempotent future awards. These combinations define tested coverage, not every historical environment.
 
-实际 CI 包含 WordPress 6.0 + PHP 8.0 最低组合、WordPress 6.8.3 + PHP 8.0／8.2 和 WordPress 7.1.3 + PHP 8.5 的安装／并发检查，以及 PHP 8.0／8.2／8.5 基础与浏览器检查。独立升级夹具从经校验的官方 1.4.1、2.0.0-rc.3、2.0.1 与 2.1.0-rc.2 ZIP 建立合成旧站，只替换插件文件，检查数据保留及后续奖励幂等。没有将这些组合扩称为所有历史环境。
+实际 CI 包含 WordPress 6.0 + PHP 8.0 最低组合、WordPress 6.8.3 + PHP 8.0／8.2 和 WordPress 7.1.3 + PHP 8.5 的安装／并发检查，以及 PHP 8.0／8.2／8.5 基础与浏览器检查。独立升级夹具从经校验的官方 1.4.1、2.0.0-rc.3、2.0.1、2.1.0-rc.2 与 2.1.0 ZIP 建立合成旧站，只替换插件文件，检查数据保留及后续奖励幂等。没有将这些组合扩称为所有历史环境。
 
 The database must provide InnoDB transactions and `JSON_VALID`, `JSON_EXTRACT`, `JSON_UNQUOTE` and `JSON_TYPE`. Activation probes those functions before making installation changes. Run SELECT-failure fixtures when changing accounting reads: an unreadable claim, quota or history must never become a successful empty result.
 

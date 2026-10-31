@@ -2465,6 +2465,489 @@
       "预览规则与通知": [
         "Preview rules and message"
       ],
+      "请选择已注册的活动来源。": [
+        "Select a registered activity source."
+      ],
+      "扩展活动不支持文章或分类范围。": [
+        "Extension activities do not support post or category scopes."
+      ],
+      "只有扩展活动可以指定来源。": [
+        "Only extension activities can specify a source."
+      ],
+      "扩展活动": [
+        "Extension activity"
+      ],
+      "请选择活动来源": [
+        "Select an activity source"
+      ],
+      "（来源暂不可用）": [
+        " (source unavailable)"
+      ],
+      "活动来源暂不可用，已有进度与成就保留。": [
+        "The activity source is unavailable. Existing progress and achievements are retained."
+      ],
+      " · %1$s：还需 %2$s %3$s": [
+        " · %1$s: %2$s %3$s remaining"
+      ],
+      "不同对象": [
+        "Distinct objects"
+      ],
+      "个不同对象": [
+        "distinct objects"
+      ],
+      "三天参与": [
+        "Participate on three days"
+      ],
+      "三次活动": [
+        "Three activities"
+      ],
+      "事件编号": [
+        "Event ID"
+      ],
+      "仅模拟当前主体回执，不包含签到阶段、作者里程碑或任务派生奖励；实际记账会重新检查。": [
+        "Only this primary receipt is simulated, excluding streak, author milestone and task rewards. Actual accounting rechecks eligibility."
+      ],
+      "仅累计启用后由所选可信来源记录的新活动。": [
+        "Count new activities recorded by the selected trusted source after activation."
+      ],
+      "今日已记录次数": [
+        "Activities recorded today"
+      ],
+      "今日次数尚未用完。": [
+        "The daily activity quota remains available."
+      ],
+      "今日次数已用完，不新增活动回执。": [
+        "The daily quota is exhausted; no new activity receipt is recorded."
+      ],
+      "今日次数已用完，合法新活动仍可保留零经验回执。": [
+        "The daily quota is exhausted; an eligible new activity can still retain a zero-XP receipt."
+      ],
+      "依赖缺失": [
+        "Dependency missing"
+      ],
+      "假设分数（可选）": [
+        "Hypothetical score (optional)"
+      ],
+      "假设实际经验": [
+        "Hypothetical actual XP"
+      ],
+      "假设服务端资格满足；未调用来源验证或读取权威发生时间。": [
+        "Assuming server eligibility: source verification and authoritative event time have not been checked."
+      ],
+      "内置活动留空": [
+        "Leave empty for built-in activities"
+      ],
+      "分数仅为模拟输入，须由来源核实。": [
+        "The score is hypothetical and must be verified by the source."
+      ],
+      "原回执未保存": [
+        "Not saved in the original receipt"
+      ],
+      "原实际经验": [
+        "Original actual XP"
+      ],
+      "原每周经验上限": [
+        "Original weekly XP cap"
+      ],
+      "原每日次数上限": [
+        "Original daily activity limit"
+      ],
+      "原每日经验上限": [
+        "Original daily XP cap"
+      ],
+      "原活动已撤销，历史回执保留。": [
+        "The original activity has been reversed; its receipt is retained."
+      ],
+      "原请求经验": [
+        "Original requested XP"
+      ],
+      "只读模拟": [
+        "Read-only simulation"
+      ],
+      "只读模拟，不提交活动或奖励。扩展资格、真实阅读停留与新建请求仍须由实际来源验证。": [
+        "Read-only simulation records no activity or reward. Extension eligibility, real reading dwell and creation requests still require source verification."
+      ],
+      "只读结果，未记录奖励。": [
+        "Read-only result. No reward was recorded."
+      ],
+      "对象编号（签到填 0）": [
+        "Object ID (0 for check-in)"
+      ],
+      "已接入并启用": [
+        "Integrated and enabled"
+      ],
+      "已接入，配置关闭": [
+        "Integrated, disabled in settings"
+      ],
+      "已有相同活动回执，不会新增经验。": [
+        "An identical activity receipt exists; no new XP is added."
+      ],
+      "已有评论回执的恢复或补偿不在新活动模拟范围，请解释原回执并查看对应补偿记录。": [
+        "Recovery or compensation of an existing comment receipt is outside this new-activity simulation. Explain the original receipt and inspect its compensation records."
+      ],
+      "已注册表示接口已接入；运行资格待来源验证，此清单不调用来源回调。": [
+        "Registered means the interface is integrated. Runtime eligibility still requires source verification; this list invokes no source callbacks."
+      ],
+      "当前条件下不会新增回执。": [
+        "Current conditions do not add a new receipt."
+      ],
+      "当前条件允许记录，实际请求仍会重新检查。": [
+        "Current conditions allow recording; the actual request will recheck them."
+      ],
+      "当前来源启用边界": [
+        "Current source activation boundary"
+      ],
+      "当前状态": [
+        "Current state"
+      ],
+      "扩展活动输入": [
+        "Extension activity inputs"
+      ],
+      "按原回执快照解释；未保存的事实显示为空，不用当前规则重算。": [
+        "Explained using the original receipt snapshots. Unsaved facts are empty; current rules never recalculate the past."
+      ],
+      "按目标用户的对象访问资格、归属与内容范围核对。": [
+        "Check object access, ownership and content scope for the target user."
+      ],
+      "暂停检查后": [
+        "After reward hold"
+      ],
+      "暂时无法解释或模拟奖励，请重试。": [
+        "Reward explanation or simulation is temporarily unavailable. Please retry."
+      ],
+      "未填写稳定活动编号，无法核对是否重复。": [
+        "No stable activity ID was supplied; duplicate identity cannot be checked."
+      ],
+      "未验证真实阅读停留或新建请求，只模拟所选主体回执。": [
+        "Real reading dwell and creation requests are unverified; only the selected primary receipt is simulated."
+      ],
+      "本次解释结果": [
+        "Inspection result"
+      ],
+      "来源发生时间须晚于当前服务器边界，此处尚未验证。": [
+        "The source event must occur after the current server boundary; its time is unverified here."
+      ],
+      "来源已注册，运行资格尚未由来源验证。": [
+        "The source is registered; runtime eligibility remains unverified."
+      ],
+      "来源未加载。": [
+        "The source is not loaded."
+      ],
+      "来源缺少服务器边界，请先由管理员保存活动规则。": [
+        "The source has no server boundary. An administrator must save its activity rules first."
+      ],
+      "查看活动接入清单": [
+        "View activity integrations"
+      ],
+      "查看记账事实": [
+        "View accounting facts"
+      ],
+      "模拟一条新活动": [
+        "Simulate a new activity"
+      ],
+      "次数限制后": [
+        "After activity quota"
+      ],
+      "活动接入与奖励解释": [
+        "Activity integrations and reward explanations"
+      ],
+      "活动日期": [
+        "Activity date"
+      ],
+      "活动编号无效。": [
+        "The activity ID is invalid."
+      ],
+      "活动记录已启用。": [
+        "Activity recording is enabled."
+      ],
+      "活动记录未启用。": [
+        "Activity recording is disabled."
+      ],
+      "稳定活动编号（可选）": [
+        "Stable activity ID (optional)"
+      ],
+      "签到的对象编号须为零。": [
+        "Check-in requires object ID zero."
+      ],
+      "经验余额将溢出，不能记账。": [
+        "The XP balance would overflow; recording is blocked."
+      ],
+      "规则经验": [
+        "Policy XP"
+      ],
+      "解释回执": [
+        "Explain receipt"
+      ],
+      "解释已有回执": [
+        "Explain an existing receipt"
+      ],
+      "请填写有效的用户、对象或事件编号。": [
+        "Enter a valid user, object or event ID."
+      ],
+      "资格尚未验证，以上经验仅为假设计算。": [
+        "Eligibility is unverified. The XP above is hypothetical."
+      ],
+      "通过": [
+        "Passed"
+      ],
+      "不满足": [
+        "Blocked"
+      ],
+      "待验证": [
+        "Unverified"
+      ],
+      "已有回执": [
+        "Existing receipt"
+      ],
+      "零经验": [
+        "Zero XP"
+      ],
+      "原次数额度已耗尽": [
+        "The original activity quota was exhausted"
+      ],
+      "原奖励处于暂停期": [
+        "The original reward was held"
+      ],
+      "原经验受日周上限截断": [
+        "The original XP was reduced by daily or weekly caps"
+      ],
+      "今日尚未签到": [
+        "Not checked in today"
+      ],
+      "前置任务：": [
+        "Prerequisite: "
+      ],
+      "原活动没有可重试的渠道消息快照。": [
+        "The original activity has no retryable channel message snapshot."
+      ],
+      "原消息已投递；经验与规则保持不变。": [
+        "The original message was delivered. XP and policy remain unchanged."
+      ],
+      "只能重试明确失败的最近消息，成功或结果未知的消息不能重投。": [
+        "Only recent explicitly failed messages can be retried. Successful or uncertain deliveries cannot be resent."
+      ],
+      "只重试最近明确失败的原消息，不重新发奖。成功、异常或中断后结果未知的投递不能重投；渠道须按相同事件编号幂等处理。": [
+        "Retry only recent explicitly failed original messages, without awarding XP. Successful, exceptional or interrupted deliveries with uncertain outcomes cannot be resent. Channels must deduplicate the same event ID."
+      ],
+      "可继续": [
+        "Ready to continue"
+      ],
+      "已完成": [
+        "Completed"
+      ],
+      "已投递": [
+        "Delivered"
+      ],
+      "已撤销": [
+        "Revoked"
+      ],
+      "已读": [
+        "Read"
+      ],
+      "成长内容暂时无法读取，请重试。": [
+        "Growth information is temporarily unavailable. Please retry."
+      ],
+      "成长组件设置无效。": [
+        "The growth widget settings are invalid."
+      ],
+      "我的任务": [
+        "My tasks"
+      ],
+      "我的成就": [
+        "My achievements"
+      ],
+      "我的成长概览": [
+        "My growth summary"
+      ],
+      "我的成长路径": [
+        "My growth path"
+      ],
+      "我的通知": [
+        "My notifications"
+      ],
+      "打开完整成长面板": [
+        "Open the full growth panel"
+      ],
+      "投递未能完成；若结果未知，请核对渠道，勿直接重投。": [
+        "Delivery could not finish. If the result is uncertain, check the channel before attempting any resend."
+      ],
+      "投递状态已改变，请重新读取后再操作。": [
+        "Delivery state changed. Reload it before trying again."
+      ],
+      "投递结果未知，请先核对渠道；不能直接重投。": [
+        "The delivery outcome is unknown. Check the channel; direct resend is blocked."
+      ],
+      "按当前任务版本与周期显示。": [
+        "Showing the current task version and cycle."
+      ],
+      "明确失败": [
+        "Explicit failure"
+      ],
+      "暂无可展示的任务。": [
+        "No tasks to display."
+      ],
+      "暂无已获成就。": [
+        "No earned achievements yet."
+      ],
+      "暂无渠道投递记录。": [
+        "No channel delivery records yet."
+      ],
+      "暂无通知。": [
+        "No notifications yet."
+      ],
+      "最近渠道结果与手动重试": [
+        "Recent channel results and manual retry"
+      ],
+      "未解锁": [
+        "Locked"
+      ],
+      "未读": [
+        "Unread"
+      ],
+      "本人已关闭活动通知，未尝试投递。": [
+        "The recipient disabled activity notifications. Delivery was not attempted."
+      ],
+      "没有查看通知投递的权限。": [
+        "You cannot view notification deliveries."
+      ],
+      "没有管理通知投递的权限。": [
+        "You cannot manage notification deliveries."
+      ],
+      "渠道": [
+        "Channel"
+      ],
+      "渠道不属于原活动消息快照。": [
+        "This channel is not in the original activity message snapshot."
+      ],
+      "渠道当前不可用，未尝试重投。": [
+        "The channel is unavailable. No resend was attempted."
+      ],
+      "渠道明确返回失败，可重新读取状态后决定是否重试。": [
+        "The channel explicitly reported failure. Reload the state before deciding whether to retry."
+      ],
+      "登录后查看我的成长": [
+        "Log in to view my growth"
+      ],
+      "等级进度": [
+        "Level progress"
+      ],
+      "结果未知": [
+        "Unknown outcome"
+      ],
+      "请填写原事件、渠道、当前状态与重试原因。": [
+        "Provide the original event, channel, current state and retry reason."
+      ],
+      "通知投递状态暂不可读。": [
+        "Notification delivery state is temporarily unavailable."
+      ],
+      "重试原因": [
+        "Retry reason"
+      ],
+      "重试原消息": [
+        "Retry original message"
+      ],
+      "显示本人经验、等级和今日签到状态。": [
+        "Show your XP, level and check-in status for today."
+      ],
+      "显示本人当前任务进度，操作在完整成长面板完成。": [
+        "Show your current task progress. Use the full growth panel for actions."
+      ],
+      "显示本人最近获得的成就。": [
+        "Show your recently earned achievements."
+      ],
+      "显示本人的站内通知快照，不自动标为已读。": [
+        "Show a snapshot of your private notifications without marking them as read."
+      ],
+      "按系列和前置任务查看本人当前成长路径。": [
+        "View your current growth path by series and prerequisites."
+      ],
+      "成长组件设置": [
+        "Growth widget settings"
+      ],
+      "标题（可选）": [
+        "Title (optional)"
+      ],
+      "显示条数": [
+        "Items to display"
+      ],
+      "显示密度": [
+        "Display density"
+      ],
+      "舒适": [
+        "Comfortable"
+      ],
+      "紧凑": [
+        "Compact"
+      ],
+      "强调色（可选十六进制）": [
+        "Accent color (optional hex)"
+      ],
+      "系列筛选（可选）": [
+        "Series filter (optional)"
+      ],
+      "暂时无法生成统计导出。": [
+        "The statistics export is temporarily unavailable."
+      ],
+      "暂时无法读取扩展活动统计。": [
+        "Extension activity statistics are temporarily unavailable."
+      ],
+      "来源超过一百项，请缩短日期范围后导出。": [
+        "More than 100 sources match. Shorten the date range before exporting."
+      ],
+      "没有导出统计的权限。": [
+        "You cannot export statistics."
+      ],
+      "下载来源汇总 CSV": [
+        "Download provider summary CSV"
+      ],
+      "仅展示前一百项来源；请缩短日期范围查看或导出。": [
+        "Only the first 100 sources are shown. Shorten the date range to inspect or export them."
+      ],
+      "关联任务按各自当前版本与当前周期展示。包含其他来源或内置活动的任务是混合目标，不表示该来源单独带来完成；完成率不相加。": [
+        "Associated tasks use their own current version and cycle. Tasks containing other sources or built-in activities are mixed goals, not completion attributed to this source alone. Do not add rates together."
+      ],
+      "其他或旧回执缺少原因": [
+        "Other or missing historical reason"
+      ],
+      "原始活动": [
+        "Original activities"
+      ],
+      "奖励暂停": [
+        "Reward hold"
+      ],
+      "扩展活动明细": [
+        "Extension activity details"
+      ],
+      "按可信来源分别汇总原始活动、撤销与净经验。人数已在每个来源内去重，不同来源人数不能相加。零经验原因只统计截至现在未撤销的零经验原回执；正向部分截断不算零经验。": [
+        "Aggregate original activities, reversals and net XP by trusted source. People are distinct within each source and cannot be added across sources. Zero reasons count only currently unreversed zero-XP originals; positive partial reductions are excluded."
+      ],
+      "撤销": [
+        "Reversals"
+      ],
+      "次数耗尽": [
+        "Quota exhausted"
+      ],
+      "没有当前启用的关联任务。": [
+        "No currently enabled associated tasks."
+      ],
+      "混合目标": [
+        "Mixed goal"
+      ],
+      "经验上限": [
+        "XP cap"
+      ],
+      "规则为零经验": [
+        "Zero-XP policy"
+      ],
+      "零经验原因与关联任务": [
+        "Zero-XP reasons and associated tasks"
+      ],
+      "选择完整面板页面后，组件才会显示跳转入口；签到、领取和通知偏好在完整面板操作。": [
+        "After selecting a full panel page, widgets display a link to it. Check-in, claims and notification preferences are handled in the full panel."
+      ],
+      "第 %1$s 版": [
+        "Version %1$s"
+      ],
       "": {
         "domain": "wp-xp-core",
         "lang": "en_US"

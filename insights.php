@@ -311,6 +311,162 @@ final class WP_XP_Core_Insights
     }
     /** Denominator is participating users plus earned users, never page impressions. */
     /** Equal consecutive windows: descriptive activity trends, never a causal attribution. */
+    /** One bounded GROUP BY scan for all historical provider IDs, never one scan per source. */
+    public static function provider_sources(array $input = [], $task_rates = null)
+    {
+        $allowed = self::available(true);
+        if ($allowed !== true) {
+            return $allowed;
+        }
+        try {
+            self::fields($input, ['period', 'from', 'to']);
+            $range = self::range($input, true);
+            global $wpdb;
+            $d = "IF(JSON_VALID(e.detail),e.detail,'{}')";
+            $provider = "JSON_UNQUOTE(JSON_EXTRACT($d,'$.provider'))";
+            $reason =
+                "CASE WHEN e.kind='provider_reward' AND e.xp=0 AND " .
+                WP_XP_Core_Providers::unreversed_condition() .
+                " THEN CASE WHEN JSON_UNQUOTE(JSON_EXTRACT($d,'$.provider_quota.exhausted'))='true' THEN 'quota'" .
+                " WHEN JSON_UNQUOTE(JSON_EXTRACT($d,'$.reward_hold.held'))='true' THEN 'hold'" .
+                " WHEN JSON_UNQUOTE(JSON_EXTRACT($d,'$.activity_cap.truncated'))='true' THEN 'cap'" .
+                " WHEN JSON_TYPE(JSON_EXTRACT($d,'$.provider_quota.requested_xp'))='INTEGER' AND JSON_EXTRACT($d,'$.provider_quota.requested_xp')=0 THEN 'rule' ELSE 'other' END ELSE NULL END";
+            $rows = self::rows(
+                "SELECT provider,SUM(kind='provider_reward') AS activity_count,SUM(kind='provider_revoke') AS reversal_count,COUNT(DISTINCT user_id) AS user_count," .
+                    'SUM(CASE WHEN xp>0 THEN xp ELSE 0 END) AS positive_xp,SUM(CASE WHEN xp<0 THEN xp ELSE 0 END) AS negative_xp,SUM(xp) AS net_xp,' .
+                    "SUM(CASE WHEN zero_reason='quota' THEN 1 ELSE 0 END) AS zero_quota,SUM(CASE WHEN zero_reason='hold' THEN 1 ELSE 0 END) AS zero_hold," .
+                    "SUM(CASE WHEN zero_reason='cap' THEN 1 ELSE 0 END) AS zero_cap,SUM(CASE WHEN zero_reason='rule' THEN 1 ELSE 0 END) AS zero_rule,SUM(CASE WHEN zero_reason='other' THEN 1 ELSE 0 END) AS zero_other FROM (" .
+                    "SELECT $provider AS provider,e.kind,e.xp,e.user_id,$reason AS zero_reason FROM " .
+                    Reader_Experience::table() .
+                    " e WHERE e.kind IN ('provider_reward','provider_revoke') AND JSON_TYPE(JSON_EXTRACT($d,'$.provider'))='STRING' AND " .
+                    $wpdb->prepare('e.local_day BETWEEN %s AND %s', $range['from'], $range['to']) .
+                    ") provider_activity WHERE provider REGEXP '^[a-z][a-z0-9_]{0,31}$' GROUP BY provider ORDER BY provider LIMIT 101",
+            );
+            $more = count($rows) > 100;
+            $rows = array_slice($rows, 0, 100);
+            $links = [];
+            if ($task_rates !== false) {
+                $task_rates ??= self::task_rates();
+                if (is_wp_error($task_rates)) {
+                    return $task_rates;
+                }
+                $rates = array_column($task_rates['rows'], null, 'id');
+                $definitions = WP_XP_Core_Achievements::definitions();
+                if ($wpdb->last_error !== '') {
+                    throw new RuntimeException('Provider task mapping unavailable');
+                }
+                foreach ($definitions as $task) {
+                    if (!isset($rates[$task['id']])) {
+                        continue;
+                    }
+                    $ids = [];
+                    $builtin = false;
+                    foreach ($task['steps'] as $step) {
+                        if ($step['kind'] === 'provider_reward') {
+                            $ids[$step['provider_id']] = true;
+                        } else {
+                            $builtin = true;
+                        }
+                    }
+                    foreach (array_keys($ids) as $id) {
+                        $links[$id][] = $rates[$task['id']] + [
+                            'mixed_sources' => $builtin || count($ids) > 1,
+                        ];
+                    }
+                }
+            }
+            foreach ($rows as &$row) {
+                foreach (array_keys($row) as $key) {
+                    if ($key !== 'provider') {
+                        $row[$key] = (int) $row[$key];
+                    }
+                }
+                $row['label'] =
+                    WP_XP_Core_Providers::definitions()[$row['provider']]['label'] ??
+                    $row['provider'];
+                $row['tasks'] = $links[$row['provider']] ?? [];
+            }
+            unset($row);
+            return $range + [
+                'rows' => $rows,
+                'more' => $more,
+                'limit' => 100,
+                'task_scope' => 'current_definition_period',
+            ];
+        } catch (InvalidArgumentException $e) {
+            return self::error('input', $e->getMessage());
+        } catch (Throwable $e) {
+            return self::error('storage', wp_xp_core_t('暂时无法读取扩展活动统计。'), 503);
+        }
+    }
+    /** Bounded aggregate export only: no user identifiers or individual ledger facts. */
+    public static function provider_csv(array $input, $nonce)
+    {
+        if (!current_user_can('manage_options')) {
+            return self::error('forbidden', wp_xp_core_t('没有导出统计的权限。'), 403);
+        }
+        if (!is_string($nonce) || !wp_verify_nonce($nonce, 'wp_xp_core_insights_export')) {
+            return self::error('nonce', wp_xp_core_t('验证已过期，请刷新页面。'), 403);
+        }
+        $data = self::provider_sources($input, false);
+        if (is_wp_error($data)) {
+            return $data;
+        }
+        if ($data['more']) {
+            return self::error('limit', wp_xp_core_t('来源超过一百项，请缩短日期范围后导出。'));
+        }
+        $columns = [
+            'provider',
+            'label',
+            'from',
+            'to',
+            'timezone',
+            'activity_count',
+            'reversal_count',
+            'user_count',
+            'positive_xp',
+            'negative_xp',
+            'net_xp',
+            'zero_quota',
+            'zero_hold',
+            'zero_cap',
+            'zero_rule',
+            'zero_other',
+        ];
+        $stream = fopen('php://temp', 'w+');
+        if (!$stream) {
+            return self::error('storage', wp_xp_core_t('暂时无法生成统计导出。'), 503);
+        }
+        fwrite($stream, "\xEF\xBB\xBF");
+        fputcsv($stream, $columns, ',', '"', '');
+        foreach ($data['rows'] as $row) {
+            $row += array_intersect_key($data, array_flip(['from', 'to', 'timezone']));
+            fputcsv(
+                $stream,
+                array_map(static fn($key) => self::csv_cell($row[$key]), $columns),
+                ',',
+                '"',
+                '',
+            );
+        }
+        rewind($stream);
+        $csv = stream_get_contents($stream);
+        fclose($stream);
+        return $csv;
+    }
+    public static function csv_cell($value): string
+    {
+        if (is_int($value)) {
+            return (string) $value;
+        }
+        $text =
+            preg_replace_callback(
+                '/\p{Cc}/u',
+                static fn($match) => in_array($match[0], ["\r", "\n"], true) ? $match[0] : '',
+                (string) $value,
+            ) ?? '';
+        return preg_match('/^[\s\p{Cf}]*[=+@-]/u', $text) ? "'" . $text : $text;
+    }
     public static function trends(array $input = [])
     {
         $allowed = self::available(true);

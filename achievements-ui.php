@@ -41,6 +41,12 @@ final class WP_XP_Core_Achievements_UI
             if (!is_array($step)) {
                 continue;
             }
+            if (
+                ($step['kind'] ?? '') !== 'provider_reward' &&
+                ($step['provider_id'] ?? '') === ''
+            ) {
+                unset($step['provider_id']);
+            }
             foreach (['post_ids', 'category_ids'] as $field) {
                 if (is_string($step[$field] ?? null)) {
                     $step[$field] =
@@ -114,6 +120,9 @@ final class WP_XP_Core_Achievements_UI
                 'mode' => $text($step['mode'] ?? 'events', 20),
                 'count' => $text($step['count'] ?? '', 10),
             ];
+            if (($step['kind'] ?? '') === 'provider_reward') {
+                $row['provider_id'] = $text($step['provider_id'] ?? '', 32);
+            }
             foreach (['post_ids', 'category_ids'] as $field) {
                 $raw = $step[$field] ?? [];
                 $raw = is_array($raw)
@@ -637,6 +646,7 @@ final class WP_XP_Core_Achievements_UI
                 'visit' => wp_xp_core_t('有效阅读'),
                 'comment' => wp_xp_core_t('有效评论'),
                 'article' => wp_xp_core_t('发表文章'),
+                'provider_reward' => wp_xp_core_t('扩展活动'),
             ]
             as $kind => $name
         ) {
@@ -645,7 +655,33 @@ final class WP_XP_Core_Achievements_UI
                 '"' .
                 selected($step['kind'], $kind, false) .
                 '>' .
-                $name .
+                esc_html($name) .
+                '</option>';
+        }
+        echo '</select></label><label data-xp-step-provider>' .
+            esc_html(wp_xp_core_t('活动来源')) .
+            '<select name="task[steps][' .
+            $index .
+            '][provider_id]">' .
+            '<option value="">' .
+            esc_html(wp_xp_core_t('请选择活动来源')) .
+            '</option>';
+        $providers = WP_XP_Core_Providers::definitions();
+        $current = $step['provider_id'] ?? '';
+        if ($current !== '' && !isset($providers[$current])) {
+            $providers[$current] = ['label' => $current];
+        }
+        foreach ($providers as $id => $provider) {
+            $label = $provider['label'];
+            if (!WP_XP_Core_Providers::available($id)) {
+                $label .= wp_xp_core_t('（来源暂不可用）');
+            }
+            echo '<option value="' .
+                esc_attr($id) .
+                '"' .
+                selected($current, $id, false) .
+                '>' .
+                esc_html($label) .
                 '</option>';
         }
         echo '</select></label><label>' .

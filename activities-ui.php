@@ -51,6 +51,93 @@ final class WP_XP_Core_Activities_UI
         }
         return $fallback;
     }
+    private static function delivery(): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delivery_retry'])) {
+            $input = wp_unslash($_POST['delivery'] ?? []);
+            $result = WP_XP_Core_Notification_Delivery::retry(
+                is_array($input) ? $input : [],
+                $_POST['_wpnonce'] ?? '',
+            );
+            $message = is_wp_error($result)
+                ? $result->get_error_message()
+                : ($result['status'] === 'delivered'
+                    ? wp_xp_core_t('原消息已投递；经验与规则保持不变。')
+                    : ($result['status'] === 'unknown'
+                        ? wp_xp_core_t('投递结果未知，请先核对渠道；不能直接重投。')
+                        : wp_xp_core_t('渠道明确返回失败，可重新读取状态后决定是否重试。')));
+            echo '<div role="status" class="notice ' .
+                (is_wp_error($result) ? 'notice-error' : 'notice-info') .
+                '"><p>' .
+                esc_html($message) .
+                '</p></div>';
+        }
+        $result = WP_XP_Core_Notification_Delivery::recent(wp_create_nonce('wp_xp_core_manage'));
+        echo '<section class="xp-card"><details' .
+            (isset($_POST['delivery_retry']) ? ' open' : '') .
+            '><summary>' .
+            esc_html(wp_xp_core_t('最近渠道结果与手动重试')) .
+            '</summary><p>' .
+            esc_html(
+                wp_xp_core_t(
+                    '只重试最近明确失败的原消息，不重新发奖。成功、异常或中断后结果未知的投递不能重投；渠道须按相同事件编号幂等处理。',
+                ),
+            ) .
+            '</p>';
+        if (is_wp_error($result)) {
+            echo '<p>' . esc_html($result->get_error_message()) . '</p>';
+        } else {
+            $statuses = [
+                'failed' => wp_xp_core_t('明确失败'),
+                'unknown' => wp_xp_core_t('结果未知'),
+                'delivered' => wp_xp_core_t('已投递'),
+            ];
+            echo '<div class="xp-table-scroll"><table class="widefat"><thead><tr><th>' .
+                esc_html(wp_xp_core_t('事件')) .
+                '</th><th>' .
+                esc_html(wp_xp_core_t('渠道')) .
+                '</th><th>' .
+                esc_html(wp_xp_core_t('当前状态')) .
+                '</th><th>' .
+                esc_html(wp_xp_core_t('操作')) .
+                '</th></tr></thead><tbody>';
+            foreach ($result['rows'] as $row) {
+                echo '<tr><td>#' .
+                    (int) $row['event_id'] .
+                    '</td><td>' .
+                    esc_html(
+                        WP_XP_Core_Activity_Notifications::channels()[$row['channel']]['label'] ??
+                            $row['channel'],
+                    ) .
+                    '</td><td>' .
+                    esc_html($statuses[$row['status']]) .
+                    '<br><small>' .
+                    esc_html($row['code']) .
+                    '</small></td><td>';
+                if ($row['status'] === 'failed') {
+                    echo '<form method="post" class="xp-retry-form"><input type="hidden" name="delivery_retry" value="1"><input type="hidden" name="delivery[event_id]" value="' .
+                        (int) $row['event_id'] .
+                        '"><input type="hidden" name="delivery[channel]" value="' .
+                        esc_attr($row['channel']) .
+                        '"><input type="hidden" name="delivery[revision]" value="' .
+                        esc_attr($row['revision']) .
+                        '">';
+                    wp_nonce_field('wp_xp_core_manage');
+                    echo '<label>' .
+                        esc_html(wp_xp_core_t('重试原因')) .
+                        '<input name="delivery[reason]" maxlength="300" required></label><button class="button">' .
+                        esc_html(wp_xp_core_t('重试原消息')) .
+                        '</button></form>';
+                }
+                echo '</td></tr>';
+            }
+            echo '</tbody></table></div>';
+            if (!$result['rows']) {
+                echo '<p>' . esc_html(wp_xp_core_t('暂无渠道投递记录。')) . '</p>';
+            }
+        }
+        echo '</details></section>';
+    }
     public static function page(): void
     {
         if (!current_user_can('manage_options')) {
@@ -78,7 +165,7 @@ final class WP_XP_Core_Activities_UI
         $preview = false;
         $unlimited = !array_key_exists('day_limit', $policy) || $policy['day_limit'] === null;
         $limit_mode = $unlimited ? 'unlimited' : 'limited';
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['delivery_retry'])) {
             try {
                 if (!wp_verify_nonce($_POST['_wpnonce'] ?? '', 'wp_xp_core_settings')) {
                     throw new InvalidArgumentException(wp_xp_core_t('验证已过期，请刷新页面。'));
@@ -144,6 +231,7 @@ final class WP_XP_Core_Activities_UI
             '</h1></div></header>';
         WP_XP_Core_Management_UI::nav('activities');
         WP_XP_Core_Growth_UI::notice($result);
+        self::delivery();
         echo '<section class="xp-card"><h2>' .
             esc_html(wp_xp_core_t('选择可信活动来源')) .
             '</h2><p>' .
@@ -297,14 +385,6 @@ final class WP_XP_Core_Activities_UI
                 '</p><p>' .
                 esc_html(wp_xp_core_t('实际经验受活动上限和临时暂停影响；为零时如实显示 +0。')) .
                 '</p></div>';
-        }
-        $results = get_option('wp_xp_core_channel_results', []);
-        if ($results) {
-            echo '<details><summary>' .
-                esc_html(wp_xp_core_t('最近渠道结果')) .
-                '</summary><pre>' .
-                esc_html(wp_json_encode($results, JSON_PRETTY_PRINT)) .
-                '</pre></details>';
         }
         echo '</section></div>';
     }

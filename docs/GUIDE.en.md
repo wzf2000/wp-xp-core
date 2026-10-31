@@ -1,10 +1,10 @@
-<!-- wp-xp-core-version: 2.1.0 -->
+<!-- wp-xp-core-version: 2.2.0-rc.1 -->
 
 # User guide
 
 [简体中文](GUIDE.md) · English · [Back to overview](../README.en.md)
 
-This administrator guide describes **2.1.0**. For released versions, use the guide at the matching Release tag. From 1.4.0, new sites can install and activate with default rules, without server JSON configuration. See [Get started](../README.en.md#get-started) for installation.
+This administrator guide describes **2.2.0-rc.1**. For released versions, use the guide at the matching Release tag. From 1.4.0, new sites can install and activate with default rules, without server JSON configuration. See [Get started](../README.en.md#get-started) for installation.
 
 ## Create an experience page
 
@@ -89,6 +89,24 @@ Open **成长中心** (Growth center) to set level names, character icons, color
 
 Extra check-in stage rewards start disabled. Choose consecutive or cumulative counting, add day thresholds and rewards, then save. Enabling or changing stage rules starts counting with the next new check-in, without historical awards. Each tier can be claimed once per rule generation. Breaking a streak resets its count but does not deduct earned XP. Check-in and any triggered stage awards commit together. Viewing the page or calendar awards nothing.
 
+## Compose private growth widgets
+
+In the page editor's Widgets category, choose **My growth summary, My tasks, My achievements, My notifications or My growth path**. Shortcode equivalents are `[xp_summary]`, `[xp_tasks]`, `[xp_badges]`, `[xp_notifications]` and `[xp_path]`. They display only the current logged-in user. Visitors get a login link, target-user IDs are unsupported, and the editor reads no private XP.
+
+Lists default to five items; `limit` accepts 1–20. Use `density="compact"` for tighter spacing, or the default `comfortable`. `title` sets the heading and `accent="#3856b0"` accepts a three- or six-digit hex color. Paths optionally filter an exact task `series`, for example `[xp_path series="Getting started" limit="10"]`. Fonts and text colors inherit from the theme; the accent affects only the border and progress bar.
+
+Tasks and paths show the current version, cycle, progress and prerequisites, distinguishing completed, ready and locked items. Achievements retain their awarded snapshots. Notification widgets do not mark anything as read. First create and select a full panel page manually in settings. Then use **Open the full growth panel** for check-in, claims, submissions, notification read actions and preferences. Standalone widgets omit that link when no valid panel page is configured. Existing `[reader_experience]`, growth blocks and old pages remain supported.
+
+## Receipt explanations and read-only simulation
+
+Under **Diagnostics → Activity integrations and reward explanations**, review built-in activities, registered extensions and saved sources whose dependency is absent. The list distinguishes enabled, disabled and missing integrations. Registration does not verify a real activity's eligibility.
+
+Enter an existing event ID, or choose **Explain receipt** in the ledger. Results use the original XP, quota, hold and daily/weekly cap snapshots. Missing historical facts say “Not saved in the original receipt”; current policy never recalculates the past. A reversed provider activity keeps its original receipt and reversal ID. Target-user management permission is required.
+
+**Simulate a new activity** reads current state only. Select the target user, activity and object. Extension activities additionally accept a registered source, optional stable event ID and hypothetical score. Results show quota, hold and cap effects with passed, blocked or unverified conditions. No provider callbacks run: scores and authoritative creation times remain unverified. Real reading dwell, password access and creation requests still require the actual activity entry point. Duplicate identities show their existing receipt; comment recovery/compensation is outside this new-primary simulation and should be investigated through the original receipt and compensation records.
+
+Only the selected primary receipt is simulated. Streak rewards, author milestones, task achievements and notification delivery are excluded. Subsequent activity or policy changes can alter the outcome. The result explicitly says it is read-only and records no reward, policy or user state, and opens no transaction.
+
 ## Create tasks and achievements
 
 Open **任务与成就** (Tasks and achievements), enter a title, description and character icon, then choose activation and a once-only, daily, weekly or monthly period. Periods follow the experience time zone; weeks start Monday and months start on the first. At most **50 tasks including disabled tasks** can be stored.
@@ -97,6 +115,10 @@ Open **任务与成就** (Tasks and achievements), enter a title, description an
 - **Reviewed tasks:** define no automatic steps. Users submit an explanation on their personal page; administrators approve or return it from the pending queue. Rejection requires feedback. Each user can submit at most five attempts per task/version/period, with only one pending at a time.
 
 Each step can count events, distinct content or distinct local days. Comments count their parent post/page for distinct content. Check-ins support events or days. Optional post/page IDs and category IDs match either list; empty lists mean unrestricted. Pages do not match post categories. Content must still be published and unprotected; task scopes never grant access to private content.
+
+Choose **Extension activity** and select an integrated course, community or other trusted source in the activity source selector. No PHP editing is needed. Count events, distinct objects or distinct local days. Objects use the provider's positive IDs, need not be posts, and cannot have post/category scopes. Each step counts only that source's valid receipts for the current user, task version boundary and period. Duplicate deliveries do not advance progress; reversed activities no longer count toward unclaimed progress. Earned achievements remain without cascading deletion.
+
+When a source is unavailable, saved definitions, progress and achievements remain readable. Existing tasks can still be edited or imported in same-site update mode. New, copied or cross-site template tasks require the source to be installed and registered. Explicitly enable activity recording under Activities and notifications; setting XP to 0 allows valid activity progress without new activity XP. Disabled sources accept no new activity. Valid receipts reduced to zero by quotas or reward holds still count. Task rewards do not trigger provider loops, and saving configuration never replays historical XP.
 
 Optional start/end dates include both boundary days in the experience time zone. Tasks outside their dates cannot complete, be claimed, accept submissions or be approved. Up to eight prerequisites must all be earned: choose the prerequisite's current version/current cycle, or lifetime honors from any version. Missing tasks and cycles are rejected. Prerequisites gate completion and submission; matching activity still accumulates from this task version's event boundary within its dates.
 
@@ -191,7 +213,7 @@ Open **Settings → WP XP Core → Configuration tools**. Export produces copyab
 
 Choose an import mode and **Preview configuration** first. Same-site updates match existing task IDs; external templates remap tasks and prerequisites. Preview shows old/new rule and growth values, milestone changes, and tasks that are new, display-only modifications, new versions or preserved. **Apply previewed configuration** commits all changes together; any intervening relevant revision change rejects the entire application. Unlisted tasks remain. Reusing a template preserves earned claims and never backfills rewards. External milestones matching an existing threshold retain its local identity; retired identities cannot be reused. Unknown tasks receive local IDs; external versions, event boundaries and generations are rejected.
 
-**Task templates** include Reading starter and Weekly participation, with zero-XP honors by default. Selecting a template only previews it; explicit application is required. Edit its presentation or conditions afterward in Tasks and achievements.
+**Task templates** include Reading starter and Weekly participation, with zero-XP honors by default. Selecting a template only previews it; explicit application is required. Edit its presentation or conditions afterward in Tasks and achievements. Each registered source also offers monthly templates for three events or three distinct local days, disabled by default with zero XP. No source is enabled automatically.
 
 **GitHub update checks** default to off. Opt into stable releases or stable plus prereleases. Only the official `wzf2000/wp-xp-core` Release attachment `wp-xp-core-{version}.zip` is accepted, never GitHub Source code archives or arbitrary URLs. Version comparison prevents downgrading a current RC to an older stable release. Successful responses cache for at most six hours; failures for fifteen minutes. No cron job is added. Turning checks off ignores stale plugin update entries and performs no publication or deployment.
 
@@ -223,7 +245,7 @@ When a claim, daily quota, milestone, original comment receipt or response histo
 
 **Preview task** validates fields, dates and prerequisites and shows the expected version and whether progress is retained or counts subsequent activity, without saving configuration or calculating user progress. The draft remains editable; saving checks the task-list revision again. **Copy as new task** opens an unsaved, disabled draft. Saving creates its own ID, version 1 and future activity boundary, without copying progress, claims or reviews. Configuration tools include discussion, monthly learning and review templates with zero XP; preview and apply them explicitly.
 
-With bbPress installed, public-topic and public-reply providers appear in Activities and notifications, disabled by default. Only newly created eligible content by registered users qualifies: the forum and its ancestors must be public, and the topic/reply must be public and password-free. Anonymous, pending, private, hidden, spam and trashed content is excluded. Closed topics can remain public. The adapter listens to official creation hooks; historical content, later moderation approval and re-enabling do not backfill rewards. Community activity contributes to XP, net standings, source statistics and private history. Task steps still cover check-ins, reading, articles and comments.
+With bbPress installed, public-topic and public-reply providers appear in Activities and notifications, disabled by default. Only newly created eligible content by registered users qualifies: the forum and its ancestors must be public, and the topic/reply must be public and password-free. Anonymous, pending, private, hidden, spam and trashed content is excluded. Closed topics can remain public. The adapter listens to official creation hooks; historical content, later moderation approval and re-enabling do not backfill rewards. Community activity contributes to XP, net standings, source statistics and private history. Automatic tasks can select these registered community sources alongside check-ins, reading, articles and comments.
 
 Changing or deleting the topic/reply itself attempts an append-only reversal of its original actual XP. Insufficient balance rejects the whole reversal. Parent forum/topic changes never scan descendants; administrators must inspect original receipts and use the server reversal API where needed. Diagnostics retain the latest twenty adapter failure codes without automatic replay. Disabling future rewards does not disable reversals.
 
@@ -244,6 +266,24 @@ Open **Settings → WP XP Core → Activities and notifications**. Choose a regi
 
 Eligible events after quota exhaustion persist zero-XP receipts. Retrying them on another day never backfills XP or repeats messages. A zero limit stops acceptance; games must have been created after the new boundary. Reversals append the original actual amount, require enough balance and do not restore daily count.
 
-Additional channels appear only when registered by an extension and default to off. This API covers activity participation/reversal messages only: one attempt after commit, without delivery guarantees, XP rollback or implicit retries. The plugin implements no email, webhook or outbound-network channel. Recent outcomes contain event IDs, channel IDs and codes, without message text or secrets.
+Other channels appear only after registration and default to off. The API covers activity participation/reversal messages, with an initial post-commit attempt, no delivery guarantee and no implicit retry; failure never rolls back XP. No email, webhook or outbound network implementation is built in. The dashboard shows event ID, channel, delivery state and error code. Explicit retries require a reason; retained state also records attempt count, actor and reason, without message content, secret configuration or raw exception text. Legacy rows remain read-only; explicit retry is described below. Delivery results are separate from failed XP accounting entries.
 
 **Optional games:** PageNest Game Tools 0.2.0-rc.1 provides the public settlement facade and isolated observers. Only registered, server-replay-verified games qualify, all disabled by default. Browser-selected users, scores or XP are never authoritative; XP rereads the receipt under its own ledger lock. Scores commit and release the shared lock before XP is notified. Identical-proof retries can recover an XP receipt that never committed, but existing receipts never repeat. The game response retains `awards: []`: XP and private messages are maintained independently by WP XP Core. Browser-only tools and unverified games are outside this integration.
+
+## Manually retry activity messages
+
+Under **Activities and notifications → Recent channel results and manual retry**, review up to 50 results. Administrators can retry only explicitly failed original messages, with a reason. Original-recipient permission, the recipient's current activity preference and a currently available channel from the original snapshot are required. Changing current copy or disabling the source does not rewrite existing messages. The source extension may be absent: this sends an existing snapshot without verifying or replaying its activity.
+
+Successful messages cannot be resent. Exceptions, indeterminate callback results or process interruption leave an **unknown** outcome. Check the external channel first; direct retry is blocked. Concurrent administrators sharing one failed revision make at most one external attempt. A subsequent explicit failure requires reloading its new state before another decision. Channels must still deduplicate the same `event_id`; the plugin cannot guarantee exactly-once effects in an external system.
+
+Retrying never changes XP, balances or reward rules and never invokes activity accounting. There is no default email, webhook, outbound implementation or cron. Old results remain readable; new state is created only for new delivery or explicit retry, never on loading or upgrade. Messages outside the retained window are not eligible for resend.
+
+## Inspect provider details and export aggregates
+
+Under **Insights → Extension activity details**, choose this week, this month or a custom range of at most 366 days. Each source shows original activity count, reversals, distinct participants, and positive/negative/net XP. Zero-XP reversals count as reversals. People can participate in several sources; row participant counts must not be added together.
+
+Expand a source to inspect effective zero-XP originals: exhausted counts, administrator holds, daily/weekly caps, zero-XP policy, or missing historical reasons. Partially reduced positive awards are excluded. Reversed originals are excluded even if their reversal happened outside the selected dates. Net XP still includes only changes occurring inside the selected dates.
+
+Associated tasks retain their own current-version/current-cycle completion-rate semantics, independent of source dates. Tasks mixing several sources or built-in activities are labeled. Their completion is not attributed to one source, and rates are not added together.
+
+**Download provider summary CSV** exports source-level numbers and dates only, without user IDs, email, individual events or administrator reasons. Downloads require administrator permission and a valid nonce. Exports are limited to 100 sources; shorten the range if necessary. UTF-8 text cells are protected against spreadsheet formulas while quotes and line breaks remain valid CSV. Existing source statistics, public standings and personal exports remain available.

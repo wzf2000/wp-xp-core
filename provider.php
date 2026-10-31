@@ -47,6 +47,13 @@ final class WP_XP_Core_Providers
     {
         return self::$providers;
     }
+    /** Shared read predicate for effective original activity, independent of current adapters. */
+    public static function unreversed_condition(): string
+    {
+        return 'NOT EXISTS (SELECT 1 FROM ' .
+            Reader_Experience::table() .
+            " r WHERE r.kind='provider_revoke' AND r.object_id=e.id AND r.user_id=e.user_id AND r.event_key=CONCAT('provider-revoke:',e.id))";
+    }
     const BOUNDARIES = 'wp_xp_core_provider_boundaries';
     public static function available(string $id): bool
     {
