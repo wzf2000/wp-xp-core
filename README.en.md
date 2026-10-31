@@ -1,4 +1,4 @@
-<!-- wp-xp-core-version: 2.2.0-rc.1 -->
+<!-- wp-xp-core-version: 2.2.0 -->
 
 <p align="center"><img src="docs/assets/hero.svg" alt="WP XP Core — Experience for participation, levels for progress" width="100%"></p>
 
@@ -27,7 +27,7 @@ The plugin manages experience and levels independently of myCRED. Likes are an o
 
 ## Get started
 
-This branch documents **2.2.0-rc.1**. Download the version actually published on [Releases](https://github.com/wzf2000/wp-xp-core/releases).
+This documentation covers stable **2.2.0**. Download the installation ZIP from [Releases](https://github.com/wzf2000/wp-xp-core/releases); use the matching tag’s documentation for other versions.
 
 Back up existing sites and verify updates in an isolated environment first; use the documentation at your Release tag for version-specific behavior. On a new site, installing and activating creates the experience ledger and uses default rules. No server JSON profile or other experience plugin is required. Existing users start at zero XP; old articles and historical comments do not trigger automatic backfill.
 
@@ -102,7 +102,7 @@ WordPress 6.0 and PHP 8.0 or later. See [Contributing](CONTRIBUTING.md) for the 
 | Contribute improvements                                        | [Contributing](CONTRIBUTING.md)                                           |
 | Maintain GitHub releases                                       | [Releasing](docs/RELEASING.md)                                            |
 
-Documentation on this branch describes 2.2.0-rc.1. For another version, use the documentation at its Release tag.
+This documentation covers 2.2.0. For another version, use the documentation at its Release tag.
 
 [Open an Issue](https://github.com/wzf2000/wp-xp-core/issues/new/choose) with your version, observed behavior and reproduction steps. Report security issues privately under the [security policy](SECURITY.md).
 

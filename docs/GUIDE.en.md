@@ -1,10 +1,10 @@
-<!-- wp-xp-core-version: 2.2.0-rc.1 -->
+<!-- wp-xp-core-version: 2.2.0 -->
 
 # User guide
 
 [简体中文](GUIDE.md) · English · [Back to overview](../README.en.md)
 
-This administrator guide describes **2.2.0-rc.1**. For released versions, use the guide at the matching Release tag. From 1.4.0, new sites can install and activate with default rules, without server JSON configuration. See [Get started](../README.en.md#get-started) for installation.
+This administrator guide describes **2.2.0**. For released versions, use the guide at the matching Release tag. From 1.4.0, new sites can install and activate with default rules, without server JSON configuration. See [Get started](../README.en.md#get-started) for installation.
 
 ## Create an experience page
 
