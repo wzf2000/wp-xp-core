@@ -89,6 +89,14 @@ Open **成长中心** (Growth center) to set level names, character icons, color
 
 Extra check-in stage rewards start disabled. Choose consecutive or cumulative counting, add day thresholds and rewards, then save. Enabling or changing stage rules starts counting with the next new check-in, without historical awards. Each tier can be claimed once per rule generation. Breaking a streak resets its count but does not deduct earned XP. Check-in and any triggered stage awards commit together. Viewing the page or calendar awards nothing.
 
+## Compose private growth widgets
+
+In the page editor's Widgets category, choose **My growth summary, My tasks, My achievements, My notifications or My growth path**. Shortcode equivalents are `[xp_summary]`, `[xp_tasks]`, `[xp_badges]`, `[xp_notifications]` and `[xp_path]`. They display only the current logged-in user. Visitors get a login link, target-user IDs are unsupported, and the editor reads no private XP.
+
+Lists default to five items; `limit` accepts 1–20. Use `density="compact"` for tighter spacing, or the default `comfortable`. `title` sets the heading and `accent="#3856b0"` accepts a three- or six-digit hex color. Paths optionally filter an exact task `series`, for example `[xp_path series="Getting started" limit="10"]`. Fonts and text colors inherit from the theme; the accent affects only the border and progress bar.
+
+Tasks and paths show the current version, cycle, progress and prerequisites, distinguishing completed, ready and locked items. Achievements retain their awarded snapshots. Notification widgets do not mark anything as read. Use **Open the full growth panel** for check-in, claims, submissions, notification read actions and preferences. Existing `[reader_experience]`, growth blocks and old pages remain supported.
+
 ## Receipt explanations and read-only simulation
 
 Under **Diagnostics → Activity integrations and reward explanations**, review built-in activities, registered extensions and saved sources whose dependency is absent. The list distinguishes enabled, disabled and missing integrations. Registration does not verify a real activity's eligibility.
@@ -261,3 +269,11 @@ Eligible events after quota exhaustion persist zero-XP receipts. Retrying them o
 Additional channels appear only when registered by an extension and default to off. This API covers activity participation/reversal messages only: one attempt after commit, without delivery guarantees, XP rollback or implicit retries. The plugin implements no email, webhook or outbound-network channel. Recent outcomes contain event IDs, channel IDs and codes, without message text or secrets.
 
 **Optional games:** PageNest Game Tools 0.2.0-rc.1 provides the public settlement facade and isolated observers. Only registered, server-replay-verified games qualify, all disabled by default. Browser-selected users, scores or XP are never authoritative; XP rereads the receipt under its own ledger lock. Scores commit and release the shared lock before XP is notified. Identical-proof retries can recover an XP receipt that never committed, but existing receipts never repeat. The game response retains `awards: []`: XP and private messages are maintained independently by WP XP Core. Browser-only tools and unverified games are outside this integration.
+
+## Manually retry activity messages
+
+Under **Activities and notifications → Recent channel results and manual retry**, review up to 50 results. Administrators can retry only explicitly failed original messages, with a reason. Original-recipient permission, the recipient's current activity preference and a currently available channel from the original snapshot are required. Changing current copy or disabling the source does not rewrite existing messages. The source extension may be absent: this sends an existing snapshot without verifying or replaying its activity.
+
+Successful messages cannot be resent. Exceptions, indeterminate callback results or process interruption leave an **unknown** outcome. Check the external channel first; direct retry is blocked. Concurrent administrators sharing one failed revision make at most one external attempt. A subsequent explicit failure requires reloading its new state before another decision. Channels must still deduplicate the same `event_id`; the plugin cannot guarantee exactly-once effects in an external system.
+
+Retrying never changes XP, balances or reward rules and never invokes activity accounting. There is no default email, webhook, outbound implementation or cron. Old results remain readable; new state is created only for new delivery or explicit retry, never on loading or upgrade. Messages outside the retained window are not eligible for resend.

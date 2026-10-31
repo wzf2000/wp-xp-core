@@ -2710,3 +2710,177 @@ msgstr "The original reward was held"
 
 msgid "原经验受日周上限截断"
 msgstr "The original XP was reduced by daily or weekly caps"
+
+msgid "今日尚未签到"
+msgstr "Not checked in today"
+
+msgid "前置任务："
+msgstr "Prerequisite: "
+
+msgid "原活动没有可重试的渠道消息快照。"
+msgstr "The original activity has no retryable channel message snapshot."
+
+msgid "原消息已投递；经验与规则保持不变。"
+msgstr "The original message was delivered. XP and policy remain unchanged."
+
+msgid "只能重试明确失败的最近消息，成功或结果未知的消息不能重投。"
+msgstr "Only recent explicitly failed messages can be retried. Successful or uncertain deliveries cannot be resent."
+
+msgid "只重试最近明确失败的原消息，不重新发奖。成功、异常或中断后结果未知的投递不能重投；渠道须按相同事件编号幂等处理。"
+msgstr "Retry only recent explicitly failed original messages, without awarding XP. Successful, exceptional or interrupted deliveries with uncertain outcomes cannot be resent. Channels must deduplicate the same event ID."
+
+msgid "可继续"
+msgstr "Ready to continue"
+
+msgid "已完成"
+msgstr "Completed"
+
+msgid "已投递"
+msgstr "Delivered"
+
+msgid "已撤销"
+msgstr "Revoked"
+
+msgid "已读"
+msgstr "Read"
+
+msgid "成长内容暂时无法读取，请重试。"
+msgstr "Growth information is temporarily unavailable. Please retry."
+
+msgid "成长组件设置无效。"
+msgstr "The growth widget settings are invalid."
+
+msgid "我的任务"
+msgstr "My tasks"
+
+msgid "我的成就"
+msgstr "My achievements"
+
+msgid "我的成长概览"
+msgstr "My growth summary"
+
+msgid "我的成长路径"
+msgstr "My growth path"
+
+msgid "我的通知"
+msgstr "My notifications"
+
+msgid "打开完整成长面板"
+msgstr "Open the full growth panel"
+
+msgid "投递未能完成；若结果未知，请核对渠道，勿直接重投。"
+msgstr "Delivery could not finish. If the result is uncertain, check the channel before attempting any resend."
+
+msgid "投递状态已改变，请重新读取后再操作。"
+msgstr "Delivery state changed. Reload it before trying again."
+
+msgid "投递结果未知，请先核对渠道；不能直接重投。"
+msgstr "The delivery outcome is unknown. Check the channel; direct resend is blocked."
+
+msgid "按当前任务版本与周期显示。"
+msgstr "Showing the current task version and cycle."
+
+msgid "明确失败"
+msgstr "Explicit failure"
+
+msgid "暂无可展示的任务。"
+msgstr "No tasks to display."
+
+msgid "暂无已获成就。"
+msgstr "No earned achievements yet."
+
+msgid "暂无渠道投递记录。"
+msgstr "No channel delivery records yet."
+
+msgid "暂无通知。"
+msgstr "No notifications yet."
+
+msgid "最近渠道结果与手动重试"
+msgstr "Recent channel results and manual retry"
+
+msgid "未解锁"
+msgstr "Locked"
+
+msgid "未读"
+msgstr "Unread"
+
+msgid "本人已关闭活动通知，未尝试投递。"
+msgstr "The recipient disabled activity notifications. Delivery was not attempted."
+
+msgid "没有查看通知投递的权限。"
+msgstr "You cannot view notification deliveries."
+
+msgid "没有管理通知投递的权限。"
+msgstr "You cannot manage notification deliveries."
+
+msgid "渠道"
+msgstr "Channel"
+
+msgid "渠道不属于原活动消息快照。"
+msgstr "This channel is not in the original activity message snapshot."
+
+msgid "渠道当前不可用，未尝试重投。"
+msgstr "The channel is unavailable. No resend was attempted."
+
+msgid "渠道明确返回失败，可重新读取状态后决定是否重试。"
+msgstr "The channel explicitly reported failure. Reload the state before deciding whether to retry."
+
+msgid "登录后查看我的成长"
+msgstr "Log in to view my growth"
+
+msgid "等级进度"
+msgstr "Level progress"
+
+msgid "结果未知"
+msgstr "Unknown outcome"
+
+msgid "请填写原事件、渠道、当前状态与重试原因。"
+msgstr "Provide the original event, channel, current state and retry reason."
+
+msgid "通知投递状态暂不可读。"
+msgstr "Notification delivery state is temporarily unavailable."
+
+msgid "重试原因"
+msgstr "Retry reason"
+
+msgid "重试原消息"
+msgstr "Retry original message"
+
+msgid "显示本人经验、等级和今日签到状态。"
+msgstr "Show your XP, level and check-in status for today."
+
+msgid "显示本人当前任务进度，操作在完整成长面板完成。"
+msgstr "Show your current task progress. Use the full growth panel for actions."
+
+msgid "显示本人最近获得的成就。"
+msgstr "Show your recently earned achievements."
+
+msgid "显示本人的站内通知快照，不自动标为已读。"
+msgstr "Show a snapshot of your private notifications without marking them as read."
+
+msgid "按系列和前置任务查看本人当前成长路径。"
+msgstr "View your current growth path by series and prerequisites."
+
+msgid "成长组件设置"
+msgstr "Growth widget settings"
+
+msgid "标题（可选）"
+msgstr "Title (optional)"
+
+msgid "显示条数"
+msgstr "Items to display"
+
+msgid "显示密度"
+msgstr "Display density"
+
+msgid "舒适"
+msgstr "Comfortable"
+
+msgid "紧凑"
+msgstr "Compact"
+
+msgid "强调色（可选十六进制）"
+msgstr "Accent color (optional hex)"
+
+msgid "系列筛选（可选）"
+msgstr "Series filter (optional)"

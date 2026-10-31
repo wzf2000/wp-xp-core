@@ -68,6 +68,7 @@ Open **Settings → WP XP Core** for all administration. Switch between rules, t
 - **Tasks and achievements:** create once-only, daily, weekly or monthly tasks. Automatic tasks combine built-in activities and registered trusted sources; reviewed tasks accept a user's explanation. Achievements default to honors, with optional XP rewards and image badges. Reasoned administrative grants/revocations are supported, and earned badges retain their awarded snapshots.
 - **Control rewards and public participation:** optional daily/weekly XP caps default off, users can leave standings, and administrators can exclude test accounts and inspect activity clues/equal-period trends.
 - **Preview before operating:** check task conditions and version effects before saving, copy tasks into disabled drafts, pause a user's automatic rewards temporarily with a reason, and use diagnostics to sample queries, explain original receipts or simulate a hypothetical activity without writes.
+- **Composable private growth widgets:** use five shortcodes or blocks for your summary, tasks, achievements, notifications or growth path. Choose a limit, density, title and accent color; actions remain in the full panel.
 - **Private notifications and next goals:** review achievement, review and level messages with read/type preferences; task goals explain remaining counts, available content links and prerequisites.
 - **Weekly/monthly boards and insights:** manually place `[xp_leaderboard period="week" limit="10"]` or its monthly variant to rank net activity XP. Personal panels show the current user’s position; administrators can review source aggregates and current task completion rates. New weeks and months do not reset XP balances.
 
@@ -84,7 +85,7 @@ Open **Settings → WP XP Core → Activities and notifications**, choose a dete
 | Companion notifications | Read your existing messages in the XP panel, preserving the original read state                        | Independent XP notifications remain available              |
 | Extension channels      | Select registered channels for activity messages                                                       | No outbound messages; no built-in email or webhook channel |
 
-Game extensions verify and store scores; this plugin accounts for XP separately. Browser-only games do not automatically become trusted reward sources. An extension author [connects the public API once](docs/CONFIGURATION.en.md#trusted-activity-providers), then administrators maintain values and text in the dashboard. See the [activity guide](docs/GUIDE.en.md#configure-optional-activities-and-notifications) for steps and limits.
+Game extensions verify and store scores; this plugin accounts for XP separately. Browser-only games do not automatically become trusted reward sources. An extension author [connects the public API once](docs/CONFIGURATION.en.md#trusted-activity-providers), then administrators maintain values and text in the dashboard. Administrators may manually retry explicitly failed original messages for registered channels with a reason. Successful or uncertain deliveries cannot be resent. Retrying never awards XP or replays an activity. See the [activity guide](docs/GUIDE.en.md#configure-optional-activities-and-notifications) for steps and limits.
 
 ## Requirements
 

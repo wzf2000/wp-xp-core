@@ -467,6 +467,8 @@ try {
         "activity-rules",
         "provider-tasks",
         "reward-inspector",
+        "widgets",
+        "delivery",
     ):
         results[stage] = json.loads(
             wp("eval-file", str(ROOT / ("tests/wordpress-" + stage + ".php")))
@@ -615,6 +617,48 @@ try {
         races[operation] = clients
     results["provider-concurrency"] = json.loads(wp("eval-file", provider_fixture, mode="verify"))
     results["provider-concurrency"]["clients"] = races
+    delivery_fixture = str(ROOT / "tests/wordpress-delivery-concurrent.php")
+    wp("eval-file", delivery_fixture, mode="prepare")
+    delivery_env = dict(env, WP_XP_TEST_BARRIER=str(time.time() + 1.0), WP_XP_TEST_MODE="retry")
+    processes = [
+        subprocess.Popen(
+            command + ["eval-file", delivery_fixture],
+            env=delivery_env,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        for _ in range(2)
+    ]
+    delivery_clients = []
+    try:
+        for process in processes:
+            output, errors = process.communicate(timeout=60)
+            if process.returncode:
+                failure(
+                    "Concurrent notification retry",
+                    subprocess.CompletedProcess([], process.returncode, output, errors),
+                )
+            delivery_clients.append(json.loads(output))
+    finally:
+        for process in processes:
+            if process.poll() is None:
+                process.terminate()
+                process.wait(timeout=10)
+    if (
+        sum(client.get("status") == "delivered" for client in delivery_clients) != 1
+        or sum(client.get("error") in ("state", "conflict") for client in delivery_clients) != 1
+    ):
+        raise RuntimeError(
+            "Concurrent notification retry must attempt once and reject the stale attempt"
+        )
+    interrupted = json.loads(wp("eval-file", delivery_fixture, mode="interrupt"))
+    if interrupted != {"interrupted": True}:
+        raise RuntimeError("Notification interruption fixture did not reach its external callback")
+    results["delivery-concurrency"] = json.loads(wp("eval-file", delivery_fixture, mode="verify"))
+    results["delivery-concurrency"]["clients"] = delivery_clients
+    results["delivery-concurrency"]["interruption"] = interrupted
+    (lab / "results.json").write_text(json.dumps(results, indent=2) + "\n")
     if args.scale:
         scale_env = dict(env, WP_XP_SCALE_TEST="1", WP_XP_TEST_OWNER_FILE=str(owner_file))
         scale = subprocess.run(

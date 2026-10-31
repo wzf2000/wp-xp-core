@@ -30,4 +30,20 @@ add_action('init', function () {
         ]),
         'supports' => ['html' => false],
     ]);
+    foreach (WP_XP_Core_Widgets::TYPES as $type) {
+        $attributes = WP_XP_Core_Widgets::attributes();
+        if ($type === 'path') {
+            $attributes['series'] = ['type' => 'string', 'default' => ''];
+        }
+        register_block_type('wp-xp-core/' . $type, [
+            'api_version' => 2,
+            'editor_script' => 'wp-xp-core-blocks',
+            'attributes' => $attributes,
+            'render_callback' => static fn($attributes) => WP_XP_Core_Widgets::render(
+                $type,
+                $attributes,
+            ),
+            'supports' => ['html' => false, 'customClassName' => false],
+        ]);
+    }
 });

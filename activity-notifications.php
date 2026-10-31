@@ -67,54 +67,11 @@ final class WP_XP_Core_Activity_Notifications
     }
     public static function deliver(array $event): void
     {
-        $detail = $event['detail'] ?? [];
-        if (!isset($detail['activity_message']) || !($detail['activity_channels'] ?? [])) {
-            return;
-        }
+        // Isolate all post-commit delivery failures so later task observers still run.
         try {
-            if (!WP_XP_Core_Notifications::activity_enabled((int) $event['user_id'])) {
-                return;
-            }
+            WP_XP_Core_Notification_Delivery::committed($event);
         } catch (Throwable $e) {
-            return;
-        }
-        foreach ($detail['activity_channels'] as $id) {
-            $code = 'unavailable';
-            try {
-                $channel = self::$channels[$id] ?? null;
-                if ($channel && call_user_func($channel['available']) === true) {
-                    $result = call_user_func($channel['deliver'], (int) $event['user_id'], [
-                        'event_id' => (int) $event['id'],
-                        'kind' => $event['kind'],
-                        'title' => $detail['activity_message']['title'],
-                        'message' => $detail['activity_message']['message'],
-                    ]);
-                    $code =
-                        $result === true
-                            ? 'delivered'
-                            : (is_wp_error($result)
-                                ? $result->get_error_code()
-                                : 'failed');
-                }
-            } catch (Throwable $e) {
-                $code = 'exception';
-            }
-            if (!is_string($code) || !preg_match('/^[a-z0-9_]{1,40}$/D', $code)) {
-                $code = 'failed';
-            }
-            try {
-                $rows = get_option('wp_xp_core_channel_results', []);
-                $rows = is_array($rows) ? $rows : [];
-                $rows[] = [
-                    'event_id' => (int) $event['id'],
-                    'channel' => $id,
-                    'code' => $code,
-                    'time' => time(),
-                ];
-                update_option('wp_xp_core_channel_results', array_slice($rows, -50), false);
-            } catch (Throwable $e) {
-                error_log('WP XP Core channel status unavailable');
-            }
+            error_log('WP XP Core channel delivery unavailable');
         }
     }
 }

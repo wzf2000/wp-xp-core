@@ -274,3 +274,15 @@ wp_xp_core_register_notification_channel('example', [
 最多十个渠道，稳定 ID 不可覆盖。回调只在新活动账本提交后尝试；当前用户 activity 偏好读取失败时不投递。回调异常／失败不影响经验，不自动重试，也不由相同事件重放。状态最多保留五十项，只有事件 ID、渠道、时间与受限错误码；不要把秘密或原始异常放入错误码。此接口不包含既有 task/review/level 消息，不包含邮件、webhook 或网络实现。
 
 游戏适配只调用 `site_tools_game_activity_catalog()` 与 `site_tools_game_settled_receipt($run,$uid)`，使用 `site_tools_register_game_settled_observer()` 优先接收提交后事件。`event` 必须与权威 run 相同且 object_id 为 0，避免换 event 绕过去重。最多二十项 provider，超额游戏明确显示未注册；未装新游戏包不会影响插件独立使用。
+
+## 私人成长组件接口
+
+`WP_XP_Core_Widgets::render($type, $attributes)` 与短代码 `xp_summary`／`xp_tasks`／`xp_badges`／`xp_notifications`／`xp_path`、动态区块 `wp-xp-core/{summary,tasks,badges,notifications,path}` 共用渲染。要求当前用户 `read`、服务就绪及私人缓存响应；匿名仅登录入口。无目标用户参数。属性只有 `limit`（1–20，默认 5）、`density`（compact／comfortable）、`title`（纯文字 ≤80）、`accent`（#RGB／#RRGGBB），path 可加 `series`（精确匹配 ≤60）；不支持 HTML 或任意 CSS。
+
+个人任务、概览、通知投影只在当前请求缓存成功结果；按当前用户隔离，切用户、提交后事件、本人元数据与相关配置变更失效。读取失败不缓存为空。多个任务／成就／路径组件复用同一 personal 投影；通知组件只读既有 XP 私人消息，不遍历其他外部通知源，不提交已读，也不加载完整交互面板脚本。编辑器只显示静态说明。
+
+## 通知投递与显式重试
+
+`WP_XP_Core_Notification_Delivery::recent($nonce)` 合并读取旧 `wp_xp_core_channel_results` 与惰性创建的 `wp_xp_core_channel_delivery`，最多展示 50 项。新 option 保存 ≤50 个 event/channel 状态、revision、次数、管理员原因与 actor、顺序和淘汰边界；旧格式不迁移、不改写。`retry({event_id,channel,revision,reason}, $nonce)` 要求管理权限、`wp_xp_core_manage` nonce、原接收人权限、原 `activity_message/activity_channels` 快照、当前本人 activity 偏好及渠道可用。无需当前 provider 代码或当前文案；不调用 record、provider 或奖励保存入口。
+
+独立命名锁覆盖状态检查与调用，revision 拒绝同时重试同一失败状态。调用前持久保存 unknown；true 记 delivered，明确 false／WP_Error 记 failed，其余结果、异常、中断或终态写失败保持 unknown。只有当前明确 failed 可以显式再试；delivered／unknown 不允许。淘汰后的旧消息不重新投递，仍保留的明确失败行不受淘汰边界阻挡。外部回调可在提交后记录另一个可信事件；终态合并最新持久状态，内层淘汰的外层条目不会复活。渠道必须以相同 event_id 幂等，不保证跨系统严格一次。默认提交后投递的锁／存储异常被隔离，不阻断后续任务观察者，也不自动重试或新增 cron。

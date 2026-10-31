@@ -2711,6 +2711,180 @@
       "原经验受日周上限截断": [
         "The original XP was reduced by daily or weekly caps"
       ],
+      "今日尚未签到": [
+        "Not checked in today"
+      ],
+      "前置任务：": [
+        "Prerequisite: "
+      ],
+      "原活动没有可重试的渠道消息快照。": [
+        "The original activity has no retryable channel message snapshot."
+      ],
+      "原消息已投递；经验与规则保持不变。": [
+        "The original message was delivered. XP and policy remain unchanged."
+      ],
+      "只能重试明确失败的最近消息，成功或结果未知的消息不能重投。": [
+        "Only recent explicitly failed messages can be retried. Successful or uncertain deliveries cannot be resent."
+      ],
+      "只重试最近明确失败的原消息，不重新发奖。成功、异常或中断后结果未知的投递不能重投；渠道须按相同事件编号幂等处理。": [
+        "Retry only recent explicitly failed original messages, without awarding XP. Successful, exceptional or interrupted deliveries with uncertain outcomes cannot be resent. Channels must deduplicate the same event ID."
+      ],
+      "可继续": [
+        "Ready to continue"
+      ],
+      "已完成": [
+        "Completed"
+      ],
+      "已投递": [
+        "Delivered"
+      ],
+      "已撤销": [
+        "Revoked"
+      ],
+      "已读": [
+        "Read"
+      ],
+      "成长内容暂时无法读取，请重试。": [
+        "Growth information is temporarily unavailable. Please retry."
+      ],
+      "成长组件设置无效。": [
+        "The growth widget settings are invalid."
+      ],
+      "我的任务": [
+        "My tasks"
+      ],
+      "我的成就": [
+        "My achievements"
+      ],
+      "我的成长概览": [
+        "My growth summary"
+      ],
+      "我的成长路径": [
+        "My growth path"
+      ],
+      "我的通知": [
+        "My notifications"
+      ],
+      "打开完整成长面板": [
+        "Open the full growth panel"
+      ],
+      "投递未能完成；若结果未知，请核对渠道，勿直接重投。": [
+        "Delivery could not finish. If the result is uncertain, check the channel before attempting any resend."
+      ],
+      "投递状态已改变，请重新读取后再操作。": [
+        "Delivery state changed. Reload it before trying again."
+      ],
+      "投递结果未知，请先核对渠道；不能直接重投。": [
+        "The delivery outcome is unknown. Check the channel; direct resend is blocked."
+      ],
+      "按当前任务版本与周期显示。": [
+        "Showing the current task version and cycle."
+      ],
+      "明确失败": [
+        "Explicit failure"
+      ],
+      "暂无可展示的任务。": [
+        "No tasks to display."
+      ],
+      "暂无已获成就。": [
+        "No earned achievements yet."
+      ],
+      "暂无渠道投递记录。": [
+        "No channel delivery records yet."
+      ],
+      "暂无通知。": [
+        "No notifications yet."
+      ],
+      "最近渠道结果与手动重试": [
+        "Recent channel results and manual retry"
+      ],
+      "未解锁": [
+        "Locked"
+      ],
+      "未读": [
+        "Unread"
+      ],
+      "本人已关闭活动通知，未尝试投递。": [
+        "The recipient disabled activity notifications. Delivery was not attempted."
+      ],
+      "没有查看通知投递的权限。": [
+        "You cannot view notification deliveries."
+      ],
+      "没有管理通知投递的权限。": [
+        "You cannot manage notification deliveries."
+      ],
+      "渠道": [
+        "Channel"
+      ],
+      "渠道不属于原活动消息快照。": [
+        "This channel is not in the original activity message snapshot."
+      ],
+      "渠道当前不可用，未尝试重投。": [
+        "The channel is unavailable. No resend was attempted."
+      ],
+      "渠道明确返回失败，可重新读取状态后决定是否重试。": [
+        "The channel explicitly reported failure. Reload the state before deciding whether to retry."
+      ],
+      "登录后查看我的成长": [
+        "Log in to view my growth"
+      ],
+      "等级进度": [
+        "Level progress"
+      ],
+      "结果未知": [
+        "Unknown outcome"
+      ],
+      "请填写原事件、渠道、当前状态与重试原因。": [
+        "Provide the original event, channel, current state and retry reason."
+      ],
+      "通知投递状态暂不可读。": [
+        "Notification delivery state is temporarily unavailable."
+      ],
+      "重试原因": [
+        "Retry reason"
+      ],
+      "重试原消息": [
+        "Retry original message"
+      ],
+      "显示本人经验、等级和今日签到状态。": [
+        "Show your XP, level and check-in status for today."
+      ],
+      "显示本人当前任务进度，操作在完整成长面板完成。": [
+        "Show your current task progress. Use the full growth panel for actions."
+      ],
+      "显示本人最近获得的成就。": [
+        "Show your recently earned achievements."
+      ],
+      "显示本人的站内通知快照，不自动标为已读。": [
+        "Show a snapshot of your private notifications without marking them as read."
+      ],
+      "按系列和前置任务查看本人当前成长路径。": [
+        "View your current growth path by series and prerequisites."
+      ],
+      "成长组件设置": [
+        "Growth widget settings"
+      ],
+      "标题（可选）": [
+        "Title (optional)"
+      ],
+      "显示条数": [
+        "Items to display"
+      ],
+      "显示密度": [
+        "Display density"
+      ],
+      "舒适": [
+        "Comfortable"
+      ],
+      "紧凑": [
+        "Compact"
+      ],
+      "强调色（可选十六进制）": [
+        "Accent color (optional hex)"
+      ],
+      "系列筛选（可选）": [
+        "Series filter (optional)"
+      ],
       "": {
         "domain": "wp-xp-core",
         "lang": "en_US"
