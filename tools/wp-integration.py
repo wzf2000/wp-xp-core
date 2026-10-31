@@ -465,6 +465,7 @@ try {
         "storage",
         "portable",
         "activity-rules",
+        "provider-tasks",
     ):
         results[stage] = json.loads(
             wp("eval-file", str(ROOT / ("tests/wordpress-" + stage + ".php")))

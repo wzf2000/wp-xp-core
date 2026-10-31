@@ -2464,3 +2464,33 @@ msgstr "Configure optional activities and notifications"
 
 msgid "预览规则与通知"
 msgstr "Preview rules and message"
+
+msgid "请选择已注册的活动来源。"
+msgstr "Select a registered activity source."
+
+msgid "扩展活动不支持文章或分类范围。"
+msgstr "Extension activities do not support post or category scopes."
+
+msgid "只有扩展活动可以指定来源。"
+msgstr "Only extension activities can specify a source."
+
+msgid "扩展活动"
+msgstr "Extension activity"
+
+msgid "请选择活动来源"
+msgstr "Select an activity source"
+
+msgid "（来源暂不可用）"
+msgstr " (source unavailable)"
+
+msgid "活动来源暂不可用，已有进度与成就保留。"
+msgstr "The activity source is unavailable. Existing progress and achievements are retained."
+
+msgid " · %1$s：还需 %2$s %3$s"
+msgstr " · %1$s: %2$s %3$s remaining"
+
+msgid "不同对象"
+msgstr "Distinct objects"
+
+msgid "个不同对象"
+msgstr "distinct objects"

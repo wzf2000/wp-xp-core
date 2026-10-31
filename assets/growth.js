@@ -195,6 +195,8 @@
             `${prerequisite.complete ? '✓' : xpT('待完成')} ${prerequisite.title} · ${prerequisite.scope === 'current' ? xpT('当前版本与当前周期') : xpT('终身荣誉（含旧版本）')}`,
           ),
         );
+      if (task.steps?.some((step) => step.source_available === false))
+        article.append(el('p', xpT('活动来源暂不可用，已有进度与成就保留。')));
       for (const step of task.steps || []) {
         if (step.scoped && !step.scope_links?.length)
           article.append(el('p', xpT('指定内容暂未公开，请选择其他可用目标或等待开放。')));
@@ -218,7 +220,7 @@
           steps.append(
             el(
               'li',
-              `${names[step.kind] || step.kind}（${{ events: xpT('活动次数'), objects: xpT('不同内容'), days: xpT('不同自然日') }[step.mode || 'events']}） ${step.current} / ${step.count}${step.complete ? ' ✓' : ''}`,
+              `${step.label || names[step.kind] || step.kind}（${{ events: xpT('活动次数'), objects: step.kind === 'provider_reward' ? xpT('不同对象') : xpT('不同内容'), days: xpT('不同自然日') }[step.mode || 'events']}） ${step.current} / ${step.count}${step.complete ? ' ✓' : ''}`,
             ),
           );
         article.append(steps);
@@ -316,11 +318,12 @@
           goal.append(
             document.createTextNode(
               xpT(
-                ' · 还需 %1$s %2$s',
+                ' · %1$s：还需 %2$s %3$s',
+                step.label || names[step.kind] || step.kind,
                 Math.max(0, step.count - step.current),
                 {
                   events: xpT('次有效活动'),
-                  objects: xpT('项不同内容'),
+                  objects: step.kind === 'provider_reward' ? xpT('个不同对象') : xpT('项不同内容'),
                   days: xpT('个不同自然日'),
                 }[step.mode || 'events'],
               ),

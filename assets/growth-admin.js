@@ -57,14 +57,22 @@
   });
   function updateSteps() {
     steps?.querySelectorAll('.xp-task-step').forEach((row) => {
-      const checkin = row.querySelector('[data-xp-step-kind]').value === 'checkin';
+      const kind = row.querySelector('[data-xp-step-kind]').value;
+      const checkin = kind === 'checkin';
+      const provider = kind === 'provider_reward';
+      const source = row.querySelector('[data-xp-step-provider]');
+      source.hidden = !provider;
+      source.querySelector('select').disabled = !provider;
+      source.querySelector('select').required = provider;
       const mode = row.querySelector('[data-xp-step-mode]');
-      mode.querySelector('option[value="objects"]').disabled = checkin;
+      const objects = mode.querySelector('option[value="objects"]');
+      objects.disabled = checkin;
+      objects.textContent = provider ? xpT('不同对象') : xpT('不同内容');
       if (checkin && mode.value === 'objects') mode.value = 'events';
       const scope = row.querySelector('[data-xp-step-scope]');
-      scope.hidden = checkin;
+      scope.hidden = checkin || provider;
       scope.querySelectorAll('input').forEach((field) => {
-        field.disabled = checkin;
+        field.disabled = checkin || provider;
       });
     });
   }

@@ -2464,3 +2464,33 @@ msgstr ""
 
 msgid "预览规则与通知"
 msgstr ""
+
+msgid "请选择已注册的活动来源。"
+msgstr ""
+
+msgid "扩展活动不支持文章或分类范围。"
+msgstr ""
+
+msgid "只有扩展活动可以指定来源。"
+msgstr ""
+
+msgid "扩展活动"
+msgstr ""
+
+msgid "请选择活动来源"
+msgstr ""
+
+msgid "（来源暂不可用）"
+msgstr ""
+
+msgid "活动来源暂不可用，已有进度与成就保留。"
+msgstr ""
+
+msgid " · %1$s：还需 %2$s %3$s"
+msgstr ""
+
+msgid "不同对象"
+msgstr ""
+
+msgid "个不同对象"
+msgstr ""

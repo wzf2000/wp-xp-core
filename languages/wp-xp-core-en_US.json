@@ -2465,6 +2465,36 @@
       "预览规则与通知": [
         "Preview rules and message"
       ],
+      "请选择已注册的活动来源。": [
+        "Select a registered activity source."
+      ],
+      "扩展活动不支持文章或分类范围。": [
+        "Extension activities do not support post or category scopes."
+      ],
+      "只有扩展活动可以指定来源。": [
+        "Only extension activities can specify a source."
+      ],
+      "扩展活动": [
+        "Extension activity"
+      ],
+      "请选择活动来源": [
+        "Select an activity source"
+      ],
+      "（来源暂不可用）": [
+        " (source unavailable)"
+      ],
+      "活动来源暂不可用，已有进度与成就保留。": [
+        "The activity source is unavailable. Existing progress and achievements are retained."
+      ],
+      " · %1$s：还需 %2$s %3$s": [
+        " · %1$s: %2$s %3$s remaining"
+      ],
+      "不同对象": [
+        "Distinct objects"
+      ],
+      "个不同对象": [
+        "distinct objects"
+      ],
       "": {
         "domain": "wp-xp-core",
         "lang": "en_US"

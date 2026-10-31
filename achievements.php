@@ -4,7 +4,7 @@ defined('ABSPATH') || exit();
 final class WP_XP_Core_Achievements
 {
     const OPTION = 'wp_xp_core_achievements';
-    const KINDS = ['checkin', 'visit', 'comment', 'article'];
+    const KINDS = ['checkin', 'visit', 'comment', 'article', 'provider_reward'];
     public static function definitions(): array
     {
         $raw = get_option(self::OPTION, []);
@@ -93,6 +93,7 @@ final class WP_XP_Core_Achievements
                     'mode',
                     'post_ids',
                     'category_ids',
+                    'provider_id',
                 ]) ||
                 !in_array($step['kind'] ?? '', self::KINDS, true)
             ) {
@@ -109,13 +110,37 @@ final class WP_XP_Core_Achievements
                     wp_xp_core_t('签到不支持内容范围或不同内容计数。'),
                 );
             }
-            $steps[] = [
-                'kind' => $step['kind'],
-                'count' => self::integer($step['count'] ?? null, 1, 1000),
-                'mode' => $mode,
-                'post_ids' => $posts,
-                'category_ids' => $categories,
-            ];
+            $provider = $step['provider_id'] ?? '';
+            if ($step['kind'] === 'provider_reward') {
+                $saved = self::definitions()[$id]['steps'] ?? [];
+                $retained = array_filter(
+                    $saved,
+                    static fn($old) => $old['kind'] === 'provider_reward' &&
+                        ($old['provider_id'] ?? '') === $provider,
+                );
+                if (
+                    !is_string($provider) ||
+                    !preg_match('/^[a-z][a-z0-9_]{0,31}$/D', $provider) ||
+                    (!isset(WP_XP_Core_Providers::definitions()[$provider]) && !$retained)
+                ) {
+                    throw new InvalidArgumentException(wp_xp_core_t('请选择已注册的活动来源。'));
+                }
+                if ($posts || $categories) {
+                    throw new InvalidArgumentException(
+                        wp_xp_core_t('扩展活动不支持文章或分类范围。'),
+                    );
+                }
+            } elseif ($provider !== '') {
+                throw new InvalidArgumentException(wp_xp_core_t('只有扩展活动可以指定来源。'));
+            }
+            $steps[] =
+                [
+                    'kind' => $step['kind'],
+                    'count' => self::integer($step['count'] ?? null, 1, 1000),
+                    'mode' => $mode,
+                    'post_ids' => $posts,
+                    'category_ids' => $categories,
+                ] + ($step['kind'] === 'provider_reward' ? ['provider_id' => $provider] : []);
         }
         if ($input['type'] === 'automatic' && !$steps) {
             throw new InvalidArgumentException(wp_xp_core_t('自动任务至少需要一个步骤。'));
@@ -236,14 +261,21 @@ final class WP_XP_Core_Achievements
         }
         return $row ?: null;
     }
-    public static function condition_text(array $task): string
+    public static function step_label(array $step): string
     {
-        $names = [
+        if ($step['kind'] === 'provider_reward') {
+            $id = $step['provider_id'];
+            return WP_XP_Core_Providers::definitions()[$id]['label'] ?? $id;
+        }
+        return [
             'checkin' => wp_xp_core_t('签到'),
             'visit' => wp_xp_core_t('有效阅读'),
             'comment' => wp_xp_core_t('有效评论'),
             'article' => wp_xp_core_t('发表文章'),
-        ];
+        ][$step['kind']] ?? $step['kind'];
+    }
+    public static function condition_text(array $task): string
+    {
         $modes = [
             'events' => wp_xp_core_t('次活动'),
             'objects' => wp_xp_core_t('项不同内容'),
@@ -252,11 +284,13 @@ final class WP_XP_Core_Achievements
         $parts = [];
         foreach ($task['steps'] as $step) {
             $text =
-                ($names[$step['kind']] ?? $step['kind']) .
+                self::step_label($step) .
                 ' ' .
                 $step['count'] .
                 ' ' .
-                $modes[$step['mode'] ?? 'events'];
+                ($step['kind'] === 'provider_reward' && ($step['mode'] ?? 'events') === 'objects'
+                    ? wp_xp_core_t('个不同对象')
+                    : $modes[$step['mode'] ?? 'events']);
             if (!empty($step['post_ids']) || !empty($step['category_ids'])) {
                 $text .= wp_xp_core_t('（指定内容范围）');
             }
@@ -528,7 +562,7 @@ final class WP_XP_Core_Achievements
         $steps = [];
         $complete = $task['type'] === 'automatic' && $available;
         foreach ($task['steps'] as $step) {
-            $n = (int) $wpdb->get_var(
+            $n = $wpdb->get_var(
                 'SELECT ' .
                     self::counter($step, '1=1') .
                     ' FROM ' .
@@ -540,9 +574,10 @@ final class WP_XP_Core_Achievements
                     self::condition($task, $step) .
                     ')',
             );
-            if ($wpdb->last_error !== '') {
+            if ($wpdb->last_error !== '' || $n === null) {
                 throw new RuntimeException('Task progress unavailable');
             }
+            $n = (int) $n;
             $done = $n >= $step['count'];
             $complete = $complete && $done;
             $steps[] = $step + ['current' => min($n, $step['count']), 'complete' => $done];
@@ -561,7 +596,7 @@ final class WP_XP_Core_Achievements
     public static function joins(): string
     {
         global $wpdb;
-        return " LEFT JOIN {$wpdb->comments} c ON e.kind='comment' AND c.comment_ID=e.object_id LEFT JOIN {$wpdb->posts} p ON p.ID=IF(e.kind='comment',c.comment_post_ID,e.object_id) ";
+        return " LEFT JOIN {$wpdb->comments} c ON e.kind='comment' AND c.comment_ID=e.object_id LEFT JOIN {$wpdb->posts} p ON e.kind IN ('visit','comment','article') AND p.ID=IF(e.kind='comment',c.comment_post_ID,e.object_id) ";
     }
     public static function condition(array $task, array $step): string
     {
@@ -574,7 +609,20 @@ final class WP_XP_Core_Achievements
             $period['from'],
             $period['to'],
         );
-        if ($step['kind'] !== 'checkin') {
+        if ($step['kind'] === 'provider_reward') {
+            $detail = "IF(JSON_VALID(e.detail),e.detail,'{}')";
+            $sql .= $wpdb->prepare(
+                " AND JSON_UNQUOTE(JSON_EXTRACT($detail,'$.provider'))=%s",
+                $step['provider_id'],
+            );
+            $sql .=
+                ' AND NOT EXISTS (SELECT 1 FROM ' .
+                Reader_Experience::table() .
+                " r WHERE r.kind='provider_revoke' AND r.object_id=e.id AND r.user_id=e.user_id AND r.event_key=CONCAT('provider-revoke:',e.id))";
+            if (($step['mode'] ?? 'events') === 'objects') {
+                $sql .= ' AND e.object_id>0';
+            }
+        } elseif ($step['kind'] !== 'checkin') {
             $sql .=
                 " AND p.post_status='publish' AND p.post_password='' AND p.post_type IN ('post','page')";
             if ($step['kind'] === 'comment') {
@@ -599,7 +647,7 @@ final class WP_XP_Core_Achievements
     private static function counter(array $step, string $condition): string
     {
         $object = match ($step['mode'] ?? 'events') {
-            'objects' => 'p.ID',
+            'objects' => $step['kind'] === 'provider_reward' ? 'NULLIF(e.object_id,0)' : 'p.ID',
             'days' => 'e.local_day',
             default => 'e.id',
         };
@@ -761,8 +809,18 @@ final class WP_XP_Core_Achievements
             return self::error('storage', wp_xp_core_t('暂时无法记录任务，请重试。'), 503);
         }
     }
+    private static function matches_event(array $step, array $event): bool
+    {
+        return $step['kind'] === $event['kind'] &&
+            ($step['kind'] !== 'provider_reward' ||
+                $step['provider_id'] === ($event['detail']['provider'] ?? ''));
+    }
     public static function committed(array $event): void
     {
+        if (($event['kind'] ?? '') === 'provider_revoke') {
+            self::clear_cache();
+            return;
+        }
         if (!in_array($event['kind'] ?? '', self::KINDS, true)) {
             return;
         }
@@ -772,7 +830,7 @@ final class WP_XP_Core_Achievements
             fn($task) => !empty($task['enabled']) &&
                 $task['type'] === 'automatic' &&
                 (int) $event['id'] > $task['start_event_id'] &&
-                array_filter($task['steps'], fn($step) => $step['kind'] === $event['kind']),
+                array_filter($task['steps'], fn($step) => self::matches_event($step, $event)),
         );
         if (!$candidates) {
             return;
@@ -789,7 +847,7 @@ final class WP_XP_Core_Achievements
                 fn($task) => !empty($task['enabled']) &&
                     $task['type'] === 'automatic' &&
                     (int) $event['id'] > $task['start_event_id'] &&
-                    array_filter($task['steps'], fn($step) => $step['kind'] === $event['kind']),
+                    array_filter($task['steps'], fn($step) => self::matches_event($step, $event)),
             );
             if (!$tasks) {
                 return;
@@ -1429,7 +1487,7 @@ final class WP_XP_Core_Achievements
                     $wpdb->prepare('e.user_id=%d AND e.id>%d', $uid, $minimum),
                 ARRAY_A,
             );
-            if ($wpdb->last_error !== '') {
+            if ($wpdb->last_error !== '' || !is_array($counts)) {
                 throw new RuntimeException('Task counters unavailable');
             }
         }
@@ -1577,6 +1635,10 @@ final class WP_XP_Core_Achievements
                 continue;
             }
             foreach ($progress[$task['id']]['steps'] as &$step) {
+                $step['label'] = self::step_label($step);
+                $step['source_available'] =
+                    $step['kind'] !== 'provider_reward' ||
+                    WP_XP_Core_Providers::available($step['provider_id']);
                 $step['scope_links'] = self::scope_links($step, $posts, $terms);
                 $step['scoped'] = !empty($step['post_ids']) || !empty($step['category_ids']);
                 unset($step['post_ids'], $step['category_ids']);
