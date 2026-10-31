@@ -1,4 +1,4 @@
-<!-- wp-xp-core-version: 2.2.0-rc.1 -->
+<!-- wp-xp-core-version: 2.2.0 -->
 
 <p align="center"><img src="docs/assets/hero.svg" alt="WP XP Core — 为参与积累经验，让成长有迹可循" width="100%"></p>
 
@@ -27,7 +27,7 @@
 
 ## 开始使用
 
-本分支文档对应 **2.2.0-rc.1**。下载安装包时，请以 [Release](https://github.com/wzf2000/wp-xp-core/releases) 中实际发布的版本为准。
+本文档对应 **2.2.0** 正式版。请从 [Release](https://github.com/wzf2000/wp-xp-core/releases) 下载可安装的 ZIP；其他版本的用法以对应标签内的文档为准。
 
 更新已有站点前请备份，并先在隔离环境验证；不同版本的功能以对应 Release 标签内的文档为准。新站上传安装包并启用后，插件会建立经验账本并使用默认规则，无需配置服务器 JSON，也无需安装其他经验插件。既有用户从 0 经验开始，不会根据旧文章或历史评论自动补发奖励。
 
@@ -102,7 +102,7 @@ WordPress 6.0、PHP 8.0 或更高版本；实际 CI 组合见[贡献指南](CONT
 | 参与开发或提交改进                 | [贡献指南](CONTRIBUTING.md)         |
 | 维护 GitHub 发行                   | [发布流程](docs/RELEASING.md)       |
 
-本分支文档对应 2.2.0-rc.1。使用其他版本时，请以对应 Release 标签内的文档为准。
+本文档适用于 2.2.0。使用其他版本时，请以对应 Release 标签内的文档为准。
 
 遇到问题可[提交 Issue](https://github.com/wzf2000/wp-xp-core/issues/new/choose)，附上版本、现象与复现步骤。安全问题请按[安全政策](SECURITY.md)私下报告。
 
